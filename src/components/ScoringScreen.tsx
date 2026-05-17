@@ -66,12 +66,15 @@ export function ScoringScreen({ exam, answers, onReview, onRestart }: ScoringScr
                 <svg
                   aria-label={item.isCorrect ? "正解" : "不正解"}
                   className={`red-pen ${item.isCorrect ? "circle" : "cross"}`}
-                  viewBox="0 0 120 80"
+                  viewBox="0 0 80 80"
                 >
                   {item.isCorrect ? (
-                    <path d="M72 17 C51 4 19 15 12 41 C6 64 32 76 57 65 C82 54 91 30 72 17" />
+                    <circle cx="40" cy="40" r="25" />
                   ) : (
-                    <path d="M18 58 C30 66 39 66 48 55 C62 39 80 27 105 16" />
+                    <>
+                      <line x1="22" x2="58" y1="22" y2="58" />
+                      <line x1="58" x2="22" y1="22" y2="58" />
+                    </>
                   )}
                 </svg>
               ) : null}

@@ -1,11 +1,13 @@
 import Editor from "@monaco-editor/react";
 import { useMemo, useState } from "react";
-import type { AuthoringMeta } from "../types";
+import type { AuthoringMeta, Exam, QuestionSlot } from "../types";
 import { defaultAuthoringMeta, defaultAuthoringSource, parseAuthoringLatex } from "../utils/latex";
 import { loadAuthorMeta, loadAuthorSource, saveAuthorMeta, saveAuthorSource } from "../utils/storage";
 
 interface AuthoringEditorProps {
+  initialExam?: Exam | null;
   onBack: () => void;
+  onPublish: (exam: Exam) => void;
 }
 
 type TextMetaKey = "title" | "subject" | "description";
@@ -34,12 +36,111 @@ function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
   );
 }
 
-export function AuthoringEditor({ onBack }: AuthoringEditorProps) {
-  const [source, setSource] = useState(() => loadAuthorSource(defaultAuthoringSource));
-  const [meta, setMeta] = useState(() => loadAuthorMeta(defaultAuthoringMeta));
+function metaFromExam(exam: Exam | null | undefined): AuthoringMeta {
+  if (!exam) {
+    return loadAuthorMeta(defaultAuthoringMeta);
+  }
+
+  return {
+    title: exam.title,
+    subject: exam.subject,
+    description: exam.description,
+    questionCount: exam.questions.length,
+    totalPoints: exam.totalPoints,
+    durationMinutes: exam.durationMinutes
+  };
+}
+
+function sourceFromExam(exam: Exam | null | undefined): string {
+  if (!exam) {
+    return loadAuthorSource(defaultAuthoringSource);
+  }
+
+  return [
+    `% ${exam.title}`,
+    `% 既存試験を編集しています。メタ情報は設定から変更できます。`,
+    "\\documentclass{article}",
+    "\\begin{document}",
+    `\\section*{${exam.title}}`,
+    exam.description,
+    "\\end{document}"
+  ].join("\n");
+}
+
+function createDefaultQuestion(index: number, totalPoints: number, questionCount: number): QuestionSlot {
+  const basePoints = Math.floor(totalPoints / Math.max(1, questionCount));
+  const remainder = totalPoints % Math.max(1, questionCount);
+  const points = basePoints + (index < remainder ? 1 : 0);
+  const label = String(index + 1);
+
+  return {
+    id: `draft-q${label.padStart(2, "0")}`,
+    label,
+    section: `第${index + 1}問`,
+    prompt: "作成したTeXコードに対応する解答欄です。",
+    pageId: "draft-p1",
+    points,
+    multi: false,
+    options: ["0", "1", "2", "3", "4"].map((value) => ({ value, label: value, content: value })),
+    correct: ["0"],
+    explanation: "投稿後に正解と解説を調整してください。"
+  };
+}
+
+function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Exam | null | undefined): Exam {
+  if (initialExam) {
+    return {
+      ...initialExam,
+      title: meta.title,
+      subject: meta.subject,
+      description: meta.description,
+      durationMinutes: meta.durationMinutes,
+      totalPoints: meta.totalPoints,
+      published: true
+    };
+  }
+
+  const questionCount = Math.max(1, meta.questionCount);
+  const questions = Array.from({ length: questionCount }, (_item, index) =>
+    createDefaultQuestion(index, meta.totalPoints, questionCount)
+  );
+
+  return {
+    id: `custom-${Date.now()}`,
+    title: meta.title,
+    subject: meta.subject,
+    durationMinutes: meta.durationMinutes,
+    published: true,
+    totalPoints: meta.totalPoints,
+    description: meta.description,
+    instructions: [
+      "解答は右側のマークシート、または問題冊子中の選択肢をクリックして行うこと。",
+      "制限時間が終了すると自動的に採点へ移る。"
+    ],
+    pages: [
+      {
+        id: "draft-p1",
+        pageNumber: 1,
+        title: meta.title,
+        blocks: [
+          { type: "heading", text: meta.title, level: 2 },
+          { type: "paragraph", text: source.slice(0, 240) || "投稿されたTeXコードから作成した問題です。" },
+          ...questions.map((question) => ({ type: "question" as const, questionId: question.id }))
+        ]
+      }
+    ],
+    questions
+  };
+}
+
+export function AuthoringEditor({ initialExam = null, onBack, onPublish }: AuthoringEditorProps) {
+  const [source, setSource] = useState(() => sourceFromExam(initialExam));
+  const [meta, setMeta] = useState(() => metaFromExam(initialExam));
   const [savedSource, setSavedSource] = useState(source);
   const [savedMeta, setSavedMeta] = useState(meta);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [publishState, setPublishState] = useState<"idle" | "published">("idle");
   const sourceStats = useMemo(() => {
     const parsed = parseAuthoringLatex(source);
     return {
@@ -55,6 +156,12 @@ export function AuthoringEditor({ onBack }: AuthoringEditorProps) {
     saveAuthorMeta(meta);
     setSavedSource(source);
     setSavedMeta(meta);
+  };
+
+  const publishDraft = () => {
+    saveDraft();
+    setPublishState("published");
+    onPublish(buildPublishedExam(meta, source, initialExam));
   };
 
   const requestBack = () => {
@@ -83,9 +190,17 @@ export function AuthoringEditor({ onBack }: AuthoringEditorProps) {
           <h1>新規作成</h1>
         </div>
         <div className="author-actions">
-          <span className={`save-state ${isDirty ? "dirty" : ""}`}>{isDirty ? "未保存" : "保存済み"}</span>
+          <span className={`save-state ${isDirty ? "dirty" : ""}`}>
+            {publishState === "published" ? "投稿済み" : isDirty ? "未保存" : "保存済み"}
+          </span>
+          <button className="secondary-button" type="button" onClick={() => setShowSettingsDialog(true)}>
+            設定
+          </button>
           <button className="primary-button" type="button" onClick={saveDraft}>
             一時保存
+          </button>
+          <button className="primary-button" type="button" onClick={publishDraft}>
+            投稿
           </button>
           <button className="secondary-button" type="button" onClick={requestBack}>
             戻る
@@ -117,8 +232,20 @@ export function AuthoringEditor({ onBack }: AuthoringEditorProps) {
         </div>
 
         <aside className="author-side">
-          <section className="meta-pane" aria-label="試験メタ情報">
-            <h2>メタ情報</h2>
+          <section className="preview-pane" aria-label="共通テスト形式プレビュー">
+            <div className="preview-heading">
+              <h2>プレビュー</h2>
+              <span>解答欄 {sourceStats.answerSlots || sourceStats.marks}</span>
+            </div>
+            <CommonTestPreview meta={meta} />
+          </section>
+        </aside>
+      </section>
+
+      {showSettingsDialog ? (
+        <div className="dialog-backdrop" role="presentation">
+          <section className="confirm-dialog settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title">
+            <h2 id="settings-dialog-title">設定</h2>
             <div className="meta-form">
               {textFields.map((field) => (
                 <label className={field.multiline ? "wide" : ""} key={field.key}>
@@ -153,17 +280,14 @@ export function AuthoringEditor({ onBack }: AuthoringEditorProps) {
                 </label>
               ))}
             </div>
-          </section>
-
-          <section className="preview-pane" aria-label="共通テスト形式プレビュー">
-            <div className="preview-heading">
-              <h2>プレビュー</h2>
-              <span>解答欄 {sourceStats.answerSlots || sourceStats.marks}</span>
+            <div className="dialog-actions">
+              <button className="primary-button" type="button" onClick={() => setShowSettingsDialog(false)}>
+                閉じる
+              </button>
             </div>
-            <CommonTestPreview meta={meta} />
           </section>
-        </aside>
-      </section>
+        </div>
+      ) : null}
 
       {showLeaveDialog ? (
         <div className="dialog-backdrop" role="presentation">

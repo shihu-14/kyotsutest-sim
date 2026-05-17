@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useMemo, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from "react";
 import type { AnswerValue, Exam, QuestionSlot, UserAnswers } from "../types";
 import { answeredCount } from "../utils/answer";
 import { useCountdown } from "../hooks/useCountdown";
@@ -14,6 +14,7 @@ interface ExamRunnerProps {
   onChangePage: (pageId: string) => void;
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
   onFinish: () => void;
+  onPause: () => void;
   onExitReview?: () => void;
   onExpire: () => void;
 }
@@ -27,11 +28,13 @@ export function ExamRunner({
   onChangePage,
   onToggleAnswer,
   onFinish,
+  onPause,
   onExitReview,
   onExpire
 }: ExamRunnerProps) {
   const [bookletZoom, setBookletZoom] = useState(1);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
@@ -54,6 +57,31 @@ export function ExamRunner({
 
   const updateBookletZoom = (value: number) => {
     setBookletZoom(Math.min(1.6, Math.max(0.75, value)));
+  };
+
+  const handleBookletWheel = (event: WheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey && !event.metaKey) {
+      return;
+    }
+
+    event.preventDefault();
+    updateBookletZoom(bookletZoom + (event.deltaY < 0 ? 0.08 : -0.08));
+  };
+
+  const handleBookletKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey && !event.metaKey) {
+      return;
+    }
+
+    if (event.key === "+" || event.key === "=") {
+      event.preventDefault();
+      updateBookletZoom(bookletZoom + 0.08);
+    }
+
+    if (event.key === "-") {
+      event.preventDefault();
+      updateBookletZoom(bookletZoom - 0.08);
+    }
   };
 
   return (
@@ -80,9 +108,14 @@ export function ExamRunner({
               結果へ戻る
             </button>
           ) : (
-            <button className="danger-button" type="button" onClick={() => setShowFinishConfirm(true)}>
-              試験終了
-            </button>
+            <>
+              <button className="secondary-button" type="button" onClick={() => setShowPauseConfirm(true)}>
+                中断
+              </button>
+              <button className="danger-button" type="button" onClick={() => setShowFinishConfirm(true)}>
+                試験終了
+              </button>
+            </>
           )}
         </div>
       </header>
@@ -101,7 +134,14 @@ export function ExamRunner({
               </button>
             ))}
           </nav>
-          <div className="booklet-stage" style={bookletStyle}>
+          <div
+            aria-label="問題表示領域"
+            className="booklet-stage"
+            style={bookletStyle}
+            tabIndex={0}
+            onKeyDown={handleBookletKeyDown}
+            onWheel={handleBookletWheel}
+          >
             <ProblemBooklet
               answers={answers}
               page={page}
@@ -109,34 +149,6 @@ export function ExamRunner({
               reviewMode={reviewMode}
               onToggleAnswer={onToggleAnswer}
             />
-            <div className="zoom-controls" aria-label="問題表示倍率">
-              <button
-                aria-label="問題を縮小"
-                className="zoom-button"
-                type="button"
-                onClick={() => updateBookletZoom(bookletZoom - 0.1)}
-              >
-                −
-              </button>
-              <input
-                aria-label="問題表示倍率"
-                max="1.6"
-                min="0.75"
-                step="0.05"
-                type="range"
-                value={bookletZoom}
-                onChange={(event) => updateBookletZoom(Number(event.currentTarget.value))}
-              />
-              <button
-                aria-label="問題を拡大"
-                className="zoom-button"
-                type="button"
-                onClick={() => updateBookletZoom(bookletZoom + 0.1)}
-              >
-                +
-              </button>
-              <span>{Math.round(bookletZoom * 100)}%</span>
-            </div>
           </div>
           <div className="page-turner">
             <button className="secondary-button" disabled={pageIndex === 0} type="button" onClick={goPrevious}>
@@ -183,6 +195,30 @@ export function ExamRunner({
                 }}
               >
                 採点へ進む
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {showPauseConfirm ? (
+        <div className="dialog-backdrop" role="presentation">
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="pause-dialog-title">
+            <h2 id="pause-dialog-title">試験を中断しますか</h2>
+            <p>現在の解答は保持されます。採点せずに一覧へ戻ります。</p>
+            <div className="dialog-actions">
+              <button className="secondary-button" type="button" onClick={() => setShowPauseConfirm(false)}>
+                戻る
+              </button>
+              <button
+                className="danger-button"
+                type="button"
+                onClick={() => {
+                  setShowPauseConfirm(false);
+                  onPause();
+                }}
+              >
+                中断する
               </button>
             </div>
           </section>

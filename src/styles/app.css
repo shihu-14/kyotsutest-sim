@@ -154,14 +154,14 @@ button:disabled {
 }
 
 .exam-tile {
-  min-height: 300px;
-  padding: 22px;
+  min-height: 236px;
+  padding: 18px;
 }
 
 .exam-card-main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(150px, 190px);
-  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(118px, 148px);
+  gap: 14px;
   min-height: 100%;
 }
 
@@ -170,7 +170,7 @@ button:disabled {
   min-width: 0;
   flex-direction: column;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .exam-title-row {
@@ -246,11 +246,12 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 236px;
+  min-height: 0;
+  aspect-ratio: 0.66;
   overflow: hidden;
-  border: 1px solid #d4c7b0;
+  border: 0;
   border-radius: 4px;
-  background: #fffdf8;
+  background: transparent;
 }
 
 .exam-cover-thumb img,
@@ -302,8 +303,17 @@ button:disabled {
 }
 
 .exam-card-copy .exam-meta {
-  grid-template-columns: 1fr;
-  width: min(170px, 100%);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: min(100%, 310px);
+  gap: 8px;
+}
+
+.exam-card-copy .exam-meta div {
+  padding: 7px 9px;
+}
+
+.exam-card-copy .exam-meta dd {
+  font-size: 0.98rem;
 }
 
 .cover-sheet {
@@ -399,8 +409,8 @@ button:disabled {
   overflow: auto;
   border-radius: 8px;
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.09), transparent 24%, rgba(0, 0, 0, 0.08) 48%, transparent 72%),
-    repeating-linear-gradient(90deg, #8a5732 0, #8a5732 86px, #754826 86px, #754826 92px, #9b653a 92px, #9b653a 178px);
+    linear-gradient(rgba(70, 39, 16, 0.12), rgba(70, 39, 16, 0.12)),
+    url("../assets/wood-desk.jpg") center / cover;
   padding: 14px;
 }
 
@@ -541,6 +551,12 @@ button:disabled {
   color: #fff;
 }
 
+.choice-button.selected .choice-index {
+  border-color: #fff;
+  background: #fff;
+  color: #222;
+}
+
 .choice-button.correct-choice {
   border-color: #a94337;
   background: #fff1ed;
@@ -598,43 +614,6 @@ button:disabled {
   justify-content: space-between;
   gap: 12px;
   margin-top: 12px;
-}
-
-.zoom-controls {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  z-index: 3;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1px solid rgba(38, 52, 51, 0.28);
-  border-radius: 8px;
-  background: rgba(255, 253, 248, 0.94);
-  padding: 7px 9px;
-  box-shadow: 0 10px 24px rgba(30, 22, 10, 0.22);
-  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.zoom-controls input {
-  width: 96px;
-}
-
-.zoom-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid #b9ab94;
-  border-radius: 50%;
-  background: #fffaf1;
-  color: #273534;
-  padding: 0;
-  font-family: Inter, system-ui, sans-serif;
-  font-weight: 900;
 }
 
 .exam-layout .exam-toolbar {
@@ -945,20 +924,20 @@ button:disabled {
 }
 
 .red-pen {
-  width: 100px;
+  width: 76px;
   height: 76px;
-  stroke: #f00;
-  stroke-width: 10;
+  stroke: #c73228;
+  stroke-width: 7;
   fill: transparent;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 260;
-  stroke-dashoffset: 260;
+  stroke-dasharray: 220;
+  stroke-dashoffset: 220;
   animation: draw-stamp 280ms ease-out forwards;
 }
 
 .red-pen.cross {
-  stroke-width: 11;
+  stroke-width: 7;
 }
 
 .earned-points {
@@ -1058,7 +1037,7 @@ button:disabled {
 
 .author-side {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 18px;
   min-height: 0;
 }
@@ -1139,9 +1118,10 @@ button:disabled {
 
 .common-test-preview {
   display: grid;
-  max-height: calc(100vh - 392px);
+  max-height: calc(100vh - 250px);
   gap: 12px;
-  overflow: hidden;
+  overflow: auto;
+  padding-right: 4px;
 }
 
 .common-test-page {
@@ -1285,6 +1265,10 @@ button:disabled {
 .confirm-dialog {
   width: min(520px, 100%);
   padding: 24px;
+}
+
+.settings-dialog {
+  width: min(760px, 100%);
 }
 
 .confirm-dialog h2 {

@@ -12,6 +12,10 @@ interface MarkSheetProps {
 
 const digitLabels = Array.from({ length: 10 }, (_item, index) => String(index));
 
+function getMajorSection(section: string): string {
+  return section.split(/\s+/)[0] || section;
+}
+
 function getOptionByLabel(question: QuestionSlot, label: string): MarkOption | undefined {
   return question.options.find((option) => option.label === label);
 }
@@ -47,9 +51,10 @@ export function MarkSheet({
           {exam.questions.map((question, index) => {
             const selected = answers[question.id] ?? [];
             const isActive = question.pageId === activePageId;
-            const startsSection = index === 0 || exam.questions[index - 1].section !== question.section;
+            const section = getMajorSection(question.section);
+            const startsSection = index === 0 || getMajorSection(exam.questions[index - 1].section) !== section;
             const isSectionActive = exam.questions.some(
-              (candidate) => candidate.section === question.section && candidate.pageId === activePageId
+              (candidate) => getMajorSection(candidate.section) === section && candidate.pageId === activePageId
             );
             const isIncorrectReview =
               reviewMode &&
@@ -65,7 +70,7 @@ export function MarkSheet({
                       type="button"
                       onClick={() => onJumpToPage(question.pageId)}
                     >
-                      {question.section}
+                      {section}
                     </button>
                   </div>
                 ) : null}

@@ -58,7 +58,8 @@ describe("MarkSheet", () => {
 
     expect(screen.queryByText("解 答 科 目 欄")).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "大問" })).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "第2問 問2" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "第2問" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "第2問 問2" })).not.toBeInTheDocument();
   });
 
   it("renders multiple selected marks when a question allows multiple answers", () => {

@@ -13,6 +13,7 @@ export function App() {
   const [phase, setPhase] = useState<ExamPhase>("select");
   const [exams, setExams] = useState<Exam[]>(sampleExams);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+  const [editingExam, setEditingExam] = useState<Exam | null>(null);
   const [answers, setAnswers] = useState<UserAnswers>({});
   const [deadline, setDeadline] = useState<number | null>(null);
   const [currentPageId, setCurrentPageId] = useState<string>("");
@@ -48,6 +49,13 @@ export function App() {
     setPhase("select");
   };
 
+  const pauseExam = () => {
+    setSelectedExam(null);
+    setDeadline(null);
+    setCurrentPageId("");
+    setPhase("select");
+  };
+
   const deleteExam = (examId: string) => {
     setExams((current) => current.filter((exam) => exam.id !== examId));
     if (selectedExam?.id === examId) {
@@ -63,6 +71,29 @@ export function App() {
     setPhase("scoring");
   }, [selectedExam]);
 
+  const openNewEditor = () => {
+    setEditingExam(null);
+    setPhase("editor");
+  };
+
+  const openExamEditor = (exam: Exam) => {
+    setEditingExam(exam);
+    setPhase("editor");
+  };
+
+  const publishExam = (exam: Exam) => {
+    setExams((current) => {
+      const existingIndex = current.findIndex((item) => item.id === exam.id);
+      if (existingIndex === -1) {
+        return [...current, exam];
+      }
+
+      return current.map((item) => (item.id === exam.id ? exam : item));
+    });
+    setEditingExam(null);
+    setPhase("select");
+  };
+
   const handleToggleAnswer = (question: QuestionSlot, value: AnswerValue) => {
     setAnswers((current) => ({
       ...current,
@@ -77,7 +108,17 @@ export function App() {
   }, [answers, selectedExam]);
 
   if (phase === "editor") {
-    return <AuthoringEditor onBack={() => setPhase("select")} />;
+    return (
+      <AuthoringEditor
+        initialExam={editingExam}
+        key={editingExam?.id ?? "new"}
+        onBack={() => {
+          setEditingExam(null);
+          setPhase("select");
+        }}
+        onPublish={publishExam}
+      />
+    );
   }
 
   if (phase === "select" || !selectedExam) {
@@ -85,8 +126,8 @@ export function App() {
       <ExamList
         exams={exams}
         onDelete={deleteExam}
-        onEdit={() => setPhase("editor")}
-        onOpenEditor={() => setPhase("editor")}
+        onEdit={openExamEditor}
+        onOpenEditor={openNewEditor}
         onSelect={openCover}
       />
     );
@@ -125,6 +166,7 @@ export function App() {
       onExitReview={() => setPhase("scoring")}
       onExpire={finishExam}
       onFinish={finishExam}
+      onPause={pauseExam}
       onToggleAnswer={handleToggleAnswer}
     />
   );
