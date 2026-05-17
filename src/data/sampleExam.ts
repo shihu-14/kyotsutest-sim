@@ -1,4 +1,5 @@
 import type { Exam } from "../types";
+import mathIaCover from "../assets/math-ia-cover.svg";
 
 const commonOptions = [
   { value: "0", label: "0", content: "0" },
@@ -17,6 +18,7 @@ export const sampleExams: Exam[] = [
     published: true,
     totalPoints: 32,
     description: "二次関数、三角比、データの分析、場合の数を含む短時間確認用セット。",
+    coverImageUrl: mathIaCover,
     instructions: [
       "解答は右側のマークシート、または問題冊子中の選択肢をクリックして行うこと。",
       "同じ選択肢を再度クリックすると、そのマークは取り消される。",

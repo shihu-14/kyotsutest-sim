@@ -11,6 +11,7 @@ import { toggleAnswer } from "./utils/answer";
 
 export function App() {
   const [phase, setPhase] = useState<ExamPhase>("select");
+  const [exams, setExams] = useState<Exam[]>(sampleExams);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [answers, setAnswers] = useState<UserAnswers>({});
   const [deadline, setDeadline] = useState<number | null>(null);
@@ -47,6 +48,13 @@ export function App() {
     setPhase("select");
   };
 
+  const deleteExam = (examId: string) => {
+    setExams((current) => current.filter((exam) => exam.id !== examId));
+    if (selectedExam?.id === examId) {
+      resetToList();
+    }
+  };
+
   const finishExam = useCallback(() => {
     if (selectedExam) {
       clearDeadline(selectedExam.id);
@@ -73,7 +81,15 @@ export function App() {
   }
 
   if (phase === "select" || !selectedExam) {
-    return <ExamList exams={sampleExams} onOpenEditor={() => setPhase("editor")} onSelect={openCover} />;
+    return (
+      <ExamList
+        exams={exams}
+        onDelete={deleteExam}
+        onEdit={() => setPhase("editor")}
+        onOpenEditor={() => setPhase("editor")}
+        onSelect={openCover}
+      />
+    );
   }
 
   if (phase === "cover") {

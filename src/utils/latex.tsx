@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import katex from "katex";
+import animeExamSource from "../../kyotutest_anime_onlymark.tex?raw";
+import type { AuthoringMeta } from "../types";
 
 export interface ParsedMark {
   id: string;
@@ -269,19 +271,13 @@ export function parseAuthoringLatex(source: string): ParsedAuthoringDocument {
   };
 }
 
-export const defaultAuthoringSource = String.raw`\examtitle{共通テスト形式 数学I・A 模試}
-\sectiontitle{第1問 二次関数}
-関数 $f(x)=x^2-4x+1$ について考える。
-\mark[answer=1,points=4,choices=4]{ア} は $f(x)$ の最小値を問う解答欄である。
-\choice{ア}{0}{$-4$}
-\choice{ア}{1}{$-3$}
-\choice{ア}{2}{$-2$}
-\choice{ア}{3}{$1$}
+export const defaultAuthoringMeta: AuthoringMeta = {
+  title: "漫画映画",
+  subject: "数学I・数学A",
+  description: "漫画・映画に関する題材を共通テスト形式で解くサンプル問題冊子。",
+  questionCount: 9,
+  totalPoints: 100,
+  durationMinutes: 40
+};
 
-\sectiontitle{第2問 データの分析}
-データ $2,4,6,8,10$ について、正しいものをすべて選べ。
-\mark[answer=0|2,points=7,choices=4,multi=true]{イ}
-\choice{イ}{0}{平均値は $6$ である}
-\choice{イ}{1}{中央値は $8$ である}
-\choice{イ}{2}{範囲は $8$ である}
-\choice{イ}{3}{分散は $10$ である}`;
+export const defaultAuthoringSource = animeExamSource;

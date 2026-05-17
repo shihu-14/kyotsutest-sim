@@ -66,12 +66,22 @@ export interface Exam {
   published: boolean;
   totalPoints: number;
   description: string;
+  coverImageUrl?: string;
   instructions: string[];
   pages: ExamPage[];
   questions: QuestionSlot[];
 }
 
 export type UserAnswers = Record<string, AnswerValue[]>;
+
+export interface AuthoringMeta {
+  title: string;
+  subject: string;
+  description: string;
+  questionCount: number;
+  totalPoints: number;
+  durationMinutes: number;
+}
 
 export interface GradedQuestion {
   question: QuestionSlot;
