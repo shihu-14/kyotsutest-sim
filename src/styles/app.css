@@ -250,7 +250,7 @@ button:disabled {
   overflow: hidden;
   border: 1px solid #d4c7b0;
   border-radius: 4px;
-  background: #767f89;
+  background: #fffdf8;
 }
 
 .exam-cover-thumb img,
@@ -322,7 +322,7 @@ button:disabled {
   margin: 0;
   border: 1px solid #d4c7b0;
   border-radius: 4px;
-  background: #767f89;
+  background: #fffdf8;
 }
 
 .cover-preview-image img {
@@ -348,7 +348,7 @@ button:disabled {
 
 .exam-body {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 352px;
+  grid-template-columns: minmax(360px, 1fr) clamp(318px, 27vw, 390px);
   gap: 20px;
   align-items: stretch;
   min-height: 0;
@@ -386,6 +386,29 @@ button:disabled {
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 0;
   min-height: 0;
+}
+
+.booklet-stage {
+  --booklet-zoom: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border-radius: 8px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.09), transparent 24%, rgba(0, 0, 0, 0.08) 48%, transparent 72%),
+    repeating-linear-gradient(90deg, #8a5732 0, #8a5732 86px, #754826 86px, #754826 92px, #9b653a 92px, #9b653a 178px);
+  padding: 14px;
+}
+
+.booklet-stage .booklet-page {
+  flex: 0 0 auto;
+  width: calc(100% * var(--booklet-zoom));
+  height: calc(100% * var(--booklet-zoom));
+  min-height: calc(100% * var(--booklet-zoom));
 }
 
 .page-tabs {
@@ -426,7 +449,7 @@ button:disabled {
   align-items: center;
   justify-content: center;
   padding: 0;
-  background: #7a838b;
+  background: transparent;
 }
 
 .exact-page-image {
@@ -513,18 +536,21 @@ button:disabled {
 }
 
 .choice-button.selected {
-  border-color: #1f6f5b;
-  background: #e6f4ee;
+  border-color: #222;
+  background: #222;
+  color: #fff;
 }
 
 .choice-button.correct-choice {
   border-color: #a94337;
   background: #fff1ed;
+  color: #263433;
 }
 
 .choice-button.wrong-choice {
   border-color: #7c7468;
   background: #ece7df;
+  color: #263433;
 }
 
 .choice-index {
@@ -574,6 +600,43 @@ button:disabled {
   margin-top: 12px;
 }
 
+.zoom-controls {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(38, 52, 51, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 253, 248, 0.94);
+  padding: 7px 9px;
+  box-shadow: 0 10px 24px rgba(30, 22, 10, 0.22);
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.zoom-controls input {
+  width: 96px;
+}
+
+.zoom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #b9ab94;
+  border-radius: 50%;
+  background: #fffaf1;
+  color: #273534;
+  padding: 0;
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 900;
+}
+
 .exam-layout .exam-toolbar {
   flex-shrink: 0;
   margin-bottom: 12px;
@@ -581,7 +644,7 @@ button:disabled {
 
 .mark-sheet {
   display: grid;
-  grid-template-rows: 28px auto auto minmax(0, 1fr);
+  grid-template-rows: 28px minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -678,7 +741,7 @@ button:disabled {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
-  margin: 8px 12px 12px;
+  margin: 12px;
   border: 2px solid #f07825;
   background: #fffdf9;
 }
@@ -696,7 +759,9 @@ button:disabled {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
   min-height: 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   color: #e27939;
   font-size: 0.72rem;
 }
@@ -730,6 +795,27 @@ button:disabled {
 
 .answer-grid-row {
   display: contents;
+}
+
+.answer-section-row {
+  display: grid;
+  grid-column: 1 / -1;
+}
+
+.answer-section-button {
+  border: 0;
+  border-bottom: 1px solid #f2ad82;
+  background: #fff2e9;
+  color: #c65e27;
+  padding: 5px 8px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-align: left;
+}
+
+.answer-section-button.active {
+  background: #f07825;
+  color: #fff;
 }
 
 .answer-grid-row.active .answer-number {
@@ -859,16 +945,20 @@ button:disabled {
 }
 
 .red-pen {
-  width: 76px;
+  width: 100px;
   height: 76px;
-  stroke: #c73228;
-  stroke-width: 7;
+  stroke: #f00;
+  stroke-width: 10;
   fill: transparent;
   stroke-linecap: round;
   stroke-linejoin: round;
-  stroke-dasharray: 220;
-  stroke-dashoffset: 220;
+  stroke-dasharray: 260;
+  stroke-dashoffset: 260;
   animation: draw-stamp 280ms ease-out forwards;
+}
+
+.red-pen.cross {
+  stroke-width: 11;
 }
 
 .earned-points {

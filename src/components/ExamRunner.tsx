@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import type { AnswerValue, Exam, QuestionSlot, UserAnswers } from "../types";
 import { answeredCount } from "../utils/answer";
 import { useCountdown } from "../hooks/useCountdown";
@@ -30,6 +30,8 @@ export function ExamRunner({
   onExitReview,
   onExpire
 }: ExamRunnerProps) {
+  const [bookletZoom, setBookletZoom] = useState(1);
+  const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
@@ -38,6 +40,7 @@ export function ExamRunner({
   const pageIndex = exam.pages.findIndex((candidate) => candidate.id === page.id);
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
   const completeCount = answeredCount(exam, answers);
+  const bookletStyle = { "--booklet-zoom": String(bookletZoom) } as CSSProperties;
 
   const goPrevious = () => {
     const previousPage = exam.pages[Math.max(0, pageIndex - 1)];
@@ -47,6 +50,10 @@ export function ExamRunner({
   const goNext = () => {
     const nextPage = exam.pages[Math.min(exam.pages.length - 1, pageIndex + 1)];
     onChangePage(nextPage.id);
+  };
+
+  const updateBookletZoom = (value: number) => {
+    setBookletZoom(Math.min(1.6, Math.max(0.75, value)));
   };
 
   return (
@@ -73,7 +80,7 @@ export function ExamRunner({
               結果へ戻る
             </button>
           ) : (
-            <button className="danger-button" type="button" onClick={onFinish}>
+            <button className="danger-button" type="button" onClick={() => setShowFinishConfirm(true)}>
               試験終了
             </button>
           )}
@@ -87,20 +94,50 @@ export function ExamRunner({
               <button
                 className={item.id === page.id ? "active" : ""}
                 key={item.id}
-                type="button"
-                onClick={() => onChangePage(item.id)}
-              >
+              type="button"
+              onClick={() => onChangePage(item.id)}
+            >
                 {item.pageNumber}
               </button>
             ))}
           </nav>
-          <ProblemBooklet
-            answers={answers}
-            page={page}
-            questionsById={questionsById}
-            reviewMode={reviewMode}
-            onToggleAnswer={onToggleAnswer}
-          />
+          <div className="booklet-stage" style={bookletStyle}>
+            <ProblemBooklet
+              answers={answers}
+              page={page}
+              questionsById={questionsById}
+              reviewMode={reviewMode}
+              onToggleAnswer={onToggleAnswer}
+            />
+            <div className="zoom-controls" aria-label="問題表示倍率">
+              <button
+                aria-label="問題を縮小"
+                className="zoom-button"
+                type="button"
+                onClick={() => updateBookletZoom(bookletZoom - 0.1)}
+              >
+                −
+              </button>
+              <input
+                aria-label="問題表示倍率"
+                max="1.6"
+                min="0.75"
+                step="0.05"
+                type="range"
+                value={bookletZoom}
+                onChange={(event) => updateBookletZoom(Number(event.currentTarget.value))}
+              />
+              <button
+                aria-label="問題を拡大"
+                className="zoom-button"
+                type="button"
+                onClick={() => updateBookletZoom(bookletZoom + 0.1)}
+              >
+                +
+              </button>
+              <span>{Math.round(bookletZoom * 100)}%</span>
+            </div>
+          </div>
           <div className="page-turner">
             <button className="secondary-button" disabled={pageIndex === 0} type="button" onClick={goPrevious}>
               前のページ
@@ -127,6 +164,30 @@ export function ExamRunner({
           onToggleAnswer={onToggleAnswer}
         />
       </section>
+
+      {showFinishConfirm ? (
+        <div className="dialog-backdrop" role="presentation">
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-dialog-title">
+            <h2 id="finish-dialog-title">試験を終了しますか</h2>
+            <p>時間はまだ残っています。終了すると採点に進みます。</p>
+            <div className="dialog-actions">
+              <button className="secondary-button" type="button" onClick={() => setShowFinishConfirm(false)}>
+                戻る
+              </button>
+              <button
+                className="danger-button"
+                type="button"
+                onClick={() => {
+                  setShowFinishConfirm(false);
+                  onFinish();
+                }}
+              >
+                採点へ進む
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }
