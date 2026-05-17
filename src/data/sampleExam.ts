@@ -1,6 +1,12 @@
 import type { Exam } from "../types";
 import mathIaCover from "../assets/math-ia-cover.svg";
 
+const optionsFrom = (contents: string[]) =>
+  contents.map((content, index) => {
+    const value = String(index + 1);
+    return { value, label: value, content };
+  });
+
 const commonOptions = [
   { value: "0", label: "0", content: "0" },
   { value: "1", label: "1", content: "1" },
@@ -210,6 +216,259 @@ export const sampleExams: Exam[] = [
         ],
         correct: ["60"],
         explanation: "Aが2枚同じなので、並べ方は $5!/2!=60$ 通り。"
+      }
+    ]
+  },
+  {
+    id: "anime-onlymark-2026",
+    title: "漫画映画",
+    subject: "漫画映画",
+    durationMinutes: 40,
+    published: true,
+    totalPoints: 100,
+    description: "kyotutest_anime_onlymark.tex をもとにした、アニメ題材の共通テスト形式サンプル。",
+    coverImageUrl: mathIaCover,
+    instructions: [
+      "この問題冊子は、同一ディレクトリの kyotutest_anime_onlymark.tex をサンプル化したものです。",
+      "解答は右側のマークシート、または問題冊子中の選択肢をクリックして行うこと。",
+      "各大問の配点はTeX内の配点に合わせてあります。",
+      "制限時間が終了すると自動的に採点へ移る。"
+    ],
+    pages: [
+      {
+        id: "anime-p1",
+        pageNumber: 1,
+        title: "第1問 方程式クイズ",
+        blocks: [
+          { type: "heading", text: "第1問 方程式クイズ", level: 2 },
+          {
+            type: "paragraph",
+            text: "各式 1 から 3 が画像 I から III に示されたアニメの名称の一部を表している。式が表すアニメの名称として最も適当なものを選べ。"
+          },
+          {
+            type: "formula",
+            latex: "\\left\\{\\begin{aligned}y-x_n&=ci\\\\fg''&=c\\\\pb\\times abq^\\circ&=_d\\ t\\end{aligned}\\right."
+          },
+          { type: "question", questionId: "anime-q1" }
+        ]
+      },
+      {
+        id: "anime-p2",
+        pageNumber: 2,
+        title: "第2問 暗殺教室",
+        blocks: [
+          { type: "heading", text: "第2問 暗殺教室", level: 2 },
+          {
+            type: "paragraph",
+            text: "暗殺教室に関する問い。学期末テストの最終問題や、登場人物のコードネームに関する内容を考える。"
+          },
+          { type: "question", questionId: "anime-q2" }
+        ]
+      },
+      {
+        id: "anime-p3",
+        pageNumber: 3,
+        title: "第3問 グラフと年表",
+        blocks: [
+          { type: "heading", text: "第3問 グラフと年表", level: 2 },
+          {
+            type: "paragraph",
+            text: "グラフおよび図は、あるアニメに関するものである。これらの内容に基づいて X に入る最も適当な記号を選べ。"
+          },
+          { type: "question", questionId: "anime-q3" }
+        ]
+      },
+      {
+        id: "anime-p4",
+        pageNumber: 4,
+        title: "第4問 集合",
+        blocks: [
+          { type: "heading", text: "第4問 集合", level: 2 },
+          {
+            type: "paragraph",
+            text: "ベン図が与えられたとき、要素 I から III の分類として最も適当なものを選べ。"
+          },
+          { type: "question", questionId: "anime-q4" }
+        ]
+      },
+      {
+        id: "anime-p5",
+        pageNumber: 5,
+        title: "第5問 漢字読み",
+        blocks: [
+          { type: "heading", text: "第5問 漢字読み", level: 2 },
+          {
+            type: "paragraph",
+            text: "下線部の漢字に相当する読みとして最も適当なものを選べ。対象は、天翼種、智慧之王、超能力者である。"
+          },
+          { type: "question", questionId: "anime-q5" }
+        ]
+      },
+      {
+        id: "anime-p6",
+        pageNumber: 6,
+        title: "第6問 順序関係",
+        blocks: [
+          { type: "heading", text: "第6問 順序関係", level: 2 },
+          {
+            type: "paragraph",
+            text: "画像 I から VI について、I < II = III < IV < V << VI が成り立つとき、A と B、C と D の関係として最も適当な記号を選べ。"
+          },
+          { type: "question", questionId: "anime-q6" }
+        ]
+      },
+      {
+        id: "anime-p7",
+        pageNumber: 7,
+        title: "第7問 口コミ",
+        blocks: [
+          { type: "heading", text: "第7問 口コミ", level: 2 },
+          {
+            type: "paragraph",
+            text: "複数の口コミ文の内容に該当するアニメとして最も適当なものを選べ。"
+          },
+          { type: "question", questionId: "anime-q7" }
+        ]
+      },
+      {
+        id: "anime-p8",
+        pageNumber: 8,
+        title: "第8問 英英辞典",
+        blocks: [
+          { type: "heading", text: "第8問 英英辞典", level: 2 },
+          {
+            type: "paragraph",
+            text: "英語版Wikipediaにも掲載されているアニメに関する単語の説明を読み、その説明が意味する単語を選べ。"
+          },
+          { type: "question", questionId: "anime-q8" }
+        ]
+      },
+      {
+        id: "anime-p9",
+        pageNumber: 9,
+        title: "第9問 英文クイズ",
+        blocks: [
+          { type: "heading", text: "第9問 英文クイズ", level: 2 },
+          {
+            type: "paragraph",
+            text: "「ノーゲーム・ノーライフ」に登場するゲームの場面を描いた英文について、空欄に当てはまる単語を選べ。"
+          },
+          { type: "question", questionId: "anime-q9" }
+        ]
+      }
+    ],
+    questions: [
+      {
+        id: "anime-q1",
+        label: "1",
+        section: "第1問",
+        prompt: "式が表すアニメの名称として最も適当なものを選べ。",
+        pageId: "anime-p1",
+        points: 10,
+        multi: false,
+        options: optionsFrom(["おねがい☆ティーチャー", "オーバーロード", "オッドタクシー", "【推しの子】"]),
+        correct: ["4"],
+        explanation: "TeXサンプルの第1問に対応する解答欄です。"
+      },
+      {
+        id: "anime-q2",
+        label: "2",
+        section: "第2問",
+        prompt: "暗殺教室に関する問いの組合せとして最も適当なものを選べ。",
+        pageId: "anime-p2",
+        points: 12,
+        multi: false,
+        options: optionsFrom(["ルベーグ積分と野球バカ", "食塩水とコロコロ上がり", "体心立方格子と性別", "放物線とホームベース"]),
+        correct: ["2"],
+        explanation: "TeXサンプルの第2問に対応する解答欄です。"
+      },
+      {
+        id: "anime-q3",
+        label: "3",
+        section: "第3問",
+        prompt: "図中の X に入る最も適当な記号を選べ。",
+        pageId: "anime-p3",
+        points: 10,
+        multi: false,
+        options: optionsFrom(["$\\Omega$", "$\\alpha$", "$\\beta$", "$\\gamma$", "$\\delta$"]),
+        correct: ["3"],
+        explanation: "TeXサンプルの第3問に対応する解答欄です。"
+      },
+      {
+        id: "anime-q4",
+        label: "4",
+        section: "第4問",
+        prompt: "ベン図における要素の分類として最も適当なものを選べ。",
+        pageId: "anime-p4",
+        points: 16,
+        multi: false,
+        options: optionsFrom(["AAA", "AAĀ", "AĀA", "AĀĀ", "ĀAA", "ĀAĀ", "ĀĀA", "ĀĀĀ"]),
+        correct: ["4"],
+        explanation: "TeXサンプルの第4問に対応する解答欄です。"
+      },
+      {
+        id: "anime-q5",
+        label: "5",
+        section: "第5問",
+        prompt: "下線部の読みの組合せとして最も適当なものを選べ。",
+        pageId: "anime-p5",
+        points: 10,
+        multi: false,
+        options: optionsFrom([
+          "イマニティ / メタトロン / レベル1",
+          "フリューゲル / ラファエル / レベル5",
+          "ファンタズマ / ガブリエル / レベル6"
+        ]),
+        correct: ["2"],
+        explanation: "TeXサンプルの第5問に対応する解答欄です。"
+      },
+      {
+        id: "anime-q6",
+        label: "6",
+        section: "第6問",
+        prompt: "A と B、C と D の関係として最も適当な組合せを選べ。",
+        pageId: "anime-p6",
+        points: 10,
+        multi: false,
+        options: optionsFrom(["< / <", "< / =", "= / >", "> / >"]),
+        correct: ["1"],
+        explanation: "TeXサンプルの第6問に対応する解答欄です。"
+      },
+      {
+        id: "anime-q7",
+        label: "7",
+        section: "第7問",
+        prompt: "口コミの内容に該当するアニメとして最も適当なものを選べ。",
+        pageId: "anime-p7",
+        points: 10,
+        multi: false,
+        options: optionsFrom(["化物語", "虚構推理", "呪術廻戦", "モブサイコ100"]),
+        correct: ["1"],
+        explanation: "TeXサンプルの第7問に対応する解答欄です。"
+      },
+      {
+        id: "anime-q8",
+        label: "8",
+        section: "第8問",
+        prompt: "英語の説明が意味する単語の組合せとして最も適当なものを選べ。",
+        pageId: "anime-p8",
+        points: 12,
+        multi: false,
+        options: optionsFrom(["isekai / manga", "romcom / lightnovel", "yuri / doujinshi", "catgirl / comiket"]),
+        correct: ["3"],
+        explanation: "TeXサンプルの第8問に対応する解答欄です。"
+      },
+      {
+        id: "anime-q9",
+        label: "9",
+        section: "第9問",
+        prompt: "空欄に当てはまる単語として最も適当なものを選べ。",
+        pageId: "anime-p9",
+        points: 10,
+        multi: false,
+        options: optionsFrom(["scoff", "despise", "inferior", "underestimate"]),
+        correct: ["4"],
+        explanation: "TeXサンプルの第9問に対応する解答欄です。"
       }
     ]
   }
