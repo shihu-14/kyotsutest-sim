@@ -41,8 +41,11 @@ describe("ExamList", () => {
       published: true,
       totalPoints: 100
     });
-    expect(animeExam?.pages).toHaveLength(9);
-    expect(animeExam?.questions).toHaveLength(9);
+    expect(animeExam?.pages).toHaveLength(13);
+    expect(animeExam?.questions).toHaveLength(20);
+    expect(animeExam?.pages.every((page) => page.pageImageUrl)).toBe(true);
+    expect(animeExam?.pages[12]?.title).toBe("キャラクター一覧");
+    expect(animeExam?.questions.reduce((sum, question) => sum + question.points, 0)).toBe(100);
   });
 
   it("opens card actions for edit and delete", async () => {

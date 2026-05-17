@@ -310,6 +310,27 @@ button:disabled {
   padding: clamp(24px, 4vw, 48px);
 }
 
+.cover-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.42fr) minmax(0, 0.58fr);
+  gap: clamp(22px, 4vw, 42px);
+  align-items: start;
+}
+
+.cover-preview-image {
+  overflow: hidden;
+  margin: 0;
+  border: 1px solid #d4c7b0;
+  border-radius: 4px;
+  background: #767f89;
+}
+
+.cover-preview-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .cover-sheet h1 {
   margin: 0 0 22px;
   font-size: clamp(1.8rem, 4vw, 3rem);
@@ -398,6 +419,25 @@ button:disabled {
   background:
     linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.86)),
     repeating-linear-gradient(0deg, transparent 0, transparent 31px, rgba(70, 55, 35, 0.08) 32px);
+}
+
+.booklet-page.exact-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #7a838b;
+}
+
+.exact-page-image {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  background: white;
+  box-shadow: 0 12px 28px rgba(20, 24, 27, 0.22);
 }
 
 .page-number {
@@ -1287,6 +1327,10 @@ button:disabled {
 
 @media (max-width: 560px) {
   .cover-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .cover-layout {
     grid-template-columns: 1fr;
   }
 

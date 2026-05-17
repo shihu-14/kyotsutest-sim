@@ -16,6 +16,14 @@ export function ProblemBooklet({
   reviewMode = false,
   onToggleAnswer
 }: ProblemBookletProps) {
+  if (page.pageImageUrl) {
+    return (
+      <article className="booklet-page exact-page" aria-label={`${page.title}の問題冊子`}>
+        <img className="exact-page-image" src={page.pageImageUrl} alt={page.pageImageAlt ?? page.title} />
+      </article>
+    );
+  }
+
   return (
     <article className="booklet-page" aria-label={`${page.title}の問題冊子`}>
       <div className="page-number">-{page.pageNumber}-</div>

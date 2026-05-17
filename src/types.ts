@@ -55,6 +55,8 @@ export interface ExamPage {
   id: string;
   pageNumber: number;
   title: string;
+  pageImageUrl?: string;
+  pageImageAlt?: string;
   blocks: ProblemBlock[];
 }
 
