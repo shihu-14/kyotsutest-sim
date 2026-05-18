@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../data/sampleExam";
@@ -67,5 +67,26 @@ describe("ExamRunner", () => {
     await user.click(screen.getByText("中断する"));
 
     expect(onPause).toHaveBeenCalledTimes(1);
+  });
+
+  it("zooms only from the problem display area when using a modified wheel", () => {
+    render(
+      <ExamRunner
+        answers={{}}
+        currentPageId="p1"
+        deadline={Date.now() + 60_000}
+        exam={sampleExams[0]}
+        onChangePage={vi.fn()}
+        onExpire={vi.fn()}
+        onFinish={vi.fn()}
+        onPause={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    const stage = screen.getByLabelText("問題表示領域");
+    fireEvent.wheel(stage, { ctrlKey: true, deltaY: -80 });
+
+    expect(stage).toHaveStyle({ "--booklet-zoom": "1.08" });
   });
 });

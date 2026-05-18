@@ -17,6 +17,7 @@ export function App() {
   const [answers, setAnswers] = useState<UserAnswers>({});
   const [deadline, setDeadline] = useState<number | null>(null);
   const [currentPageId, setCurrentPageId] = useState<string>("");
+  const [showCompletedScoring, setShowCompletedScoring] = useState(false);
 
   const openCover = (exam: Exam) => {
     setSelectedExam(exam);
@@ -46,6 +47,7 @@ export function App() {
     setSelectedExam(null);
     setDeadline(null);
     setCurrentPageId("");
+    setShowCompletedScoring(false);
     setPhase("select");
   };
 
@@ -53,6 +55,7 @@ export function App() {
     setSelectedExam(null);
     setDeadline(null);
     setCurrentPageId("");
+    setShowCompletedScoring(false);
     setPhase("select");
   };
 
@@ -68,6 +71,7 @@ export function App() {
       clearDeadline(selectedExam.id);
     }
     setDeadline(null);
+    setShowCompletedScoring(false);
     setPhase("scoring");
   }, [selectedExam]);
 
@@ -142,12 +146,14 @@ export function App() {
       <ScoringScreen
         answers={answers}
         exam={selectedExam}
+        startComplete={showCompletedScoring}
         onRestart={() => {
           clearAnswers(selectedExam.id);
           clearDeadline(selectedExam.id);
           resetToList();
         }}
         onReview={() => {
+          setShowCompletedScoring(true);
           setCurrentPageId(selectedExam.pages[0]?.id ?? "");
           setPhase("review");
         }}

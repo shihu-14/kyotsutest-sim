@@ -74,7 +74,12 @@ export function MarkSheet({
                     </button>
                   </div>
                 ) : null}
-                <div className={`answer-grid-row ${isActive ? "active" : ""}`} role="row">
+                <div
+                  className={`answer-grid-row ${isActive ? "active" : ""} ${
+                    isIncorrectReview ? "review-incorrect" : ""
+                  }`}
+                  role="row"
+                >
                   <button className="answer-number" type="button" onClick={() => onJumpToPage(question.pageId)}>
                     {question.label}
                   </button>
@@ -92,7 +97,7 @@ export function MarkSheet({
                             "bubble",
                             checked ? "filled" : "",
                             option ? "" : "unavailable",
-                            isCorrectChoice ? "review-correct" : "",
+                            isCorrectChoice && !checked ? "review-correct" : "",
                             isIncorrectReview && checked && !isCorrectChoice ? "review-wrong" : ""
                           ]
                             .filter(Boolean)

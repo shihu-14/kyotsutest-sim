@@ -273,9 +273,9 @@ export function parseAuthoringLatex(source: string): ParsedAuthoringDocument {
 
 export const defaultAuthoringMeta: AuthoringMeta = {
   title: "漫画映画",
-  subject: "数学I・数学A",
+  subject: "漫画映画",
   description: "漫画・映画に関する題材を共通テスト形式で解くサンプル問題冊子。",
-  questionCount: 9,
+  questionCount: 20,
   totalPoints: 100,
   durationMinutes: 40
 };

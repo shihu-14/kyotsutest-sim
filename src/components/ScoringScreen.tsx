@@ -5,20 +5,21 @@ import { gradeExam } from "../utils/answer";
 interface ScoringScreenProps {
   exam: Exam;
   answers: UserAnswers;
+  startComplete?: boolean;
   onReview: () => void;
   onRestart: () => void;
 }
 
-export function ScoringScreen({ exam, answers, onReview, onRestart }: ScoringScreenProps) {
+export function ScoringScreen({ exam, answers, startComplete = false, onReview, onRestart }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);
-  const [visibleCount, setVisibleCount] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(() => (startComplete ? summary.gradedQuestions.length : 0));
   const visibleItems = summary.gradedQuestions.slice(0, visibleCount);
   const currentScore = visibleItems.reduce((sum, item) => sum + item.earnedPoints, 0);
   const isComplete = visibleCount >= summary.gradedQuestions.length;
 
   useEffect(() => {
-    setVisibleCount(0);
-  }, [summary]);
+    setVisibleCount(startComplete ? summary.gradedQuestions.length : 0);
+  }, [summary, startComplete]);
 
   useEffect(() => {
     if (visibleCount >= summary.gradedQuestions.length) {

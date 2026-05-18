@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from "react";
 import type { AnswerValue, Exam, QuestionSlot, UserAnswers } from "../types";
 import { answeredCount } from "../utils/answer";
 import { useCountdown } from "../hooks/useCountdown";
@@ -35,6 +35,7 @@ export function ExamRunner({
   const [bookletZoom, setBookletZoom] = useState(1);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
+  const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
@@ -58,6 +59,24 @@ export function ExamRunner({
   const updateBookletZoom = (value: number) => {
     setBookletZoom(Math.min(1.6, Math.max(0.75, value)));
   };
+
+  useEffect(() => {
+    const stage = bookletStageRef.current;
+    if (!stage) {
+      return undefined;
+    }
+
+    const preventPageZoom = (event: globalThis.WheelEvent) => {
+      if (!event.ctrlKey && !event.metaKey) {
+        return;
+      }
+
+      event.preventDefault();
+    };
+
+    stage.addEventListener("wheel", preventPageZoom, { passive: false });
+    return () => stage.removeEventListener("wheel", preventPageZoom);
+  }, []);
 
   const handleBookletWheel = (event: WheelEvent<HTMLDivElement>) => {
     if (!event.ctrlKey && !event.metaKey) {
@@ -137,6 +156,7 @@ export function ExamRunner({
           <div
             aria-label="問題表示領域"
             className="booklet-stage"
+            ref={bookletStageRef}
             style={bookletStyle}
             tabIndex={0}
             onKeyDown={handleBookletKeyDown}

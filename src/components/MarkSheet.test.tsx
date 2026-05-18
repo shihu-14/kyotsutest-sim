@@ -76,4 +76,22 @@ describe("MarkSheet", () => {
     expect(screen.getByRole("button", { name: "オ 0" })).toHaveAttribute("aria-pressed", "true");
     expect(screen.getByRole("button", { name: "オ 2" })).toHaveAttribute("aria-pressed", "true");
   });
+
+  it("keeps the user's wrong review mark black and paints only the answer number red", () => {
+    render(
+      <MarkSheet
+        activePageId="p1"
+        answers={{ q1: ["-4"] }}
+        exam={sampleExams[0]}
+        reviewMode
+        onJumpToPage={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "ア" })).toHaveClass("answer-number");
+    expect(screen.getByRole("button", { name: "ア" }).closest(".answer-grid-row")).toHaveClass("review-incorrect");
+    expect(screen.getByRole("button", { name: "ア 0" })).toHaveClass("filled", "review-wrong");
+    expect(screen.getByRole("button", { name: "ア 1" })).toHaveClass("review-correct");
+  });
 });

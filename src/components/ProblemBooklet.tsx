@@ -17,9 +17,19 @@ export function ProblemBooklet({
   onToggleAnswer
 }: ProblemBookletProps) {
   if (page.pageImageUrl) {
+    const pageQuestions = Array.from(questionsById.values()).filter((question) => question.pageId === page.id);
+
     return (
       <article className="booklet-page exact-page" aria-label={`${page.title}の問題冊子`}>
         <img className="exact-page-image" src={page.pageImageUrl} alt={page.pageImageAlt ?? page.title} />
+        {pageQuestions.length ? (
+          <PageMarkPanel
+            answers={answers}
+            questions={pageQuestions}
+            reviewMode={reviewMode}
+            onToggleAnswer={onToggleAnswer}
+          />
+        ) : null}
       </article>
     );
   }
@@ -97,7 +107,7 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
   const isWrong = reviewMode && !isCorrect;
 
   return (
-    <section className="question-block" aria-labelledby={`${question.id}-title`}>
+    <section className={`question-block ${isWrong ? "review-incorrect" : ""}`} aria-labelledby={`${question.id}-title`}>
       <h3 id={`${question.id}-title`}>
         <span className="mark-label">{question.label}</span>
         {renderMathSegments(question.prompt)}
@@ -137,5 +147,59 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
         </p>
       ) : null}
     </section>
+  );
+}
+
+interface PageMarkPanelProps {
+  questions: QuestionSlot[];
+  answers: UserAnswers;
+  reviewMode: boolean;
+  onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
+}
+
+function PageMarkPanel({ questions, answers, reviewMode, onToggleAnswer }: PageMarkPanelProps) {
+  return (
+    <div className="page-mark-panel" aria-label="問題ページ内の解答マーク">
+      {questions.map((question) => {
+        const selected = answers[question.id] ?? [];
+        const isWrong =
+          reviewMode &&
+          (selected.length !== question.correct.length ||
+            question.correct.some((value) => !selected.includes(value)));
+
+        return (
+          <div className={`page-mark-row ${isWrong ? "review-incorrect" : ""}`} key={question.id}>
+            <span className="page-mark-label">{question.label}</span>
+            <div className="page-mark-options">
+              {question.options.map((option) => {
+                const checked = selected.includes(option.value);
+                const correct = reviewMode && question.correct.includes(option.value);
+
+                return (
+                  <button
+                    aria-label={`${question.label} ${option.label}`}
+                    aria-pressed={checked}
+                    className={[
+                      "page-mark-bubble",
+                      checked ? "filled" : "",
+                      correct ? "review-correct" : "",
+                      isWrong && checked && !correct ? "review-wrong" : ""
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    disabled={reviewMode}
+                    key={option.value}
+                    type="button"
+                    onClick={() => onToggleAnswer(question, option.value)}
+                  >
+                    {option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }

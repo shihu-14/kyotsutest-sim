@@ -56,6 +56,13 @@ function sourceFromExam(exam: Exam | null | undefined): string {
     return loadAuthorSource(defaultAuthoringSource);
   }
 
+  const markLines = exam.questions.map(
+    (question) =>
+      `\\mark[answer=${question.correct.join("|")},points=${question.points},choices=${question.options.length}${
+        question.multi ? ",multi=true" : ""
+      }]{${question.label}} % ${question.section}`
+  );
+
   return [
     `% ${exam.title}`,
     `% 既存試験を編集しています。メタ情報は設定から変更できます。`,
@@ -63,8 +70,57 @@ function sourceFromExam(exam: Exam | null | undefined): string {
     "\\begin{document}",
     `\\section*{${exam.title}}`,
     exam.description,
+    "",
+    "% 解答欄定義",
+    ...markLines,
     "\\end{document}"
   ].join("\n");
+}
+
+function getMarkSections(source: string): string[] {
+  const sections: string[] = [];
+  let currentSection = "第1問";
+  let currentSubsection = "";
+
+  source.split("\n").forEach((line) => {
+    const sectionMatch = line.match(/\\sectiontitle\{([^}]*)\}/);
+    if (sectionMatch) {
+      currentSection = sectionMatch[1];
+      currentSubsection = "";
+    }
+
+    const subsectionMatch = line.match(/\\subsectiontitle\{([^}]*)\}/);
+    if (subsectionMatch) {
+      currentSubsection = subsectionMatch[1];
+    }
+
+    const markCount = line.match(/\\mark(?:\[[^\]]*\])?\{([^}]*)\}/g)?.length ?? 0;
+    for (let index = 0; index < markCount; index += 1) {
+      sections.push(currentSubsection ? `${currentSection} ${currentSubsection}` : currentSection);
+    }
+  });
+
+  return sections;
+}
+
+function validateAuthoring(source: string, meta: AuthoringMeta): string[] {
+  const parsed = parseAuthoringLatex(source);
+  const errors = [...parsed.errors];
+
+  if (parsed.marks.length < meta.questionCount) {
+    errors.push(`設定された設問数は${meta.questionCount}問ですが、問題文内のマークは${parsed.marks.length}個です。`);
+  }
+
+  if (parsed.marks.length > meta.questionCount) {
+    errors.push(`問題文内のマークは${parsed.marks.length}個ですが、設定された設問数は${meta.questionCount}問です。`);
+  }
+
+  const parsedTotal = parsed.marks.reduce((sum, mark) => sum + mark.points, 0);
+  if (parsed.marks.length > 0 && parsedTotal !== meta.totalPoints) {
+    errors.push(`設定された配点は${meta.totalPoints}点ですが、マークの配点合計は${parsedTotal}点です。`);
+  }
+
+  return errors;
 }
 
 function createDefaultQuestion(index: number, totalPoints: number, questionCount: number): QuestionSlot {
@@ -88,6 +144,9 @@ function createDefaultQuestion(index: number, totalPoints: number, questionCount
 }
 
 function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Exam | null | undefined): Exam {
+  const parsed = parseAuthoringLatex(source);
+  const markSections = getMarkSections(source);
+
   if (initialExam) {
     return {
       ...initialExam,
@@ -101,9 +160,25 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
   }
 
   const questionCount = Math.max(1, meta.questionCount);
-  const questions = Array.from({ length: questionCount }, (_item, index) =>
-    createDefaultQuestion(index, meta.totalPoints, questionCount)
-  );
+  const questions = parsed.marks.length
+    ? parsed.marks.map<QuestionSlot>((mark, index) => ({
+        id: `draft-q${String(index + 1).padStart(2, "0")}`,
+        label: mark.label,
+        section: markSections[index] ?? `第${index + 1}問`,
+        prompt: "作成したTeXコードに対応する解答欄です。",
+        pageId: "draft-p1",
+        points: mark.points,
+        multi: mark.multi,
+        options: Array.from({ length: mark.choices }, (_item, optionIndex) => {
+          const value = String(optionIndex + 1);
+          return { value, label: value, content: value };
+        }),
+        correct: mark.answer,
+        explanation: "投稿後に解説を調整してください。"
+      }))
+    : Array.from({ length: questionCount }, (_item, index) =>
+        createDefaultQuestion(index, meta.totalPoints, questionCount)
+      );
 
   return {
     id: `custom-${Date.now()}`,
@@ -140,7 +215,9 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const [savedMeta, setSavedMeta] = useState(meta);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [publishState, setPublishState] = useState<"idle" | "published">("idle");
+  const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
   const sourceStats = useMemo(() => {
     const parsed = parseAuthoringLatex(source);
     return {
@@ -159,6 +236,11 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   };
 
   const publishDraft = () => {
+    if (validationErrors.length) {
+      setShowValidationErrors(true);
+      return;
+    }
+
     saveDraft();
     setPublishState("published");
     onPublish(buildPublishedExam(meta, source, initialExam));
@@ -238,6 +320,16 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
               <span>解答欄 {sourceStats.answerSlots || sourceStats.marks}</span>
             </div>
             <CommonTestPreview meta={meta} />
+            {showValidationErrors && validationErrors.length ? (
+              <div className="validation-errors" role="alert">
+                <strong>投稿できません</strong>
+                <ul>
+                  {validationErrors.map((error) => (
+                    <li key={error}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </section>
         </aside>
       </section>
@@ -336,7 +428,7 @@ function CommonTestPreview({ meta }: { meta: AuthoringMeta }) {
         <ol>
           <li>解答用紙に正しくマークされていない場合は，採点されないことがあります。</li>
           <li>
-            この問題冊子は，問題が第1問から第{meta.questionCount}問まであり，配点は各問題ごとに明記されています。
+            この問題冊子は，解答番号が1から{meta.questionCount}まであり，配点は各問題ごとに明記されています。
           </li>
           <li>解答は，各問題にある所定の記号をクリックまたはタップをしマークしなさい。</li>
         </ol>
