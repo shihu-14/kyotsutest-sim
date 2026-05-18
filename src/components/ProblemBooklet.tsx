@@ -1,4 +1,5 @@
-import type { AnswerValue, ExamPage, QuestionSlot, UserAnswers } from "../types";
+import type { CSSProperties } from "react";
+import type { AnswerValue, ExamPage, PageMarkArea, QuestionSlot, UserAnswers } from "../types";
 import { renderMathSegments, mathToHtml } from "../utils/latex";
 
 interface ProblemBookletProps {
@@ -17,19 +18,20 @@ export function ProblemBooklet({
   onToggleAnswer
 }: ProblemBookletProps) {
   if (page.pageImageUrl) {
-    const pageQuestions = Array.from(questionsById.values()).filter((question) => question.pageId === page.id);
-
     return (
       <article className="booklet-page exact-page" aria-label={`${page.title}の問題冊子`}>
-        <img className="exact-page-image" src={page.pageImageUrl} alt={page.pageImageAlt ?? page.title} />
-        {pageQuestions.length ? (
-          <PageMarkPanel
-            answers={answers}
-            questions={pageQuestions}
-            reviewMode={reviewMode}
-            onToggleAnswer={onToggleAnswer}
-          />
-        ) : null}
+        <div className="exact-page-frame">
+          <img className="exact-page-image" src={page.pageImageUrl} alt={page.pageImageAlt ?? page.title} />
+          {page.markAreas?.length ? (
+            <PageImageMarks
+              areas={page.markAreas}
+              answers={answers}
+              questionsById={questionsById}
+              reviewMode={reviewMode}
+              onToggleAnswer={onToggleAnswer}
+            />
+          ) : null}
+        </div>
       </article>
     );
   }
@@ -94,6 +96,53 @@ export function ProblemBooklet({
   );
 }
 
+interface PageImageMarksProps {
+  areas: PageMarkArea[];
+  questionsById: Map<string, QuestionSlot>;
+  answers: UserAnswers;
+  reviewMode: boolean;
+  onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
+}
+
+function PageImageMarks({ areas, questionsById, answers, reviewMode, onToggleAnswer }: PageImageMarksProps) {
+  return (
+    <div className="page-image-mark-layer" aria-label="問題ページ上のマーク領域">
+      {areas.map((area) => {
+        const question = questionsById.get(area.questionId);
+        if (!question) {
+          return null;
+        }
+
+        const selected = answers[question.id] ?? [];
+        const checked = selected.includes(area.value);
+        const correct = reviewMode && !checked && question.correct.includes(area.value);
+        const option = question.options.find((candidate) => candidate.value === area.value);
+        const style = {
+          "--mark-x": `${area.xPercent}%`,
+          "--mark-y": `${area.yPercent}%`,
+          "--mark-width": `${area.widthPercent ?? 3.2}%`,
+          "--mark-height": `${area.heightPercent ?? 2.6}%`
+        } as CSSProperties;
+
+        return (
+          <button
+            aria-label={`${question.label} ${option?.label ?? area.value}`}
+            aria-pressed={checked}
+            className={["page-image-mark", checked ? "selected" : "", correct ? "review-correct" : ""]
+              .filter(Boolean)
+              .join(" ")}
+            disabled={reviewMode}
+            key={`${area.questionId}-${area.value}-${area.xPercent}-${area.yPercent}`}
+            style={style}
+            type="button"
+            onClick={() => onToggleAnswer(question, area.value)}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
 interface QuestionBlockProps {
   question: QuestionSlot;
   answers: AnswerValue[];
@@ -107,7 +156,7 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
   const isWrong = reviewMode && !isCorrect;
 
   return (
-    <section className={`question-block ${isWrong ? "review-incorrect" : ""}`} aria-labelledby={`${question.id}-title`}>
+    <section className="question-block" aria-labelledby={`${question.id}-title`}>
       <h3 id={`${question.id}-title`}>
         <span className="mark-label">{question.label}</span>
         {renderMathSegments(question.prompt)}
@@ -147,59 +196,5 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
         </p>
       ) : null}
     </section>
-  );
-}
-
-interface PageMarkPanelProps {
-  questions: QuestionSlot[];
-  answers: UserAnswers;
-  reviewMode: boolean;
-  onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
-}
-
-function PageMarkPanel({ questions, answers, reviewMode, onToggleAnswer }: PageMarkPanelProps) {
-  return (
-    <div className="page-mark-panel" aria-label="問題ページ内の解答マーク">
-      {questions.map((question) => {
-        const selected = answers[question.id] ?? [];
-        const isWrong =
-          reviewMode &&
-          (selected.length !== question.correct.length ||
-            question.correct.some((value) => !selected.includes(value)));
-
-        return (
-          <div className={`page-mark-row ${isWrong ? "review-incorrect" : ""}`} key={question.id}>
-            <span className="page-mark-label">{question.label}</span>
-            <div className="page-mark-options">
-              {question.options.map((option) => {
-                const checked = selected.includes(option.value);
-                const correct = reviewMode && question.correct.includes(option.value);
-
-                return (
-                  <button
-                    aria-label={`${question.label} ${option.label}`}
-                    aria-pressed={checked}
-                    className={[
-                      "page-mark-bubble",
-                      checked ? "filled" : "",
-                      correct ? "review-correct" : "",
-                      isWrong && checked && !correct ? "review-wrong" : ""
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    disabled={reviewMode}
-                    key={option.value}
-                    type="button"
-                    onClick={() => onToggleAnswer(question, option.value)}
-                  >
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </div>
   );
 }

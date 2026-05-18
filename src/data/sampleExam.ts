@@ -1,4 +1,4 @@
-import type { Exam } from "../types";
+import type { Exam, PageMarkArea } from "../types";
 import animeCoverPage from "../assets/anime-pages/page-00.jpg";
 import animePage01 from "../assets/anime-pages/page-01.jpg";
 import animePage02 from "../assets/anime-pages/page-02.jpg";
@@ -62,6 +62,76 @@ const animePageTitles = [
 ];
 
 const animePageId = (pageNumber: number) => `anime-p${String(pageNumber).padStart(2, "0")}`;
+
+const animePageWidth = 1247;
+const animePageHeight = 1772;
+const animeQuestionId = (questionNumber: number) => `anime-q${String(questionNumber).padStart(2, "0")}`;
+
+function imageMarkArea(
+  questionNumber: number,
+  value: string,
+  x: number,
+  y: number,
+  width = 36,
+  height = 42
+): PageMarkArea {
+  return {
+    questionId: animeQuestionId(questionNumber),
+    value,
+    xPercent: Number(((x / animePageWidth) * 100).toFixed(3)),
+    yPercent: Number(((y / animePageHeight) * 100).toFixed(3)),
+    widthPercent: Number(((width / animePageWidth) * 100).toFixed(3)),
+    heightPercent: Number(((height / animePageHeight) * 100).toFixed(3))
+  };
+}
+
+function imageMarkRow(questionNumber: number, y: number, values: string[], xs: number[]): PageMarkArea[] {
+  return values.map((value, index) => imageMarkArea(questionNumber, value, xs[index], y));
+}
+
+const animeSmallChoices = ["1", "2", "3"];
+const animeFourChoices = ["1", "2", "3", "4"];
+const animeEightChoices = ["1", "2", "3", "4", "5", "6", "7", "8"];
+const animeNineChoices = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+const animePageMarkAreas: Record<number, PageMarkArea[]> = {
+  1: [
+    imageMarkArea(1, "1", 184, 1565),
+    imageMarkArea(1, "2", 644, 1565),
+    imageMarkArea(1, "3", 184, 1649),
+    imageMarkArea(1, "4", 644, 1649)
+  ],
+  2: [imageMarkArea(2, "1", 221, 686), imageMarkArea(2, "2", 221, 1158)],
+  3: [imageMarkArea(2, "3", 221, 154), imageMarkArea(2, "4", 221, 932)],
+  4: [
+    ...imageMarkRow(3, 957, animeNineChoices, [658, 704, 750, 796, 842, 887, 932, 977, 1022]),
+    ...imageMarkRow(4, 1037, animeNineChoices, [658, 704, 750, 796, 842, 887, 932, 977, 1022]),
+    ...imageMarkRow(5, 1117, animeNineChoices, [658, 704, 750, 796, 842, 887, 932, 977, 1022]),
+    ...imageMarkRow(6, 1197, animeNineChoices, [658, 704, 750, 796, 842, 887, 932, 977, 1022])
+  ],
+  5: imageMarkRow(7, 1634, ["1", "2", "3", "4", "5"], [213, 398, 582, 771, 951]),
+  6: imageMarkRow(8, 1386, animeEightChoices, [402, 473, 544, 615, 686, 756, 827, 897]),
+  7: [
+    ...imageMarkRow(9, 1208, animeFourChoices, [728, 773, 819, 864]),
+    ...imageMarkRow(10, 1295, animeFourChoices, [728, 773, 819, 864]),
+    ...imageMarkRow(11, 1384, animeFourChoices, [728, 773, 819, 864])
+  ],
+  8: [
+    ...imageMarkRow(12, 750, animeSmallChoices, [237, 545, 853]),
+    ...imageMarkRow(13, 1192, animeSmallChoices, [237, 545, 853]),
+    ...imageMarkRow(14, 1622, animeSmallChoices, [237, 545, 853])
+  ],
+  9: [
+    ...imageMarkRow(15, 470, animeSmallChoices, [694, 739, 784]),
+    ...imageMarkRow(16, 554, animeSmallChoices, [694, 739, 784])
+  ],
+  10: imageMarkRow(17, 1676, animeFourChoices, [213, 419, 623, 865]),
+  11: [
+    ...imageMarkRow(18, 964, animeFourChoices, [238, 469, 699, 929]),
+    ...imageMarkRow(19, 1661, animeFourChoices, [238, 469, 699, 929])
+  ],
+  12: imageMarkRow(20, 989, animeFourChoices, [203, 420, 634, 851])
+};
 
 export const sampleExams: Exam[] = [
   {
@@ -288,6 +358,7 @@ export const sampleExams: Exam[] = [
       title: animePageTitles[index],
       pageImageUrl,
       pageImageAlt: `${animePageTitles[index]}のPDF再現ページ`,
+      markAreas: animePageMarkAreas[index + 1] ?? [],
       blocks: []
     })),
     questions: [

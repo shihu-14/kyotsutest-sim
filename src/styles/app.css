@@ -421,6 +421,11 @@ button:disabled {
   min-height: calc(100% * var(--booklet-zoom));
 }
 
+.booklet-stage .booklet-page.exact-page {
+  width: auto;
+  aspect-ratio: 1247 / 1772;
+}
+
 .page-tabs {
   display: flex;
   gap: 8px;
@@ -455,7 +460,6 @@ button:disabled {
 }
 
 .booklet-page.exact-page {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -463,86 +467,63 @@ button:disabled {
   background: transparent;
 }
 
-.exact-page-image {
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+.exact-page-frame {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1247 / 1772;
   background: white;
   box-shadow: 0 12px 28px rgba(20, 24, 27, 0.22);
 }
 
-.page-mark-panel {
+.exact-page-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  background: white;
+}
+
+.page-image-mark-layer {
   position: absolute;
-  right: 16px;
-  bottom: 16px;
+  inset: 0;
   z-index: 2;
-  display: grid;
-  max-width: min(540px, calc(100% - 32px));
-  max-height: 44%;
-  gap: 6px;
-  overflow: auto;
-  border: 1px solid rgba(35, 35, 35, 0.24);
-  border-radius: 8px;
-  background: rgba(255, 253, 248, 0.95);
-  padding: 8px;
-  box-shadow: 0 10px 28px rgba(20, 24, 27, 0.24);
-  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  pointer-events: none;
 }
 
-.page-mark-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.page-mark-label {
-  min-width: 28px;
-  color: #1f2a2e;
-  font-weight: 900;
-}
-
-.page-mark-row.review-incorrect .page-mark-label {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 30px;
-  min-height: 30px;
+.page-image-mark {
+  position: absolute;
+  top: var(--mark-y);
+  left: var(--mark-x);
+  width: var(--mark-width);
+  height: var(--mark-height);
+  border: 0;
   border-radius: 50%;
-  background: #c73228;
-  color: #fff;
-}
-
-.page-mark-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.page-mark-bubble {
-  width: 21px;
-  height: 27px;
-  border: 1.5px solid #222;
-  border-radius: 50%;
-  background: #fffdf9;
-  color: #222;
+  background: transparent;
   padding: 0;
-  font-size: 0.7rem;
-  font-weight: 900;
-  line-height: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
 }
 
-.page-mark-bubble.filled {
-  border-color: #222;
-  background: #222;
-  color: #fff;
+.page-image-mark::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  content: "";
 }
 
-.page-mark-bubble.review-correct:not(.filled) {
-  border-color: #c73228;
-  color: #c73228;
+.page-image-mark.selected::after {
+  background: #111;
+}
+
+.page-image-mark.review-correct::after {
+  background: #c73228;
+}
+
+.page-image-mark:focus-visible {
+  outline: 2px solid #1f6f5b;
+  outline-offset: 3px;
 }
 
 .page-number {
@@ -580,12 +561,6 @@ button:disabled {
   border-top: 1px solid #ddd1bd;
   margin-top: 14px;
   padding-top: 12px;
-}
-
-.question-block.review-incorrect .mark-label {
-  border-color: #c73228;
-  background: #c73228;
-  color: #fff;
 }
 
 .mark-label,
@@ -636,15 +611,15 @@ button:disabled {
 }
 
 .choice-button.correct-choice {
-  border-color: #a94337;
-  background: #fff1ed;
-  color: #263433;
+  border-color: #c73228;
+  background: #c73228;
+  color: #c73228;
 }
 
 .choice-button.wrong-choice {
-  border-color: #7c7468;
-  background: #ece7df;
-  color: #263433;
+  border-color: #222;
+  background: #222;
+  color: #222;
 }
 
 .choice-button.selected.wrong-choice,
@@ -923,7 +898,7 @@ button:disabled {
 .bubble.filled {
   border-color: #222;
   background: #222;
-  color: white;
+  color: #222;
 }
 
 .bubble.unavailable {
@@ -932,19 +907,8 @@ button:disabled {
 
 .bubble.review-correct {
   border-color: #c73228;
-  background: #fffdf9;
-  color: #9d2c20;
-}
-
-.bubble.review-wrong {
-  border-color: #222;
-  background: #222;
-  color: #fff;
-}
-
-.answer-grid-row.review-incorrect .answer-number {
   background: #c73228;
-  color: #fff;
+  color: #c73228;
 }
 
 .scoring-screen {

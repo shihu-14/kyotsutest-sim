@@ -77,7 +77,7 @@ describe("MarkSheet", () => {
     expect(screen.getByRole("button", { name: "オ 2" })).toHaveAttribute("aria-pressed", "true");
   });
 
-  it("keeps the user's wrong review mark black and paints only the answer number red", () => {
+  it("keeps the user's wrong review mark black and paints only the correct mark red", () => {
     render(
       <MarkSheet
         activePageId="p1"
@@ -90,8 +90,11 @@ describe("MarkSheet", () => {
     );
 
     expect(screen.getByRole("button", { name: "ア" })).toHaveClass("answer-number");
-    expect(screen.getByRole("button", { name: "ア" }).closest(".answer-grid-row")).toHaveClass("review-incorrect");
-    expect(screen.getByRole("button", { name: "ア 0" })).toHaveClass("filled", "review-wrong");
+    expect(screen.getByRole("button", { name: "ア" }).closest(".answer-grid-row")).not.toHaveClass(
+      "review-incorrect"
+    );
+    expect(screen.getByRole("button", { name: "ア 0" })).toHaveClass("filled");
+    expect(screen.getByRole("button", { name: "ア 0" })).not.toHaveClass("review-wrong");
     expect(screen.getByRole("button", { name: "ア 1" })).toHaveClass("review-correct");
   });
 });

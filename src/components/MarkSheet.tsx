@@ -56,10 +56,6 @@ export function MarkSheet({
             const isSectionActive = exam.questions.some(
               (candidate) => getMajorSection(candidate.section) === section && candidate.pageId === activePageId
             );
-            const isIncorrectReview =
-              reviewMode &&
-              (selected.length !== question.correct.length ||
-                question.correct.some((value) => !selected.includes(value)));
 
             return (
               <Fragment key={question.id}>
@@ -74,12 +70,7 @@ export function MarkSheet({
                     </button>
                   </div>
                 ) : null}
-                <div
-                  className={`answer-grid-row ${isActive ? "active" : ""} ${
-                    isIncorrectReview ? "review-incorrect" : ""
-                  }`}
-                  role="row"
-                >
+                <div className={`answer-grid-row ${isActive ? "active" : ""}`} role="row">
                   <button className="answer-number" type="button" onClick={() => onJumpToPage(question.pageId)}>
                     {question.label}
                   </button>
@@ -97,8 +88,7 @@ export function MarkSheet({
                             "bubble",
                             checked ? "filled" : "",
                             option ? "" : "unavailable",
-                            isCorrectChoice && !checked ? "review-correct" : "",
-                            isIncorrectReview && checked && !isCorrectChoice ? "review-wrong" : ""
+                            isCorrectChoice && !checked ? "review-correct" : ""
                           ]
                             .filter(Boolean)
                             .join(" ")}

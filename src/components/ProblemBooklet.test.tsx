@@ -21,6 +21,7 @@ describe("ProblemBooklet", () => {
       />
     );
 
+    expect(screen.queryByLabelText("問題ページ内の解答マーク")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "1 4" }));
 
     expect(onToggleAnswer).toHaveBeenCalledWith(question, "4");
@@ -41,6 +42,26 @@ describe("ProblemBooklet", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "1 4" })).toHaveClass("filled");
+    expect(screen.getByRole("button", { name: "1 4" })).toHaveClass("selected");
+    expect(screen.getByRole("button", { name: "1 1" })).not.toHaveClass("review-correct");
+  });
+
+  it("marks the correct answer in red during review without a separate mark panel", () => {
+    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const page = animeExam.pages[0];
+    const question = animeExam.questions[0];
+
+    render(
+      <ProblemBooklet
+        answers={{ [question.id]: ["1"] }}
+        page={page}
+        questionsById={new Map(animeExam.questions.map((item) => [item.id, item]))}
+        reviewMode
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "1 1" })).toHaveClass("selected");
+    expect(screen.getByRole("button", { name: "1 4" })).toHaveClass("review-correct");
   });
 });

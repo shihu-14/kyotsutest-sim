@@ -51,12 +51,22 @@ export interface QuestionSlot {
   explanation: string;
 }
 
+export interface PageMarkArea {
+  questionId: string;
+  value: AnswerValue;
+  xPercent: number;
+  yPercent: number;
+  widthPercent?: number;
+  heightPercent?: number;
+}
+
 export interface ExamPage {
   id: string;
   pageNumber: number;
   title: string;
   pageImageUrl?: string;
   pageImageAlt?: string;
+  markAreas?: PageMarkArea[];
   blocks: ProblemBlock[];
 }
 
