@@ -18,5 +18,7 @@ describe("ScoringScreen", () => {
 
     expect(screen.getByText("最終得点")).toBeInTheDocument();
     expect(screen.getAllByLabelText("不正解")).toHaveLength(sampleExams[0].questions.length);
+    expect(screen.getAllByLabelText("不正解")[0].querySelector(".cross-stroke.first")).not.toBeNull();
+    expect(screen.getAllByLabelText("不正解")[0].querySelector(".cross-stroke.second")).not.toBeNull();
   });
 });

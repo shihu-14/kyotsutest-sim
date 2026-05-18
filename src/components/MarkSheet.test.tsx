@@ -19,6 +19,8 @@ describe("MarkSheet", () => {
       />
     );
 
+    expect(screen.queryByText("←")).not.toBeInTheDocument();
+    expect(screen.queryByText("→")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "ア 1" }));
 
     expect(onToggleAnswer).toHaveBeenCalledWith(sampleExams[0].questions[0], "-3");

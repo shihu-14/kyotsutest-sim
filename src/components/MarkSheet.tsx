@@ -30,12 +30,6 @@ export function MarkSheet({
 }: MarkSheetProps) {
   return (
     <aside className="mark-sheet" aria-label="デジタルマークシート">
-      <div className="sheet-window-bar" aria-hidden="true">
-        <span>←</span>
-        <span>→</span>
-        <i />
-      </div>
-
       <section className="answer-table" aria-label="解答欄">
         <div className="answer-title">解　答　欄</div>
         <div className="answer-grid" role="table">

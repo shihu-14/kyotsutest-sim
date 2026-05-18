@@ -400,10 +400,9 @@ button:disabled {
 
 .booklet-stage {
   --booklet-zoom: 1;
+  container-type: size;
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   min-width: 0;
   min-height: 0;
   overflow: auto;
@@ -414,15 +413,33 @@ button:disabled {
   padding: 14px;
 }
 
-.booklet-stage .booklet-page {
-  flex: 0 0 auto;
-  width: calc(100% * var(--booklet-zoom));
-  height: calc(100% * var(--booklet-zoom));
-  min-height: calc(100% * var(--booklet-zoom));
+.booklet-scroll-surface {
+  --scroll-page-width: calc(100cqw * var(--booklet-zoom));
+  --scroll-page-height: calc(100cqh * var(--booklet-zoom));
+  display: grid;
+  width: max(100%, var(--scroll-page-width));
+  height: max(100%, var(--scroll-page-height));
+  min-width: 100%;
+  min-height: 100%;
+  place-items: center;
 }
 
-.booklet-stage .booklet-page.exact-page {
-  width: auto;
+.booklet-scroll-surface.exact-scroll-surface {
+  --exact-base-width: min(100cqw, calc(100cqh * 1247 / 1772));
+  --exact-base-height: min(100cqh, calc(100cqw * 1772 / 1247));
+  --scroll-page-width: calc(var(--exact-base-width) * var(--booklet-zoom));
+  --scroll-page-height: calc(var(--exact-base-height) * var(--booklet-zoom));
+}
+
+.booklet-scroll-surface .booklet-page {
+  flex: 0 0 auto;
+  width: var(--scroll-page-width);
+  height: var(--scroll-page-height);
+  min-height: var(--scroll-page-height);
+}
+
+.booklet-scroll-surface .booklet-page.exact-page {
+  width: var(--scroll-page-width);
   aspect-ratio: 1247 / 1772;
 }
 
@@ -683,7 +700,7 @@ button:disabled {
 
 .mark-sheet {
   display: grid;
-  grid-template-rows: 28px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -700,24 +717,6 @@ button:disabled {
   font-size: 1rem;
   letter-spacing: 0;
   text-align: center;
-}
-
-.sheet-window-bar {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border-bottom: 1px solid #d7dde0;
-  background: #f2f4f5;
-  color: #7d858b;
-  padding: 0 10px;
-  font-size: 1rem;
-}
-
-.sheet-window-bar i {
-  width: 18px;
-  height: 3px;
-  margin-left: auto;
-  background: #6e767c;
 }
 
 .subject-sheet {
@@ -986,6 +985,9 @@ button:disabled {
   fill: transparent;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.red-pen.circle circle {
   stroke-dasharray: 220;
   stroke-dashoffset: 220;
   animation: draw-stamp 280ms ease-out forwards;
@@ -993,6 +995,16 @@ button:disabled {
 
 .red-pen.cross {
   stroke-width: 7;
+}
+
+.red-pen.cross .cross-stroke {
+  stroke-dasharray: 52;
+  stroke-dashoffset: 52;
+  animation: draw-stamp 180ms ease-out forwards;
+}
+
+.red-pen.cross .cross-stroke.second {
+  animation-delay: 180ms;
 }
 
 .earned-points {
@@ -1173,10 +1185,81 @@ button:disabled {
 
 .common-test-preview {
   display: grid;
-  max-height: calc(100vh - 250px);
+  max-height: calc(100vh - 420px);
   gap: 12px;
   overflow: auto;
   padding-right: 4px;
+}
+
+.answer-settings {
+  display: grid;
+  gap: 10px;
+  border-top: 1px solid #ded2bd;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.answer-settings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.answer-settings-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.answer-settings-list {
+  display: grid;
+  max-height: 250px;
+  gap: 8px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.answer-setting-row {
+  display: grid;
+  grid-template-columns: 38px minmax(88px, 1fr) 74px 74px auto;
+  align-items: end;
+  gap: 8px;
+  border: 1px solid #ded2bd;
+  border-radius: 8px;
+  background: #fffdf8;
+  padding: 8px;
+}
+
+.answer-setting-row strong {
+  align-self: center;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.answer-setting-row label {
+  display: grid;
+  gap: 4px;
+}
+
+.answer-setting-row span {
+  color: #5f685f;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.answer-setting-row input {
+  min-width: 0;
+  border: 1px solid #c9bda9;
+  border-radius: 6px;
+  background: #fff;
+  color: #263433;
+  padding: 7px 8px;
+}
+
+.answer-setting-check {
+  align-items: center;
+  grid-template-columns: auto auto;
+  padding-bottom: 7px;
 }
 
 .common-test-page {

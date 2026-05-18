@@ -82,4 +82,34 @@ describe("AuthoringEditor", () => {
       })
     );
   });
+
+  it("edits answer mark settings and publishes multiple answers", async () => {
+    const user = userEvent.setup();
+    const onPublish = vi.fn();
+    const source = String.raw`\examtitle{Parsed}
+\sectiontitle{第1問}
+\mark[answer=1,points=100,choices=4]{1}`;
+
+    render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
+
+    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
+    await user.click(screen.getByRole("button", { name: "設定" }));
+
+    const settingsDialog = screen.getByRole("dialog", { name: "設定" });
+    const [questionCountInput] = within(settingsDialog).getAllByRole("spinbutton");
+    await user.clear(questionCountInput);
+    await user.type(questionCountInput, "1");
+    await user.click(screen.getByRole("button", { name: "閉じる" }));
+
+    const answerInput = screen.getByLabelText("1 正解");
+    await user.clear(answerInput);
+    await user.type(answerInput, "1|3");
+    await user.click(screen.getByRole("button", { name: "投稿" }));
+
+    expect(onPublish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        questions: [expect.objectContaining({ correct: ["1", "3"], multi: true })]
+      })
+    );
+  });
 });

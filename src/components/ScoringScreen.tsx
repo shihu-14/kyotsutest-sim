@@ -73,8 +73,8 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
                     <circle cx="40" cy="40" r="25" />
                   ) : (
                     <>
-                      <line x1="22" x2="58" y1="22" y2="58" />
-                      <line x1="58" x2="22" y1="22" y2="58" />
+                      <line className="cross-stroke first" x1="22" x2="58" y1="22" y2="58" />
+                      <line className="cross-stroke second" x1="58" x2="22" y1="22" y2="58" />
                     </>
                   )}
                 </svg>

@@ -88,5 +88,26 @@ describe("ExamRunner", () => {
     fireEvent.wheel(stage, { ctrlKey: true, deltaY: -80 });
 
     expect(stage).toHaveStyle({ "--booklet-zoom": "1.08" });
+    expect(document.querySelector(".booklet-scroll-surface")).toBeInTheDocument();
+  });
+
+  it("uses the exact image scroll surface for reproduced exam pages", () => {
+    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+
+    render(
+      <ExamRunner
+        answers={{}}
+        currentPageId={animeExam.pages[0].id}
+        deadline={Date.now() + 60_000}
+        exam={animeExam}
+        onChangePage={vi.fn()}
+        onExpire={vi.fn()}
+        onFinish={vi.fn()}
+        onPause={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(document.querySelector(".booklet-scroll-surface.exact-scroll-surface")).toBeInTheDocument();
   });
 });

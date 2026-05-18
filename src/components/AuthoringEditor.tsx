@@ -13,11 +13,118 @@ interface AuthoringEditorProps {
 type TextMetaKey = "title" | "subject" | "description";
 type NumberMetaKey = "questionCount" | "totalPoints" | "durationMinutes";
 
+interface EditableMark {
+  index: number;
+  label: string;
+  answer: string;
+  points: number;
+  choices: number;
+  multi: boolean;
+}
+
 const textFields: Array<{ key: TextMetaKey; label: string; multiline?: boolean }> = [
   { key: "title", label: "タイトル" },
   { key: "subject", label: "科目名" },
   { key: "description", label: "説明", multiline: true }
 ];
+
+function parseMarkAttrs(input: string | undefined): Record<string, string> {
+  if (!input) {
+    return {};
+  }
+
+  return input.split(",").reduce<Record<string, string>>((attrs, pair) => {
+    const [rawKey, ...rawValue] = pair.split("=");
+    const key = rawKey?.trim();
+    if (!key) {
+      return attrs;
+    }
+
+    attrs[key] = rawValue.join("=").trim();
+    return attrs;
+  }, {});
+}
+
+function serializeMarkAttrs(attrs: Record<string, string>): string {
+  const orderedKeys = ["answer", "points", "choices", "multi"];
+  const extras = Object.keys(attrs).filter((key) => !orderedKeys.includes(key));
+  return [...orderedKeys, ...extras]
+    .filter((key) => attrs[key] !== undefined && attrs[key] !== "")
+    .map((key) => `${key}=${attrs[key]}`)
+    .join(",");
+}
+
+function getEditableMarks(source: string): EditableMark[] {
+  const marks: EditableMark[] = [];
+  const pattern = /\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(source)) !== null) {
+    const attrs = parseMarkAttrs(match[1]);
+    const answer = attrs.answer ?? "";
+    const points = Number(attrs.points ?? 0);
+    const choices = Number(attrs.choices ?? 4);
+
+    marks.push({
+      index: marks.length,
+      label: match[2],
+      answer,
+      points: Number.isFinite(points) ? points : 0,
+      choices: Number.isInteger(choices) && choices > 0 ? choices : 4,
+      multi: attrs.multi === "true" || answer.includes("|")
+    });
+  }
+
+  return marks;
+}
+
+function updateMarkCommand(source: string, targetIndex: number, updates: Partial<EditableMark>): string {
+  let currentIndex = 0;
+  return source.replace(/\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g, (full, attrsRaw: string, label: string) => {
+    const isTarget = currentIndex === targetIndex;
+    currentIndex += 1;
+    if (!isTarget) {
+      return full;
+    }
+
+    const attrs = parseMarkAttrs(attrsRaw);
+    if (updates.answer !== undefined) {
+      attrs.answer = updates.answer;
+    }
+    if (updates.points !== undefined) {
+      attrs.points = String(Math.max(0, updates.points));
+    }
+    if (updates.choices !== undefined) {
+      attrs.choices = String(Math.max(1, updates.choices));
+    }
+    if (updates.multi !== undefined) {
+      if (updates.multi) {
+        attrs.multi = "true";
+      } else {
+        delete attrs.multi;
+      }
+    }
+
+    return `\\mark[${serializeMarkAttrs(attrs)}]{${label}}`;
+  });
+}
+
+function appendDefaultMarkDefinitions(source: string, meta: AuthoringMeta): string {
+  if (getEditableMarks(source).length > 0) {
+    return source;
+  }
+
+  const questionCount = Math.max(1, meta.questionCount);
+  const basePoints = Math.floor(meta.totalPoints / questionCount);
+  const remainder = meta.totalPoints % questionCount;
+  const markLines = Array.from({ length: questionCount }, (_item, index) => {
+    const label = String(index + 1);
+    const points = basePoints + (index < remainder ? 1 : 0);
+    return `\\mark[answer=1,points=${points},choices=4]{${label}}`;
+  });
+
+  return `${source.trimEnd()}\n\n% Answer mark definitions\n${markLines.join("\n")}\n`;
+}
 
 const numberFields: Array<{ key: NumberMetaKey; label: string; suffix: string }> = [
   { key: "questionCount", label: "設問数", suffix: "問" },
@@ -148,6 +255,33 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
   const markSections = getMarkSections(source);
 
   if (initialExam) {
+    const questions = parsed.marks.length
+      ? initialExam.questions.map<QuestionSlot>((question, index) => {
+          const mark = parsed.marks[index];
+          if (!mark) {
+            return question;
+          }
+
+          return {
+            ...question,
+            label: mark.label,
+            points: mark.points,
+            multi: mark.multi,
+            options: Array.from({ length: mark.choices }, (_item, optionIndex) => {
+              const value = String(optionIndex + 1);
+              return (
+                question.options.find((option) => option.label === value || option.value === value) ?? {
+                  value,
+                  label: value,
+                  content: value
+                }
+              );
+            }),
+            correct: mark.answer
+          };
+        })
+      : initialExam.questions;
+
     return {
       ...initialExam,
       title: meta.title,
@@ -155,6 +289,7 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
       description: meta.description,
       durationMinutes: meta.durationMinutes,
       totalPoints: meta.totalPoints,
+      questions,
       published: true
     };
   }
@@ -218,6 +353,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [publishState, setPublishState] = useState<"idle" | "published">("idle");
   const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
+  const editableMarks = useMemo(() => getEditableMarks(source), [source]);
   const sourceStats = useMemo(() => {
     const parsed = parseAuthoringLatex(source);
     return {
@@ -262,6 +398,10 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const updateNumberMeta = (key: NumberMetaKey, value: string) => {
     const numericValue = Number(value);
     setMeta((current) => ({ ...current, [key]: Number.isFinite(numericValue) ? Math.max(0, numericValue) : 0 }));
+  };
+
+  const updateMark = (index: number, updates: Partial<EditableMark>) => {
+    setSource((currentSource) => updateMarkCommand(currentSource, index, updates));
   };
 
   return (
@@ -320,6 +460,11 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
               <span>解答欄 {sourceStats.answerSlots || sourceStats.marks}</span>
             </div>
             <CommonTestPreview meta={meta} />
+            <AnswerMarkSettings
+              marks={editableMarks}
+              onCreate={() => setSource((currentSource) => appendDefaultMarkDefinitions(currentSource, meta))}
+              onUpdate={updateMark}
+            />
             {showValidationErrors && validationErrors.length ? (
               <div className="validation-errors" role="alert">
                 <strong>投稿できません</strong>
@@ -408,6 +553,73 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
         </div>
       ) : null}
     </main>
+  );
+}
+
+interface AnswerMarkSettingsProps {
+  marks: EditableMark[];
+  onCreate: () => void;
+  onUpdate: (index: number, updates: Partial<EditableMark>) => void;
+}
+
+function AnswerMarkSettings({ marks, onCreate, onUpdate }: AnswerMarkSettingsProps) {
+  return (
+    <section className="answer-settings" aria-label="解答マーク設定">
+      <div className="answer-settings-heading">
+        <h2>解答マーク設定</h2>
+        {!marks.length ? (
+          <button className="secondary-button" type="button" onClick={onCreate}>
+            解答欄を作成
+          </button>
+        ) : null}
+      </div>
+      {marks.length ? (
+        <div className="answer-settings-list">
+          {marks.map((mark) => (
+            <div className="answer-setting-row" key={`${mark.index}-${mark.label}`}>
+              <strong>{mark.label}</strong>
+              <label>
+                <span>正解</span>
+                <input
+                  aria-label={`${mark.label} 正解`}
+                  value={mark.answer}
+                  onChange={(event) => onUpdate(mark.index, { answer: event.currentTarget.value })}
+                />
+              </label>
+              <label>
+                <span>配点</span>
+                <input
+                  aria-label={`${mark.label} 配点`}
+                  min={0}
+                  type="number"
+                  value={mark.points}
+                  onChange={(event) => onUpdate(mark.index, { points: Number(event.currentTarget.value) })}
+                />
+              </label>
+              <label>
+                <span>選択肢</span>
+                <input
+                  aria-label={`${mark.label} 選択肢`}
+                  min={1}
+                  type="number"
+                  value={mark.choices}
+                  onChange={(event) => onUpdate(mark.index, { choices: Number(event.currentTarget.value) })}
+                />
+              </label>
+              <label className="answer-setting-check">
+                <input
+                  aria-label={`${mark.label} 複数回答`}
+                  checked={mark.multi}
+                  type="checkbox"
+                  onChange={(event) => onUpdate(mark.index, { multi: event.currentTarget.checked })}
+                />
+                <span>複数</span>
+              </label>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }
 

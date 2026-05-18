@@ -146,9 +146,9 @@ export function ExamRunner({
               <button
                 className={item.id === page.id ? "active" : ""}
                 key={item.id}
-              type="button"
-              onClick={() => onChangePage(item.id)}
-            >
+                type="button"
+                onClick={() => onChangePage(item.id)}
+              >
                 {item.pageNumber}
               </button>
             ))}
@@ -162,13 +162,15 @@ export function ExamRunner({
             onKeyDown={handleBookletKeyDown}
             onWheel={handleBookletWheel}
           >
-            <ProblemBooklet
-              answers={answers}
-              page={page}
-              questionsById={questionsById}
-              reviewMode={reviewMode}
-              onToggleAnswer={onToggleAnswer}
-            />
+            <div className={`booklet-scroll-surface ${page.pageImageUrl ? "exact-scroll-surface" : ""}`}>
+              <ProblemBooklet
+                answers={answers}
+                page={page}
+                questionsById={questionsById}
+                reviewMode={reviewMode}
+                onToggleAnswer={onToggleAnswer}
+              />
+            </div>
           </div>
           <div className="page-turner">
             <button className="secondary-button" disabled={pageIndex === 0} type="button" onClick={goPrevious}>

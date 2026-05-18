@@ -46,6 +46,24 @@ describe("ProblemBooklet", () => {
     expect(screen.getByRole("button", { name: "1 1" })).not.toHaveClass("review-correct");
   });
 
+  it("renders multiple selected marks on an exact page when the question allows it", () => {
+    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const page = animeExam.pages[0];
+    const question = { ...animeExam.questions[0], multi: true };
+
+    render(
+      <ProblemBooklet
+        answers={{ [question.id]: ["1", "3"] }}
+        page={page}
+        questionsById={new Map([[question.id, question]])}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(screen.getByRole("button", { name: "1 1" })).toHaveClass("selected");
+    expect(screen.getByRole("button", { name: "1 3" })).toHaveClass("selected");
+  });
+
   it("marks the correct answer in red during review without a separate mark panel", () => {
     const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
