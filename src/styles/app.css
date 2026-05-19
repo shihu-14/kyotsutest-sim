@@ -1102,6 +1102,30 @@ button:disabled {
   font-weight: 800;
 }
 
+.author-mode-tabs {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid #b9ab94;
+  border-radius: 8px;
+  background: #fffaf1;
+}
+
+.author-mode-tabs button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #40514f;
+  padding: 7px 11px;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.author-mode-tabs button.active {
+  background: #1f6f5b;
+  color: #fff;
+}
+
 .author-side {
   display: grid;
   grid-template-rows: minmax(0, 1fr);
@@ -1180,7 +1204,7 @@ button:disabled {
 
 .structure-list {
   display: grid;
-  max-height: 270px;
+  max-height: calc(100vh - 250px);
   gap: 10px;
   overflow: auto;
   padding-right: 4px;
@@ -1223,7 +1247,8 @@ button:disabled {
 
 .structure-section input,
 .structure-section textarea,
-.structure-mark-row input {
+.structure-mark-row input,
+.structure-mark-row textarea {
   min-width: 0;
   width: 100%;
   border: 1px solid #c9bda9;
@@ -1234,6 +1259,10 @@ button:disabled {
 }
 
 .structure-section textarea {
+  resize: vertical;
+}
+
+.structure-mark-row textarea {
   resize: vertical;
 }
 
@@ -1258,6 +1287,10 @@ button:disabled {
 }
 
 .structure-mark-context {
+  grid-column: 1 / -1;
+}
+
+.structure-choice-contents {
   grid-column: 1 / -1;
 }
 
@@ -1461,6 +1494,29 @@ button:disabled {
 
 .problem-preview .page-number {
   margin: 0 0 8px;
+}
+
+.draft-preview-section {
+  margin-bottom: 16px;
+}
+
+.draft-preview-subsection {
+  margin-top: 12px;
+}
+
+.draft-preview-subsection h4 {
+  margin: 0 0 8px;
+  font-size: 0.98rem;
+}
+
+.draft-preview-mark {
+  margin-top: 10px;
+}
+
+.draft-preview-mark p {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .equation-preview {

@@ -15,6 +15,11 @@ describe("AuthoringEditor", () => {
     window.localStorage.clear();
   });
 
+  async function enterSource(user: ReturnType<typeof userEvent.setup>, source: string) {
+    await user.click(screen.getByRole("tab", { name: "詳細TeX" }));
+    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
+  }
+
   it("opens metadata in settings and publishes edits for the selected exam", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
@@ -45,7 +50,7 @@ describe("AuthoringEditor", () => {
 
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
-    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
+    await enterSource(user, source);
     await user.click(screen.getByRole("button", { name: "投稿" }));
 
     expect(onPublish).not.toHaveBeenCalled();
@@ -65,7 +70,7 @@ describe("AuthoringEditor", () => {
 
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
-    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
+    await enterSource(user, source);
     await user.click(screen.getByRole("button", { name: "設定" }));
 
     const settingsDialog = screen.getByRole("dialog", { name: "設定" });
@@ -96,10 +101,15 @@ describe("AuthoringEditor", () => {
 
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
-    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
+    await enterSource(user, source);
+    await user.click(screen.getByRole("tab", { name: "フォーム" }));
     const sectionTitle = screen.getByLabelText("大問 1 タイトル");
     await user.clear(sectionTitle);
     await user.type(sectionTitle, "第A問");
+    fireEvent.change(screen.getByLabelText("1 マーク内容"), {
+      target: { value: "Alpha\nBeta\nGamma\nDelta" }
+    });
+    expect(screen.getByText("Alpha")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "小問追加" }));
     await user.click(screen.getAllByRole("button", { name: "マーク追加" })[1]);
     await user.click(screen.getByRole("button", { name: "投稿" }));
@@ -108,7 +118,17 @@ describe("AuthoringEditor", () => {
       expect.objectContaining({
         totalPoints: 5,
         questions: [
-          expect.objectContaining({ label: "1", section: "第A問", points: 4 }),
+          expect.objectContaining({
+            label: "1",
+            section: "第A問",
+            points: 4,
+            options: [
+              expect.objectContaining({ content: "Alpha" }),
+              expect.objectContaining({ content: "Beta" }),
+              expect.objectContaining({ content: "Gamma" }),
+              expect.objectContaining({ content: "Delta" })
+            ]
+          }),
           expect.objectContaining({ label: "2", section: "第A問 問1", points: 1 })
         ]
       })
@@ -124,7 +144,8 @@ describe("AuthoringEditor", () => {
 
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
-    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
+    await enterSource(user, source);
+    await user.click(screen.getByRole("tab", { name: "フォーム" }));
     await user.click(screen.getByRole("button", { name: "設定" }));
 
     const settingsDialog = screen.getByRole("dialog", { name: "設定" });

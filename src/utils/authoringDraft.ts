@@ -7,6 +7,12 @@ export interface DraftMark {
   points: number;
   choices: number;
   multi: boolean;
+  optionContents: DraftChoice[];
+}
+
+export interface DraftChoice {
+  value: string;
+  content: string;
 }
 
 export interface DraftSubsection {
@@ -37,6 +43,26 @@ export interface DraftMarkEntry {
 }
 
 const markPattern = /\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g;
+const choicePattern = /^\\choice\{([^}]*)\}\{([^}]*)\}\{([^}]*)\}$/;
+
+function positiveChoiceCount(count: number): number {
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 1;
+}
+
+export function createDefaultChoices(count: number): DraftChoice[] {
+  return Array.from({ length: positiveChoiceCount(count) }, (_item, index) => {
+    const value = String(index + 1);
+    return { value, content: value };
+  });
+}
+
+export function normalizeMarkChoices(mark: DraftMark): DraftChoice[] {
+  const existingByValue = new Map(mark.optionContents.map((choice) => [choice.value, choice]));
+  return Array.from({ length: positiveChoiceCount(mark.choices) }, (_item, index) => {
+    const value = String(index + 1);
+    return existingByValue.get(value) ?? { value, content: value };
+  });
+}
 
 function parseAttributes(input: string | undefined): Record<string, string> {
   if (!input) {
@@ -59,11 +85,15 @@ function serializeMark(mark: DraftMark): string {
   const attrs = [
     `answer=${mark.answer}`,
     `points=${Math.max(0, mark.points)}`,
-    `choices=${Math.max(1, mark.choices)}`,
+    `choices=${positiveChoiceCount(mark.choices)}`,
     mark.multi ? "multi=true" : ""
   ].filter(Boolean);
 
   return `\\mark[${attrs.join(",")}]{${mark.label}}`;
+}
+
+function serializeChoice(mark: DraftMark, choice: DraftChoice): string {
+  return `\\choice{${mark.label}}{${choice.value}}{${choice.content}}`;
 }
 
 function createSection(index: number, title = `第${index + 1}問`): DraftSection {
@@ -101,7 +131,8 @@ function parseMark(attrsRaw: string | undefined, label: string, index: number): 
     answer,
     points: Number.isFinite(points) ? points : 0,
     choices: Number.isInteger(choices) && choices > 0 ? choices : 4,
-    multi: attrs.multi === "true" || answer.includes("|")
+    multi: attrs.multi === "true" || answer.includes("|"),
+    optionContents: createDefaultChoices(Number.isInteger(choices) && choices > 0 ? choices : 4)
   };
 }
 
@@ -152,6 +183,22 @@ export function parseAuthoringDraft(source: string): ExamDraft {
       return;
     }
 
+    const choiceMatch = line.match(choicePattern);
+    if (choiceMatch) {
+      const [_full, markLabel, value, content] = choiceMatch;
+      const section = ensureSection();
+      const marks = currentSubsection ? currentSubsection.marks : section.marks;
+      const target = marks.find((mark) => mark.label === markLabel) ?? marks.at(-1);
+      if (target) {
+        const nextContents = target.optionContents.filter((choice) => choice.value !== value);
+        nextContents.push({ value, content });
+        nextContents.sort((left, right) => Number(left.value) - Number(right.value));
+        target.optionContents = nextContents;
+        target.choices = Math.max(target.choices, Number(value) || 1);
+      }
+      return;
+    }
+
     let hasMark = false;
     line.replace(markPattern, (_full, attrsRaw: string | undefined, label: string) => {
       const section = ensureSection();
@@ -188,13 +235,19 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
     if (section.body.trim()) {
       lines.push(...section.body.trim().split("\n"));
     }
-    section.marks.forEach((mark) => lines.push(serializeMark(mark)));
+    section.marks.forEach((mark) => {
+      lines.push(serializeMark(mark));
+      normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
+    });
     section.subsections.forEach((subsection) => {
       lines.push("", `\\subsectiontitle{${subsection.title}}`);
       if (subsection.body.trim()) {
         lines.push(...subsection.body.trim().split("\n"));
       }
-      subsection.marks.forEach((mark) => lines.push(serializeMark(mark)));
+      subsection.marks.forEach((mark) => {
+        lines.push(serializeMark(mark));
+        normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
+      });
     });
   });
 

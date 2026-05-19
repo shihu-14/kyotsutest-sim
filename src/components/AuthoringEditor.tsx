@@ -3,16 +3,19 @@ import { useMemo, useState } from "react";
 import type { AuthoringMeta, Exam, ProblemBlock, QuestionSlot } from "../types";
 import {
   countDraftMarks,
+  createDefaultChoices,
   getDraftMarkEntries,
+  normalizeMarkChoices,
   parseAuthoringDraft,
   serializeAuthoringDraft,
   sumDraftPoints,
+  type DraftChoice,
   type DraftMark,
   type DraftSection,
   type DraftSubsection,
   type ExamDraft
 } from "../utils/authoringDraft";
-import { defaultAuthoringMeta, defaultAuthoringSource, parseAuthoringLatex } from "../utils/latex";
+import { defaultAuthoringMeta, defaultAuthoringSource, parseAuthoringLatex, renderMathSegments } from "../utils/latex";
 import { loadAuthorMeta, loadAuthorSource, saveAuthorMeta, saveAuthorSource } from "../utils/storage";
 
 interface AuthoringEditorProps {
@@ -23,6 +26,7 @@ interface AuthoringEditorProps {
 
 type TextMetaKey = "title" | "subject" | "description";
 type NumberMetaKey = "questionCount" | "totalPoints" | "durationMinutes";
+type AuthorMode = "form" | "tex";
 
 const textFields: Array<{ key: TextMetaKey; label: string; multiline?: boolean }> = [
   { key: "title", label: "タイトル" },
@@ -69,7 +73,8 @@ function createDraftMark(label: string, points = 1): DraftMark {
     answer: "1",
     points,
     choices: 4,
-    multi: false
+    multi: false,
+    optionContents: createDefaultChoices(4)
   };
 }
 
@@ -96,10 +101,13 @@ function cloneDraft(draft: ExamDraft): ExamDraft {
   return {
     sections: draft.sections.map((section) => ({
       ...section,
-      marks: section.marks.map((mark) => ({ ...mark })),
+      marks: section.marks.map((mark) => ({ ...mark, optionContents: mark.optionContents.map((choice) => ({ ...choice })) })),
       subsections: section.subsections.map((subsection) => ({
         ...subsection,
-        marks: subsection.marks.map((mark) => ({ ...mark }))
+        marks: subsection.marks.map((mark) => ({
+          ...mark,
+          optionContents: mark.optionContents.map((choice) => ({ ...choice }))
+        }))
       }))
     }))
   };
@@ -124,7 +132,8 @@ function draftFromExam(exam: Exam): ExamDraft {
       answer: question.correct.join("|"),
       points: question.points,
       choices: question.options.length,
-      multi: question.multi
+      multi: question.multi,
+      optionContents: question.options.map((option) => ({ value: option.value, content: option.content }))
     };
 
     if (subsectionTitle) {
@@ -256,37 +265,38 @@ function buildDraftPageBlocks(draft: ExamDraft, questions: QuestionSlot[], meta:
   return blocks.length ? blocks : [{ type: "heading", text: meta.title, level: 2 }];
 }
 
+function answerValues(mark: DraftMark): string[] {
+  return mark.answer.split("|").map((value) => value.trim()).filter(Boolean);
+}
+
+function optionsFromMark(mark: DraftMark) {
+  return normalizeMarkChoices(mark).map((choice) => ({
+    value: choice.value,
+    label: choice.value,
+    content: choice.content || choice.value
+  }));
+}
+
 function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Exam | null | undefined): Exam {
-  const parsed = parseAuthoringLatex(source);
   const draft = parseAuthoringDraft(source);
   const draftEntries = getDraftMarkEntries(draft);
-  const markSections = draftEntries.length ? draftEntries.map((entry) => entry.sectionTitle) : getMarkSections(source);
+  const fallbackSections = getMarkSections(source);
 
   if (initialExam) {
-    const questions = parsed.marks.length
-      ? initialExam.questions.map<QuestionSlot>((question, index) => {
-          const mark = parsed.marks[index];
-          if (!mark) {
-            return question;
-          }
-
+    const questions = draftEntries.length
+      ? draftEntries.map<QuestionSlot>((entry, index) => {
+          const existingQuestion = initialExam.questions[index];
           return {
-            ...question,
-            label: mark.label,
-            section: markSections[index] ?? question.section,
-            points: mark.points,
-            multi: mark.multi,
-            options: Array.from({ length: mark.choices }, (_item, optionIndex) => {
-              const value = String(optionIndex + 1);
-              return (
-                question.options.find((option) => option.label === value || option.value === value) ?? {
-                  value,
-                  label: value,
-                  content: value
-                }
-              );
-            }),
-            correct: mark.answer
+            id: existingQuestion?.id ?? `draft-q${String(index + 1).padStart(2, "0")}`,
+            label: entry.mark.label,
+            section: entry.sectionTitle,
+            prompt: existingQuestion?.prompt ?? "作成したフォームに対応する解答欄です。",
+            pageId: existingQuestion?.pageId ?? "draft-p1",
+            points: entry.mark.points,
+            multi: entry.mark.multi || answerValues(entry.mark).length > 1,
+            options: optionsFromMark(entry.mark),
+            correct: answerValues(entry.mark),
+            explanation: existingQuestion?.explanation ?? "投稿後に解説を調整してください。"
           };
         })
       : initialExam.questions;
@@ -304,20 +314,17 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
   }
 
   const questionCount = Math.max(1, meta.questionCount);
-  const questions = parsed.marks.length
-    ? parsed.marks.map<QuestionSlot>((mark, index) => ({
+  const questions = draftEntries.length
+    ? draftEntries.map<QuestionSlot>((entry, index) => ({
         id: `draft-q${String(index + 1).padStart(2, "0")}`,
-        label: mark.label,
-        section: markSections[index] ?? `第${index + 1}問`,
-        prompt: "作成したTeXコードに対応する解答欄です。",
+        label: entry.mark.label,
+        section: entry.sectionTitle || fallbackSections[index] || `第${index + 1}問`,
+        prompt: "作成したフォームに対応する解答欄です。",
         pageId: "draft-p1",
-        points: mark.points,
-        multi: mark.multi,
-        options: Array.from({ length: mark.choices }, (_item, optionIndex) => {
-          const value = String(optionIndex + 1);
-          return { value, label: value, content: value };
-        }),
-        correct: mark.answer,
+        points: entry.mark.points,
+        multi: entry.mark.multi || answerValues(entry.mark).length > 1,
+        options: optionsFromMark(entry.mark),
+        correct: answerValues(entry.mark),
         explanation: "投稿後に解説を調整してください。"
       }))
     : Array.from({ length: questionCount }, (_item, index) =>
@@ -357,6 +364,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [publishState, setPublishState] = useState<"idle" | "published">("idle");
+  const [authorMode, setAuthorMode] = useState<AuthorMode>("form");
   const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
   const draft = useMemo(() => parseAuthoringDraft(source), [source]);
   const sourceStats = useMemo(() => {
@@ -447,25 +455,47 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
       <section className="author-grid">
         <div className="editor-pane">
           <div className="editor-pane-header">
-            <h2>TeXコード</h2>
-            <span>{sourceStats.lines} lines</span>
+            <h2>{authorMode === "form" ? "作問フォーム" : "詳細TeX"}</h2>
+            <div className="author-mode-tabs" role="tablist" aria-label="編集モード">
+              <button
+                aria-selected={authorMode === "form"}
+                className={authorMode === "form" ? "active" : ""}
+                role="tab"
+                type="button"
+                onClick={() => setAuthorMode("form")}
+              >
+                フォーム
+              </button>
+              <button
+                aria-selected={authorMode === "tex"}
+                className={authorMode === "tex" ? "active" : ""}
+                role="tab"
+                type="button"
+                onClick={() => setAuthorMode("tex")}
+              >
+                詳細TeX
+              </button>
+            </div>
           </div>
-          <StructureEditor draft={draft} onChange={applyDraft} />
-          <Editor
-            height="calc(100vh - 472px)"
-            defaultLanguage="latex"
-            theme="vs-light"
-            value={source}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 14,
-              lineNumbers: "on",
-              wordWrap: "on",
-              tabSize: 2,
-              automaticLayout: true
-            }}
-            onChange={(nextSource) => setSource(nextSource ?? "")}
-          />
+          {authorMode === "form" ? (
+            <StructureEditor draft={draft} onChange={applyDraft} />
+          ) : (
+            <Editor
+              height="calc(100vh - 188px)"
+              defaultLanguage="latex"
+              theme="vs-light"
+              value={source}
+              options={{
+                minimap: { enabled: false },
+                fontSize: 14,
+                lineNumbers: "on",
+                wordWrap: "on",
+                tabSize: 2,
+                automaticLayout: true
+              }}
+              onChange={(nextSource) => setSource(nextSource ?? "")}
+            />
+          )}
         </div>
 
         <aside className="author-side">
@@ -477,7 +507,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
                 {sourceStats.answerSlots || sourceStats.marks}
               </span>
             </div>
-            <CommonTestPreview meta={meta} />
+            <CommonTestPreview draft={draft} meta={meta} />
             {showValidationErrors && validationErrors.length ? (
               <div className="validation-errors" role="alert">
                 <strong>投稿できません</strong>
@@ -746,6 +776,27 @@ interface MarkListProps {
   onUpdate: (markIndex: number, updates: Partial<DraftMark>) => void;
 }
 
+function choiceText(mark: DraftMark): string {
+  return normalizeMarkChoices(mark)
+    .map((choice) => choice.content)
+    .join("\n");
+}
+
+function choicesFromText(text: string): DraftChoice[] {
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const contents = lines.length ? lines : ["1"];
+  return contents.map((content, index) => ({ value: String(index + 1), content }));
+}
+
+function resizeChoices(mark: DraftMark, choices: number): DraftChoice[] {
+  return normalizeMarkChoices({ ...mark, choices });
+}
+
+function positiveInputNumber(value: string): number {
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? Math.max(1, numericValue) : 1;
+}
+
 function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
   if (!marks.length) {
     return null;
@@ -788,7 +839,22 @@ function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
               min={1}
               type="number"
               value={mark.choices}
-              onChange={(event) => onUpdate(markIndex, { choices: Number(event.currentTarget.value) })}
+              onChange={(event) => {
+                const choices = positiveInputNumber(event.currentTarget.value);
+                onUpdate(markIndex, { choices, optionContents: resizeChoices(mark, choices) });
+              }}
+            />
+          </label>
+          <label className="structure-choice-contents">
+            <span>マーク内容</span>
+            <textarea
+              aria-label={`${mark.label} マーク内容`}
+              rows={Math.min(6, Math.max(2, mark.choices))}
+              value={choiceText(mark)}
+              onChange={(event) => {
+                const optionContents = choicesFromText(event.currentTarget.value);
+                onUpdate(markIndex, { choices: optionContents.length, optionContents });
+              }}
             />
           </label>
           <label className="structure-check">
@@ -810,7 +876,9 @@ function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
   );
 }
 
-function CommonTestPreview({ meta }: { meta: AuthoringMeta }) {
+function CommonTestPreview({ draft, meta }: { draft: ExamDraft; meta: AuthoringMeta }) {
+  const previewSections = draft.sections.slice(0, 2);
+
   return (
     <div className="common-test-preview">
       <article className="common-test-page cover-preview">
@@ -843,24 +911,51 @@ function CommonTestPreview({ meta }: { meta: AuthoringMeta }) {
 
       <article className="common-test-page problem-preview">
         <div className="page-number">- 1 -</div>
-        <h3>第１問</h3>
-        <p>
-          以下の連立方程式において，各式 1 から 3 がそれぞれ画像 I から III に示されたアニメの名称の一部を表している。
-        </p>
-        <div className="equation-preview">
-          <span>y - x_n = ci</span>
-          <span>fg'' = c</span>
-          <span>pb × abq° = _d t</span>
-        </div>
-        <div className="choice-preview">
-          {["おねがい☆ティーチャー", "オーバーロード", "オッドタクシー", "【推しの子】"].map((choice, index) => (
-            <button key={choice} type="button">
-              <i>{index + 1}</i>
-              {choice}
-            </button>
-          ))}
-        </div>
+        {previewSections.length ? (
+          previewSections.map((section) => (
+            <section className="draft-preview-section" key={section.id}>
+              <h3>{section.title}</h3>
+              {section.body ? <p>{renderMathSegments(section.body)}</p> : null}
+              <PreviewMarks marks={section.marks} />
+              {section.subsections.map((subsection) => (
+                <section className="draft-preview-subsection" key={subsection.id}>
+                  <h4>{subsection.title}</h4>
+                  {subsection.body ? <p>{renderMathSegments(subsection.body)}</p> : null}
+                  <PreviewMarks marks={subsection.marks} />
+                </section>
+              ))}
+            </section>
+          ))
+        ) : (
+          <>
+            <h3>第1問</h3>
+            <p>フォームから大問，問題文，小問，マークを追加してください。</p>
+          </>
+        )}
       </article>
     </div>
+  );
+}
+
+function PreviewMarks({ marks }: { marks: DraftMark[] }) {
+  return (
+    <>
+      {marks.map((mark) => (
+        <div className="draft-preview-mark" key={mark.id}>
+          <p>
+            <span className="latex-mark">{mark.label}</span>
+            <span>（配点 {mark.points}）</span>
+          </p>
+          <div className="choice-preview">
+            {normalizeMarkChoices(mark).map((choice) => (
+              <button key={choice.value} type="button">
+                <i>{choice.value}</i>
+                {renderMathSegments(choice.content)}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </>
   );
 }
