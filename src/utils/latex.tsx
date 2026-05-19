@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import katex from "katex";
-import animeExamSource from "../../kyotutest_anime_onlymark.tex?raw";
 import type { AuthoringMeta } from "../types";
 
 export interface ParsedMark {
@@ -280,4 +279,55 @@ export const defaultAuthoringMeta: AuthoringMeta = {
   durationMinutes: 40
 };
 
-export const defaultAuthoringSource = animeExamSource;
+export const defaultAuthoringSource = String.raw`\examtitle{漫画映画}
+\sectiontitle{第1問}
+以下の連立方程式において，各式 1 から 3 がそれぞれ画像 I から III に示されたアニメの名称の一部を表している。
+\mark[answer=4,points=10,choices=4]{1}
+
+\sectiontitle{第2問}
+暗殺教室に関する次の問いに答えよ。
+\subsectiontitle{問1}
+\mark[answer=2,points=2,choices=4]{2}
+\subsectiontitle{問2}
+\mark[answer=4,points=2,choices=9]{3}
+\mark[answer=7,points=2,choices=9]{4}
+\mark[answer=2,points=3,choices=9]{5}
+\mark[answer=8,points=3,choices=9]{6}
+
+\sectiontitle{第3問}
+図中の X に入る最も適当な記号を選べ。
+\mark[answer=3,points=10,choices=5]{7}
+
+\sectiontitle{第4問}
+集合と分類に関する次の問いに答えよ。
+\subsectiontitle{問1}
+\mark[answer=4,points=4,choices=8]{8}
+\subsectiontitle{問2}
+\mark[answer=4,points=4,choices=4]{9}
+\mark[answer=1,points=4,choices=4]{10}
+\mark[answer=1,points=4,choices=4]{11}
+
+\sectiontitle{第5問}
+漢字表記の読みとして最も適当なものを選べ。
+\mark[answer=2,points=4,choices=3]{12}
+\mark[answer=1,points=3,choices=3]{13}
+\mark[answer=2,points=3,choices=3]{14}
+
+\sectiontitle{第6問}
+不等式の関係として最も適当な記号を選べ。
+\mark[answer=3,points=5,choices=3]{15}
+\mark[answer=1,points=5,choices=3]{16}
+
+\sectiontitle{第7問}
+口コミの内容に該当するアニメとして最も適当なものを選べ。
+\mark[answer=1,points=10,choices=4]{17}
+
+\sectiontitle{第8問}
+英英辞典の説明が意味する語として最も適当なものを選べ。
+\mark[answer=3,points=6,choices=4]{18}
+\mark[answer=4,points=6,choices=4]{19}
+
+\sectiontitle{第9問}
+英文の空欄に当てはまる単語として最も適当なものを選べ。
+\mark[answer=4,points=10,choices=4]{20}
+`;

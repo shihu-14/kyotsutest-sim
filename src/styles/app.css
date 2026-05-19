@@ -1157,6 +1157,110 @@ button:disabled {
   resize: vertical;
 }
 
+.structure-editor {
+  display: grid;
+  gap: 10px;
+  border-bottom: 1px solid #ded2bd;
+  background: #fbf6ec;
+  padding: 12px;
+}
+
+.structure-heading,
+.structure-section-head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.structure-heading h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.structure-list {
+  display: grid;
+  max-height: 270px;
+  gap: 10px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.structure-section,
+.structure-subsection {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #d4c7b4;
+  border-radius: 8px;
+  background: #fffdf8;
+  padding: 10px;
+}
+
+.structure-subsection {
+  margin-left: 14px;
+  background: #fbfffb;
+}
+
+.structure-section label,
+.structure-mark-row label {
+  display: grid;
+  gap: 4px;
+}
+
+.structure-section-head label,
+.structure-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.structure-section span,
+.structure-mark-row span {
+  color: #5f685f;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.structure-section input,
+.structure-section textarea,
+.structure-mark-row input {
+  min-width: 0;
+  width: 100%;
+  border: 1px solid #c9bda9;
+  border-radius: 6px;
+  background: #fff;
+  color: #263433;
+  padding: 7px 8px;
+}
+
+.structure-section textarea {
+  resize: vertical;
+}
+
+.structure-mark-list {
+  display: grid;
+  gap: 7px;
+}
+
+.structure-mark-row {
+  display: grid;
+  grid-template-columns: 58px minmax(92px, 1fr) 72px 72px auto auto;
+  align-items: end;
+  gap: 8px;
+  border-top: 1px solid #eee2d1;
+  padding-top: 8px;
+}
+
+.structure-check {
+  align-items: center;
+  grid-template-columns: auto auto;
+  padding-bottom: 7px;
+}
+
+.structure-mark-context {
+  grid-column: 1 / -1;
+}
+
 .number-input {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1538,6 +1642,15 @@ button:disabled {
   .author-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .structure-section-head {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .structure-mark-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .common-test-preview {

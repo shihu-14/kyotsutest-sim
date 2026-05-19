@@ -39,9 +39,13 @@ describe("AuthoringEditor", () => {
   it("blocks publishing and shows red validation errors when marks do not match metadata", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
+    const source = String.raw`\examtitle{Bad}
+\sectiontitle{第1問}
+\mark[answer=1,points=5,choices=4]{1}`;
 
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
+    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
     await user.click(screen.getByRole("button", { name: "投稿" }));
 
     expect(onPublish).not.toHaveBeenCalled();
@@ -78,6 +82,34 @@ describe("AuthoringEditor", () => {
         questions: [
           expect.objectContaining({ label: "1", section: "第1問 問1", points: 4 }),
           expect.objectContaining({ label: "2", section: "第1問 問2", points: 6 })
+        ]
+      })
+    );
+  });
+
+  it("adds subquestions and marks from the structured editor", async () => {
+    const user = userEvent.setup();
+    const onPublish = vi.fn();
+    const source = String.raw`\examtitle{Parsed}
+\sectiontitle{第1問}
+\mark[answer=1,points=4,choices=4]{1}`;
+
+    render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
+
+    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
+    const sectionTitle = screen.getByLabelText("大問 1 タイトル");
+    await user.clear(sectionTitle);
+    await user.type(sectionTitle, "第A問");
+    await user.click(screen.getByRole("button", { name: "小問追加" }));
+    await user.click(screen.getAllByRole("button", { name: "マーク追加" })[1]);
+    await user.click(screen.getByRole("button", { name: "投稿" }));
+
+    expect(onPublish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        totalPoints: 5,
+        questions: [
+          expect.objectContaining({ label: "1", section: "第A問", points: 4 }),
+          expect.objectContaining({ label: "2", section: "第A問 問1", points: 1 })
         ]
       })
     );

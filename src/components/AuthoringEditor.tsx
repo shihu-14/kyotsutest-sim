@@ -1,6 +1,17 @@
 import Editor from "@monaco-editor/react";
 import { useMemo, useState } from "react";
-import type { AuthoringMeta, Exam, QuestionSlot } from "../types";
+import type { AuthoringMeta, Exam, ProblemBlock, QuestionSlot } from "../types";
+import {
+  countDraftMarks,
+  getDraftMarkEntries,
+  parseAuthoringDraft,
+  serializeAuthoringDraft,
+  sumDraftPoints,
+  type DraftMark,
+  type DraftSection,
+  type DraftSubsection,
+  type ExamDraft
+} from "../utils/authoringDraft";
 import { defaultAuthoringMeta, defaultAuthoringSource, parseAuthoringLatex } from "../utils/latex";
 import { loadAuthorMeta, loadAuthorSource, saveAuthorMeta, saveAuthorSource } from "../utils/storage";
 
@@ -13,118 +24,11 @@ interface AuthoringEditorProps {
 type TextMetaKey = "title" | "subject" | "description";
 type NumberMetaKey = "questionCount" | "totalPoints" | "durationMinutes";
 
-interface EditableMark {
-  index: number;
-  label: string;
-  answer: string;
-  points: number;
-  choices: number;
-  multi: boolean;
-}
-
 const textFields: Array<{ key: TextMetaKey; label: string; multiline?: boolean }> = [
   { key: "title", label: "タイトル" },
   { key: "subject", label: "科目名" },
   { key: "description", label: "説明", multiline: true }
 ];
-
-function parseMarkAttrs(input: string | undefined): Record<string, string> {
-  if (!input) {
-    return {};
-  }
-
-  return input.split(",").reduce<Record<string, string>>((attrs, pair) => {
-    const [rawKey, ...rawValue] = pair.split("=");
-    const key = rawKey?.trim();
-    if (!key) {
-      return attrs;
-    }
-
-    attrs[key] = rawValue.join("=").trim();
-    return attrs;
-  }, {});
-}
-
-function serializeMarkAttrs(attrs: Record<string, string>): string {
-  const orderedKeys = ["answer", "points", "choices", "multi"];
-  const extras = Object.keys(attrs).filter((key) => !orderedKeys.includes(key));
-  return [...orderedKeys, ...extras]
-    .filter((key) => attrs[key] !== undefined && attrs[key] !== "")
-    .map((key) => `${key}=${attrs[key]}`)
-    .join(",");
-}
-
-function getEditableMarks(source: string): EditableMark[] {
-  const marks: EditableMark[] = [];
-  const pattern = /\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = pattern.exec(source)) !== null) {
-    const attrs = parseMarkAttrs(match[1]);
-    const answer = attrs.answer ?? "";
-    const points = Number(attrs.points ?? 0);
-    const choices = Number(attrs.choices ?? 4);
-
-    marks.push({
-      index: marks.length,
-      label: match[2],
-      answer,
-      points: Number.isFinite(points) ? points : 0,
-      choices: Number.isInteger(choices) && choices > 0 ? choices : 4,
-      multi: attrs.multi === "true" || answer.includes("|")
-    });
-  }
-
-  return marks;
-}
-
-function updateMarkCommand(source: string, targetIndex: number, updates: Partial<EditableMark>): string {
-  let currentIndex = 0;
-  return source.replace(/\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g, (full, attrsRaw: string, label: string) => {
-    const isTarget = currentIndex === targetIndex;
-    currentIndex += 1;
-    if (!isTarget) {
-      return full;
-    }
-
-    const attrs = parseMarkAttrs(attrsRaw);
-    if (updates.answer !== undefined) {
-      attrs.answer = updates.answer;
-    }
-    if (updates.points !== undefined) {
-      attrs.points = String(Math.max(0, updates.points));
-    }
-    if (updates.choices !== undefined) {
-      attrs.choices = String(Math.max(1, updates.choices));
-    }
-    if (updates.multi !== undefined) {
-      if (updates.multi) {
-        attrs.multi = "true";
-      } else {
-        delete attrs.multi;
-      }
-    }
-
-    return `\\mark[${serializeMarkAttrs(attrs)}]{${label}}`;
-  });
-}
-
-function appendDefaultMarkDefinitions(source: string, meta: AuthoringMeta): string {
-  if (getEditableMarks(source).length > 0) {
-    return source;
-  }
-
-  const questionCount = Math.max(1, meta.questionCount);
-  const basePoints = Math.floor(meta.totalPoints / questionCount);
-  const remainder = meta.totalPoints % questionCount;
-  const markLines = Array.from({ length: questionCount }, (_item, index) => {
-    const label = String(index + 1);
-    const points = basePoints + (index < remainder ? 1 : 0);
-    return `\\mark[answer=1,points=${points},choices=4]{${label}}`;
-  });
-
-  return `${source.trimEnd()}\n\n% Answer mark definitions\n${markLines.join("\n")}\n`;
-}
 
 const numberFields: Array<{ key: NumberMetaKey; label: string; suffix: string }> = [
   { key: "questionCount", label: "設問数", suffix: "問" },
@@ -158,30 +62,94 @@ function metaFromExam(exam: Exam | null | undefined): AuthoringMeta {
   };
 }
 
+function createDraftMark(label: string, points = 1): DraftMark {
+  return {
+    id: `mark-${label}`,
+    label,
+    answer: "1",
+    points,
+    choices: 4,
+    multi: false
+  };
+}
+
+function createDraftSection(index: number): DraftSection {
+  return {
+    id: `section-${index + 1}`,
+    title: `第${index + 1}問`,
+    body: "",
+    marks: [],
+    subsections: []
+  };
+}
+
+function createDraftSubsection(sectionIndex: number, subsectionIndex: number): DraftSubsection {
+  return {
+    id: `section-${sectionIndex + 1}-subsection-${subsectionIndex + 1}`,
+    title: `問${subsectionIndex + 1}`,
+    body: "",
+    marks: []
+  };
+}
+
+function cloneDraft(draft: ExamDraft): ExamDraft {
+  return {
+    sections: draft.sections.map((section) => ({
+      ...section,
+      marks: section.marks.map((mark) => ({ ...mark })),
+      subsections: section.subsections.map((subsection) => ({
+        ...subsection,
+        marks: subsection.marks.map((mark) => ({ ...mark }))
+      }))
+    }))
+  };
+}
+
+function draftFromExam(exam: Exam): ExamDraft {
+  const sections: DraftSection[] = [];
+
+  exam.questions.forEach((question, index) => {
+    const [sectionTitle, ...subsectionParts] = question.section.split(/\s+/);
+    const subsectionTitle = subsectionParts.join(" ");
+    let section = sections.find((candidate) => candidate.title === sectionTitle);
+    if (!section) {
+      section = createDraftSection(sections.length);
+      section.title = sectionTitle || `第${sections.length + 1}問`;
+      sections.push(section);
+    }
+
+    const mark: DraftMark = {
+      id: `mark-${index + 1}`,
+      label: question.label,
+      answer: question.correct.join("|"),
+      points: question.points,
+      choices: question.options.length,
+      multi: question.multi
+    };
+
+    if (subsectionTitle) {
+      let subsection = section.subsections.find((candidate) => candidate.title === subsectionTitle);
+      if (!subsection) {
+        subsection = createDraftSubsection(sections.length - 1, section.subsections.length);
+        subsection.title = subsectionTitle;
+        section.subsections.push(subsection);
+      }
+      subsection.marks.push(mark);
+      return;
+    }
+
+    section.marks.push(mark);
+  });
+
+  return { sections };
+}
+
 function sourceFromExam(exam: Exam | null | undefined): string {
   if (!exam) {
     return loadAuthorSource(defaultAuthoringSource);
   }
 
-  const markLines = exam.questions.map(
-    (question) =>
-      `\\mark[answer=${question.correct.join("|")},points=${question.points},choices=${question.options.length}${
-        question.multi ? ",multi=true" : ""
-      }]{${question.label}} % ${question.section}`
-  );
-
-  return [
-    `% ${exam.title}`,
-    `% 既存試験を編集しています。メタ情報は設定から変更できます。`,
-    "\\documentclass{article}",
-    "\\begin{document}",
-    `\\section*{${exam.title}}`,
-    exam.description,
-    "",
-    "% 解答欄定義",
-    ...markLines,
-    "\\end{document}"
-  ].join("\n");
+  return serializeAuthoringDraft(metaFromExam(exam), draftFromExam(exam));
 }
 
 function getMarkSections(source: string): string[] {
@@ -250,9 +218,49 @@ function createDefaultQuestion(index: number, totalPoints: number, questionCount
   };
 }
 
+function paragraphBlocks(body: string): ProblemBlock[] {
+  return body
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((text) => ({ type: "paragraph", text }));
+}
+
+function buildDraftPageBlocks(draft: ExamDraft, questions: QuestionSlot[], meta: AuthoringMeta): ProblemBlock[] {
+  const blocks: ProblemBlock[] = [];
+  let questionIndex = 0;
+
+  draft.sections.forEach((section) => {
+    blocks.push({ type: "heading", text: section.title, level: 2 });
+    blocks.push(...paragraphBlocks(section.body));
+    section.marks.forEach(() => {
+      const question = questions[questionIndex];
+      questionIndex += 1;
+      if (question) {
+        blocks.push({ type: "question", questionId: question.id });
+      }
+    });
+    section.subsections.forEach((subsection) => {
+      blocks.push({ type: "heading", text: subsection.title, level: 3 });
+      blocks.push(...paragraphBlocks(subsection.body));
+      subsection.marks.forEach(() => {
+        const question = questions[questionIndex];
+        questionIndex += 1;
+        if (question) {
+          blocks.push({ type: "question", questionId: question.id });
+        }
+      });
+    });
+  });
+
+  return blocks.length ? blocks : [{ type: "heading", text: meta.title, level: 2 }];
+}
+
 function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Exam | null | undefined): Exam {
   const parsed = parseAuthoringLatex(source);
-  const markSections = getMarkSections(source);
+  const draft = parseAuthoringDraft(source);
+  const draftEntries = getDraftMarkEntries(draft);
+  const markSections = draftEntries.length ? draftEntries.map((entry) => entry.sectionTitle) : getMarkSections(source);
 
   if (initialExam) {
     const questions = parsed.marks.length
@@ -265,6 +273,7 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
           return {
             ...question,
             label: mark.label,
+            section: markSections[index] ?? question.section,
             points: mark.points,
             multi: mark.multi,
             options: Array.from({ length: mark.choices }, (_item, optionIndex) => {
@@ -332,11 +341,7 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
         id: "draft-p1",
         pageNumber: 1,
         title: meta.title,
-        blocks: [
-          { type: "heading", text: meta.title, level: 2 },
-          { type: "paragraph", text: source.slice(0, 240) || "投稿されたTeXコードから作成した問題です。" },
-          ...questions.map((question) => ({ type: "question" as const, questionId: question.id }))
-        ]
+        blocks: buildDraftPageBlocks(draft, questions, meta)
       }
     ],
     questions
@@ -353,15 +358,17 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [publishState, setPublishState] = useState<"idle" | "published">("idle");
   const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
-  const editableMarks = useMemo(() => getEditableMarks(source), [source]);
+  const draft = useMemo(() => parseAuthoringDraft(source), [source]);
   const sourceStats = useMemo(() => {
     const parsed = parseAuthoringLatex(source);
     return {
       lines: source.split("\n").length,
       marks: parsed.marks.length,
+      sections: draft.sections.length,
+      subsections: draft.sections.reduce((sum, section) => sum + section.subsections.length, 0),
       answerSlots: source.match(/\\counterbox/g)?.length ?? 0
     };
-  }, [source]);
+  }, [draft, source]);
   const isDirty = source !== savedSource || !sameMeta(meta, savedMeta);
 
   const saveDraft = () => {
@@ -400,8 +407,15 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
     setMeta((current) => ({ ...current, [key]: Number.isFinite(numericValue) ? Math.max(0, numericValue) : 0 }));
   };
 
-  const updateMark = (index: number, updates: Partial<EditableMark>) => {
-    setSource((currentSource) => updateMarkCommand(currentSource, index, updates));
+  const applyDraft = (nextDraft: ExamDraft) => {
+    const nextQuestionCount = countDraftMarks(nextDraft);
+    const nextTotalPoints = sumDraftPoints(nextDraft);
+    setMeta((current) => ({
+      ...current,
+      questionCount: nextQuestionCount || current.questionCount,
+      totalPoints: nextQuestionCount ? nextTotalPoints : current.totalPoints
+    }));
+    setSource(serializeAuthoringDraft(meta, nextDraft));
   };
 
   return (
@@ -436,8 +450,9 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
             <h2>TeXコード</h2>
             <span>{sourceStats.lines} lines</span>
           </div>
+          <StructureEditor draft={draft} onChange={applyDraft} />
           <Editor
-            height="calc(100vh - 188px)"
+            height="calc(100vh - 472px)"
             defaultLanguage="latex"
             theme="vs-light"
             value={source}
@@ -457,14 +472,12 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
           <section className="preview-pane" aria-label="共通テスト形式プレビュー">
             <div className="preview-heading">
               <h2>プレビュー</h2>
-              <span>解答欄 {sourceStats.answerSlots || sourceStats.marks}</span>
+              <span>
+                大問 {sourceStats.sections} / 小問 {sourceStats.subsections} / 解答欄{" "}
+                {sourceStats.answerSlots || sourceStats.marks}
+              </span>
             </div>
             <CommonTestPreview meta={meta} />
-            <AnswerMarkSettings
-              marks={editableMarks}
-              onCreate={() => setSource((currentSource) => appendDefaultMarkDefinitions(currentSource, meta))}
-              onUpdate={updateMark}
-            />
             {showValidationErrors && validationErrors.length ? (
               <div className="validation-errors" role="alert">
                 <strong>投稿できません</strong>
@@ -481,7 +494,12 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
 
       {showSettingsDialog ? (
         <div className="dialog-backdrop" role="presentation">
-          <section className="confirm-dialog settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-dialog-title">
+          <section
+            className="confirm-dialog settings-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="settings-dialog-title"
+          >
             <h2 id="settings-dialog-title">設定</h2>
             <div className="meta-form">
               {textFields.map((field) => (
@@ -556,70 +574,239 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   );
 }
 
-interface AnswerMarkSettingsProps {
-  marks: EditableMark[];
-  onCreate: () => void;
-  onUpdate: (index: number, updates: Partial<EditableMark>) => void;
+interface StructureEditorProps {
+  draft: ExamDraft;
+  onChange: (draft: ExamDraft) => void;
 }
 
-function AnswerMarkSettings({ marks, onCreate, onUpdate }: AnswerMarkSettingsProps) {
+function StructureEditor({ draft, onChange }: StructureEditorProps) {
+  const updateSection = (sectionIndex: number, updates: Partial<DraftSection>) => {
+    const nextDraft = cloneDraft(draft);
+    nextDraft.sections[sectionIndex] = { ...nextDraft.sections[sectionIndex], ...updates };
+    onChange(nextDraft);
+  };
+
+  const updateSubsection = (
+    sectionIndex: number,
+    subsectionIndex: number,
+    updates: Partial<DraftSubsection>
+  ) => {
+    const nextDraft = cloneDraft(draft);
+    nextDraft.sections[sectionIndex].subsections[subsectionIndex] = {
+      ...nextDraft.sections[sectionIndex].subsections[subsectionIndex],
+      ...updates
+    };
+    onChange(nextDraft);
+  };
+
+  const updateMark = (
+    sectionIndex: number,
+    subsectionIndex: number | null,
+    markIndex: number,
+    updates: Partial<DraftMark>
+  ) => {
+    const nextDraft = cloneDraft(draft);
+    const marks =
+      subsectionIndex === null
+        ? nextDraft.sections[sectionIndex].marks
+        : nextDraft.sections[sectionIndex].subsections[subsectionIndex].marks;
+    marks[markIndex] = { ...marks[markIndex], ...updates };
+    onChange(nextDraft);
+  };
+
+  const addSection = () => {
+    onChange({ sections: [...draft.sections, createDraftSection(draft.sections.length)] });
+  };
+
+  const addSubsection = (sectionIndex: number) => {
+    const nextDraft = cloneDraft(draft);
+    const section = nextDraft.sections[sectionIndex];
+    section.subsections.push(createDraftSubsection(sectionIndex, section.subsections.length));
+    onChange(nextDraft);
+  };
+
+  const addMark = (sectionIndex: number, subsectionIndex: number | null) => {
+    const nextDraft = cloneDraft(draft);
+    const label = String(countDraftMarks(nextDraft) + 1);
+    const target =
+      subsectionIndex === null
+        ? nextDraft.sections[sectionIndex].marks
+        : nextDraft.sections[sectionIndex].subsections[subsectionIndex].marks;
+    target.push(createDraftMark(label));
+    onChange(nextDraft);
+  };
+
+  const removeMark = (sectionIndex: number, subsectionIndex: number | null, markIndex: number) => {
+    const nextDraft = cloneDraft(draft);
+    const target =
+      subsectionIndex === null
+        ? nextDraft.sections[sectionIndex].marks
+        : nextDraft.sections[sectionIndex].subsections[subsectionIndex].marks;
+    target.splice(markIndex, 1);
+    onChange(nextDraft);
+  };
+
   return (
-    <section className="answer-settings" aria-label="解答マーク設定">
-      <div className="answer-settings-heading">
-        <h2>解答マーク設定</h2>
-        {!marks.length ? (
-          <button className="secondary-button" type="button" onClick={onCreate}>
-            解答欄を作成
-          </button>
-        ) : null}
+    <section className="structure-editor" aria-label="問題構成エディタ">
+      <div className="structure-heading">
+        <h2>問題構成</h2>
+        <button className="secondary-button" type="button" onClick={addSection}>
+          大問追加
+        </button>
       </div>
-      {marks.length ? (
-        <div className="answer-settings-list">
-          {marks.map((mark) => (
-            <div className="answer-setting-row" key={`${mark.index}-${mark.label}`}>
-              <strong>{mark.label}</strong>
-              <label>
-                <span>正解</span>
-                <input
-                  aria-label={`${mark.label} 正解`}
-                  value={mark.answer}
-                  onChange={(event) => onUpdate(mark.index, { answer: event.currentTarget.value })}
+      {draft.sections.length ? (
+        <div className="structure-list">
+          {draft.sections.map((section, sectionIndex) => (
+            <article className="structure-section" key={section.id}>
+              <div className="structure-section-head">
+                <label>
+                  <span>大問</span>
+                  <input
+                    aria-label={`大問 ${sectionIndex + 1} タイトル`}
+                    value={section.title}
+                    onChange={(event) => updateSection(sectionIndex, { title: event.currentTarget.value })}
+                  />
+                </label>
+                <button className="secondary-button" type="button" onClick={() => addSubsection(sectionIndex)}>
+                  小問追加
+                </button>
+                <button className="secondary-button" type="button" onClick={() => addMark(sectionIndex, null)}>
+                  マーク追加
+                </button>
+              </div>
+              <label className="structure-body">
+                <span>本文</span>
+                <textarea
+                  aria-label={`${section.title} 本文`}
+                  rows={2}
+                  value={section.body}
+                  onChange={(event) => updateSection(sectionIndex, { body: event.currentTarget.value })}
                 />
               </label>
-              <label>
-                <span>配点</span>
-                <input
-                  aria-label={`${mark.label} 配点`}
-                  min={0}
-                  type="number"
-                  value={mark.points}
-                  onChange={(event) => onUpdate(mark.index, { points: Number(event.currentTarget.value) })}
-                />
-              </label>
-              <label>
-                <span>選択肢</span>
-                <input
-                  aria-label={`${mark.label} 選択肢`}
-                  min={1}
-                  type="number"
-                  value={mark.choices}
-                  onChange={(event) => onUpdate(mark.index, { choices: Number(event.currentTarget.value) })}
-                />
-              </label>
-              <label className="answer-setting-check">
-                <input
-                  aria-label={`${mark.label} 複数回答`}
-                  checked={mark.multi}
-                  type="checkbox"
-                  onChange={(event) => onUpdate(mark.index, { multi: event.currentTarget.checked })}
-                />
-                <span>複数</span>
-              </label>
-            </div>
+              <MarkList
+                marks={section.marks}
+                prefix={section.title}
+                onRemove={(markIndex) => removeMark(sectionIndex, null, markIndex)}
+                onUpdate={(markIndex, updates) => updateMark(sectionIndex, null, markIndex, updates)}
+              />
+              {section.subsections.map((subsection, subsectionIndex) => (
+                <section className="structure-subsection" key={subsection.id}>
+                  <div className="structure-section-head">
+                    <label>
+                      <span>小問</span>
+                      <input
+                        aria-label={`${section.title} 小問 ${subsectionIndex + 1} タイトル`}
+                        value={subsection.title}
+                        onChange={(event) =>
+                          updateSubsection(sectionIndex, subsectionIndex, { title: event.currentTarget.value })
+                        }
+                      />
+                    </label>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => addMark(sectionIndex, subsectionIndex)}
+                    >
+                      マーク追加
+                    </button>
+                  </div>
+                  <label className="structure-body">
+                    <span>本文</span>
+                    <textarea
+                      aria-label={`${section.title} ${subsection.title} 本文`}
+                      rows={2}
+                      value={subsection.body}
+                      onChange={(event) =>
+                        updateSubsection(sectionIndex, subsectionIndex, { body: event.currentTarget.value })
+                      }
+                    />
+                  </label>
+                  <MarkList
+                    marks={subsection.marks}
+                    prefix={`${section.title} ${subsection.title}`}
+                    onRemove={(markIndex) => removeMark(sectionIndex, subsectionIndex, markIndex)}
+                    onUpdate={(markIndex, updates) =>
+                      updateMark(sectionIndex, subsectionIndex, markIndex, updates)
+                    }
+                  />
+                </section>
+              ))}
+            </article>
           ))}
         </div>
       ) : null}
     </section>
+  );
+}
+
+interface MarkListProps {
+  marks: DraftMark[];
+  prefix: string;
+  onRemove: (markIndex: number) => void;
+  onUpdate: (markIndex: number, updates: Partial<DraftMark>) => void;
+}
+
+function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
+  if (!marks.length) {
+    return null;
+  }
+
+  return (
+    <div className="structure-mark-list">
+      {marks.map((mark, markIndex) => (
+        <div className="structure-mark-row" key={mark.id}>
+          <label>
+            <span>番号</span>
+            <input
+              aria-label={`${mark.label} 解答番号`}
+              value={mark.label}
+              onChange={(event) => onUpdate(markIndex, { label: event.currentTarget.value })}
+            />
+          </label>
+          <label>
+            <span>正解</span>
+            <input
+              aria-label={`${mark.label} 正解`}
+              value={mark.answer}
+              onChange={(event) => onUpdate(markIndex, { answer: event.currentTarget.value })}
+            />
+          </label>
+          <label>
+            <span>配点</span>
+            <input
+              aria-label={`${mark.label} 配点`}
+              min={0}
+              type="number"
+              value={mark.points}
+              onChange={(event) => onUpdate(markIndex, { points: Number(event.currentTarget.value) })}
+            />
+          </label>
+          <label>
+            <span>選択肢</span>
+            <input
+              aria-label={`${mark.label} 選択肢`}
+              min={1}
+              type="number"
+              value={mark.choices}
+              onChange={(event) => onUpdate(markIndex, { choices: Number(event.currentTarget.value) })}
+            />
+          </label>
+          <label className="structure-check">
+            <input
+              aria-label={`${mark.label} 複数回答`}
+              checked={mark.multi}
+              type="checkbox"
+              onChange={(event) => onUpdate(markIndex, { multi: event.currentTarget.checked })}
+            />
+            <span>複数</span>
+          </label>
+          <button className="secondary-button" type="button" onClick={() => onRemove(markIndex)}>
+            削除
+          </button>
+          <span className="structure-mark-context">{prefix}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
