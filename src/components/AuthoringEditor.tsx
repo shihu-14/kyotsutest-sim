@@ -1,6 +1,7 @@
 import Editor from "@monaco-editor/react";
 import { useMemo, useState } from "react";
-import type { AuthoringMeta, Exam, ProblemBlock, QuestionSlot } from "../types";
+import type { AuthoringMeta, Exam, ProblemBlock, QuestionSlot, UserAnswers } from "../types";
+import { ProblemBooklet } from "./ProblemBooklet";
 import {
   countDraftMarks,
   createDefaultChoices,
@@ -39,6 +40,8 @@ const numberFields: Array<{ key: NumberMetaKey; label: string; suffix: string }>
   { key: "totalPoints", label: "配点", suffix: "点" },
   { key: "durationMinutes", label: "制限時間", suffix: "分" }
 ];
+const previewAnswers: UserAnswers = {};
+const ignorePreviewAnswer = () => undefined;
 
 function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
   return (
@@ -367,6 +370,10 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const [authorMode, setAuthorMode] = useState<AuthorMode>("form");
   const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
   const draft = useMemo(() => parseAuthoringDraft(source), [source]);
+  const previewExam = useMemo(
+    () => (initialExam ? buildPublishedExam(meta, source, initialExam) : null),
+    [initialExam, meta, source]
+  );
   const sourceStats = useMemo(() => {
     const parsed = parseAuthoringLatex(source);
     return {
@@ -430,8 +437,8 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
     <main className="author-layout">
       <header className="exam-toolbar">
         <div>
-          <p className="eyebrow">New exam</p>
-          <h1>新規作成</h1>
+          <p className="eyebrow">{initialExam ? "Edit exam" : "New exam"}</p>
+          <h1>{initialExam ? meta.title || initialExam.title : "新規作成"}</h1>
         </div>
         <div className="author-actions">
           <span className={`save-state ${isDirty ? "dirty" : ""}`}>
@@ -503,11 +510,14 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
             <div className="preview-heading">
               <h2>プレビュー</h2>
               <span>
-                大問 {sourceStats.sections} / 小問 {sourceStats.subsections} / 解答欄{" "}
-                {sourceStats.answerSlots || sourceStats.marks}
+                {previewExam
+                  ? `ページ ${previewExam.pages.length} / 解答欄 ${sourceStats.answerSlots || sourceStats.marks}`
+                  : `大問 ${sourceStats.sections} / 小問 ${sourceStats.subsections} / 解答欄 ${
+                      sourceStats.answerSlots || sourceStats.marks
+                    }`}
               </span>
             </div>
-            <CommonTestPreview draft={draft} meta={meta} />
+            {previewExam ? <ExistingExamPreview exam={previewExam} /> : <CommonTestPreview draft={draft} meta={meta} />}
             {showValidationErrors && validationErrors.length ? (
               <div className="validation-errors" role="alert">
                 <strong>投稿できません</strong>
@@ -601,6 +611,45 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
         </div>
       ) : null}
     </main>
+  );
+}
+
+function ExistingExamPreview({ exam }: { exam: Exam }) {
+  const questionsById = useMemo(
+    () => new Map(exam.questions.map((question) => [question.id, question])),
+    [exam.questions]
+  );
+  const previewPages = exam.pages.slice(0, 3);
+
+  return (
+    <div className="existing-exam-preview">
+      {exam.coverImageUrl ? (
+        <figure className="existing-preview-cover" aria-label={`${exam.title}の表紙プレビュー`}>
+          <img src={exam.coverImageUrl} alt={`${exam.title}の表紙`} />
+        </figure>
+      ) : null}
+      {previewPages.map((page) => (
+        <section
+          className={`existing-preview-page ${page.pageImageUrl ? "exact" : ""}`}
+          key={page.id}
+          aria-label={`${page.title}のプレビュー`}
+        >
+          <div className="existing-preview-caption">
+            <span>{page.pageNumber}</span>
+            <strong>{page.title}</strong>
+          </div>
+          <ProblemBooklet
+            answers={previewAnswers}
+            page={page}
+            questionsById={questionsById}
+            onToggleAnswer={ignorePreviewAnswer}
+          />
+        </section>
+      ))}
+      {exam.pages.length > previewPages.length ? (
+        <p className="existing-preview-note">残り {exam.pages.length - previewPages.length} ページ</p>
+      ) : null}
+    </div>
   );
 }
 

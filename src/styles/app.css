@@ -1328,6 +1328,98 @@ button:disabled {
   padding-right: 4px;
 }
 
+.existing-exam-preview {
+  display: grid;
+  max-height: calc(100vh - 260px);
+  gap: 12px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.existing-preview-cover,
+.existing-preview-page {
+  overflow: hidden;
+  border: 1px solid #d3c8ba;
+  border-radius: 4px;
+  background: #fffefb;
+}
+
+.existing-preview-cover {
+  margin: 0;
+}
+
+.existing-preview-cover img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.existing-preview-caption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid #ded2bd;
+  background: #fbf6ec;
+  padding: 8px 10px;
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-size: 0.78rem;
+}
+
+.existing-preview-caption span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid #b9ab94;
+  border-radius: 50%;
+  background: #fffaf1;
+  font-weight: 900;
+}
+
+.existing-preview-caption strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.existing-preview-page .booklet-page {
+  height: auto;
+  min-height: 380px;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.existing-preview-page.exact .booklet-page.exact-page {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 1247 / 1772;
+}
+
+.existing-preview-page.exact .exact-page-frame {
+  width: 100%;
+  height: 100%;
+  box-shadow: none;
+}
+
+.existing-preview-page .choice-button,
+.existing-preview-page .page-image-mark {
+  cursor: default;
+}
+
+.existing-preview-note {
+  margin: 0;
+  color: #626d67;
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .answer-settings {
   display: grid;
   gap: 10px;

@@ -39,6 +39,19 @@ describe("AuthoringEditor", () => {
     await user.click(screen.getByRole("button", { name: "投稿" }));
 
     expect(onPublish).toHaveBeenCalledWith(expect.objectContaining({ id: exam.id, title: "編集済み漫画映画" }));
+    expect(onPublish.mock.calls[0][0].pages[0].pageImageUrl).toBe(exam.pages[0].pageImageUrl);
+  });
+
+  it("previews the selected image-based exam instead of a generated draft page", () => {
+    const onPublish = vi.fn();
+    const exam = sampleExams[1];
+
+    render(<AuthoringEditor initialExam={exam} onBack={vi.fn()} onPublish={onPublish} />);
+
+    expect(screen.getByRole("heading", { name: exam.title })).toBeInTheDocument();
+    expect(screen.getByLabelText(`${exam.title}の表紙プレビュー`)).toBeInTheDocument();
+    expect(screen.getByAltText("第1問 方程式クイズのPDF再現ページ")).toBeInTheDocument();
+    expect(screen.getByText("残り 10 ページ")).toBeInTheDocument();
   });
 
   it("blocks publishing and shows red validation errors when marks do not match metadata", async () => {
