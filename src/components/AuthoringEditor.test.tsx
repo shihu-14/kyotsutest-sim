@@ -20,6 +20,22 @@ describe("AuthoringEditor", () => {
     fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
   }
 
+  function getSettingsDialog() {
+    const dialog = screen.getByText("設定", { selector: "h2" }).closest("section");
+    expect(dialog).not.toBeNull();
+    return dialog as HTMLElement;
+  }
+
+  function getButtonsByText(name: string) {
+    return screen.getAllByText(name).filter((element): element is HTMLButtonElement => element.tagName === "BUTTON");
+  }
+
+  function getButtonByText(name: string) {
+    const button = getButtonsByText(name)[0];
+    expect(button).toBeDefined();
+    return button;
+  }
+
   it("opens metadata in settings and publishes edits for the selected exam", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
@@ -29,20 +45,24 @@ describe("AuthoringEditor", () => {
 
     expect(screen.queryByLabelText("試験メタ情報")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "設定" }));
+    await user.click(getButtonByText("設定"));
 
-    const settingsDialog = screen.getByRole("dialog", { name: "設定" });
+    const settingsDialog = getSettingsDialog();
     const titleInput = within(settingsDialog).getByLabelText("タイトル");
     await user.clear(titleInput);
     await user.type(titleInput, "編集済み漫画映画");
-    await user.click(screen.getByRole("button", { name: "閉じる" }));
-    await user.click(screen.getByRole("button", { name: "投稿" }));
+    await user.click(getButtonByText("閉じる"));
+    await user.click(getButtonByText("投稿"));
 
     expect(onPublish).toHaveBeenCalledWith(expect.objectContaining({ id: exam.id, title: "編集済み漫画映画" }));
-    expect(onPublish.mock.calls[0][0].pages[0].pageImageUrl).toBe(exam.pages[0].pageImageUrl);
+    expect(onPublish.mock.calls[0][0].pages[0].pageImageUrl).toBeUndefined();
+    expect(onPublish.mock.calls[0][0].pages[0].blocks).toEqual(
+      expect.arrayContaining([expect.objectContaining({ questionId: "anime-q01", type: "question" })])
+    );
   });
 
-  it("previews the selected image-based exam instead of a generated draft page", () => {
+  it("previews the selected exam from the editable draft and writes full choice TeX", async () => {
+    const user = userEvent.setup();
     const onPublish = vi.fn();
     const exam = sampleExams[1];
 
@@ -50,8 +70,13 @@ describe("AuthoringEditor", () => {
 
     expect(screen.getByRole("heading", { name: exam.title })).toBeInTheDocument();
     expect(screen.getByLabelText(`${exam.title}の表紙プレビュー`)).toBeInTheDocument();
-    expect(screen.getByAltText("第1問 方程式クイズのPDF再現ページ")).toBeInTheDocument();
-    expect(screen.getByText("残り 10 ページ")).toBeInTheDocument();
+    expect(screen.getByLabelText("第1問のプレビュー")).toBeInTheDocument();
+    expect(screen.queryByAltText("第1問 方程式クイズのPDF再現ページ")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "詳細TeX" }));
+    expect((screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value).toContain(
+      "\\choice{1}{4}{【推しの子】}"
+    );
   });
 
   it("blocks publishing and shows red validation errors when marks do not match metadata", async () => {
@@ -64,7 +89,7 @@ describe("AuthoringEditor", () => {
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
     await enterSource(user, source);
-    await user.click(screen.getByRole("button", { name: "投稿" }));
+    await user.click(getButtonByText("投稿"));
 
     expect(onPublish).not.toHaveBeenCalled();
     expect(screen.getByRole("alert")).toHaveTextContent("投稿できません");
@@ -84,16 +109,16 @@ describe("AuthoringEditor", () => {
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
     await enterSource(user, source);
-    await user.click(screen.getByRole("button", { name: "設定" }));
+    await user.click(getButtonByText("設定"));
 
-    const settingsDialog = screen.getByRole("dialog", { name: "設定" });
+    const settingsDialog = getSettingsDialog();
     const [questionCountInput, totalPointsInput] = within(settingsDialog).getAllByRole("spinbutton");
     await user.clear(questionCountInput);
     await user.type(questionCountInput, "2");
     await user.clear(totalPointsInput);
     await user.type(totalPointsInput, "10");
-    await user.click(screen.getByRole("button", { name: "閉じる" }));
-    await user.click(screen.getByRole("button", { name: "投稿" }));
+    await user.click(getButtonByText("閉じる"));
+    await user.click(getButtonByText("投稿"));
 
     expect(onPublish).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -116,16 +141,17 @@ describe("AuthoringEditor", () => {
 
     await enterSource(user, source);
     await user.click(screen.getByRole("tab", { name: "フォーム" }));
-    const sectionTitle = screen.getByLabelText("大問 1 タイトル");
-    await user.clear(sectionTitle);
-    await user.type(sectionTitle, "第A問");
+    expect(screen.queryByLabelText("大問 1 タイトル")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("第1問")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("1 マーク内容"), {
       target: { value: "Alpha\nBeta\nGamma\nDelta" }
     });
     expect(screen.getByText("Alpha")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "小問追加" }));
-    await user.click(screen.getAllByRole("button", { name: "マーク追加" })[1]);
-    await user.click(screen.getByRole("button", { name: "投稿" }));
+    await user.click(getButtonByText("大問追加"));
+    expect(screen.getByLabelText("第2問")).toBeInTheDocument();
+    await user.click(getButtonsByText("小問追加")[0]);
+    await user.click(getButtonsByText("マーク追加")[1]);
+    await user.click(getButtonByText("投稿"));
 
     expect(onPublish).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -133,7 +159,7 @@ describe("AuthoringEditor", () => {
         questions: [
           expect.objectContaining({
             label: "1",
-            section: "第A問",
+            section: "第1問",
             points: 4,
             options: [
               expect.objectContaining({ content: "Alpha" }),
@@ -142,7 +168,7 @@ describe("AuthoringEditor", () => {
               expect.objectContaining({ content: "Delta" })
             ]
           }),
-          expect.objectContaining({ label: "2", section: "第A問 問1", points: 1 })
+          expect.objectContaining({ label: "2", section: "第1問 問1", points: 1 })
         ]
       })
     );
@@ -159,18 +185,18 @@ describe("AuthoringEditor", () => {
 
     await enterSource(user, source);
     await user.click(screen.getByRole("tab", { name: "フォーム" }));
-    await user.click(screen.getByRole("button", { name: "設定" }));
+    await user.click(getButtonByText("設定"));
 
-    const settingsDialog = screen.getByRole("dialog", { name: "設定" });
+    const settingsDialog = getSettingsDialog();
     const [questionCountInput] = within(settingsDialog).getAllByRole("spinbutton");
     await user.clear(questionCountInput);
     await user.type(questionCountInput, "1");
-    await user.click(screen.getByRole("button", { name: "閉じる" }));
+    await user.click(getButtonByText("閉じる"));
 
-    const answerInput = screen.getByLabelText("1 正解");
+    const answerInput = screen.getByLabelText("1 正解番号");
     await user.clear(answerInput);
     await user.type(answerInput, "1|3");
-    await user.click(screen.getByRole("button", { name: "投稿" }));
+    await user.click(getButtonByText("投稿"));
 
     expect(onPublish).toHaveBeenCalledWith(
       expect.objectContaining({

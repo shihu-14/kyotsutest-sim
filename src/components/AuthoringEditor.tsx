@@ -1,6 +1,6 @@
 import Editor from "@monaco-editor/react";
 import { useMemo, useState } from "react";
-import type { AuthoringMeta, Exam, ProblemBlock, QuestionSlot, UserAnswers } from "../types";
+import type { AuthoringMeta, Exam, ExamPage, ProblemBlock, QuestionSlot, UserAnswers } from "../types";
 import { ProblemBooklet } from "./ProblemBooklet";
 import {
   countDraftMarks,
@@ -16,7 +16,7 @@ import {
   type DraftSubsection,
   type ExamDraft
 } from "../utils/authoringDraft";
-import { defaultAuthoringMeta, defaultAuthoringSource, parseAuthoringLatex, renderMathSegments } from "../utils/latex";
+import { defaultAuthoringMeta, defaultAuthoringSource, parseAuthoringLatex } from "../utils/latex";
 import { loadAuthorMeta, loadAuthorSource, saveAuthorMeta, saveAuthorSource } from "../utils/storage";
 
 interface AuthoringEditorProps {
@@ -42,6 +42,7 @@ const numberFields: Array<{ key: NumberMetaKey; label: string; suffix: string }>
 ];
 const previewAnswers: UserAnswers = {};
 const ignorePreviewAnswer = () => undefined;
+const draftPageId = (sectionIndex: number) => `draft-p${sectionIndex + 1}`;
 
 function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
   return (
@@ -116,8 +117,82 @@ function cloneDraft(draft: ExamDraft): ExamDraft {
   };
 }
 
+function normalizeDraft(draft: ExamDraft): ExamDraft {
+  let nextMarkNumber = 1;
+
+  return {
+    sections: draft.sections.map((section, sectionIndex) => ({
+      ...section,
+      title: `第${sectionIndex + 1}問`,
+      marks: section.marks.map((mark) => ({
+        ...mark,
+        label: String(nextMarkNumber++)
+      })),
+      subsections: section.subsections.map((subsection, subsectionIndex) => ({
+        ...subsection,
+        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
+        marks: subsection.marks.map((mark) => ({
+          ...mark,
+          label: String(nextMarkNumber++)
+        }))
+      }))
+    }))
+  };
+}
+
+function draftBodyLineFromBlock(block: ProblemBlock): string | null {
+  if (block.type === "paragraph") {
+    return block.text;
+  }
+
+  if (block.type === "formula") {
+    return `$$${block.latex}$$`;
+  }
+
+  if (block.type === "figure") {
+    if (block.imageUrl) {
+      return `\\includegraphics{${block.imageUrl}}`;
+    }
+    if (block.tikz) {
+      return block.tikz;
+    }
+    return block.caption;
+  }
+
+  if (block.type === "note") {
+    return `【注】${block.text}`;
+  }
+
+  return null;
+}
+
+function sectionKeyFromTitle(title: string): string {
+  return title.match(/第\d+問/)?.[0] ?? title.split(/\s+/)[0] ?? title;
+}
+
+function collectPageBodies(exam: Exam): Map<string, string> {
+  const bodyBySection = new Map<string, string[]>();
+
+  exam.pages.forEach((page) => {
+    const sectionKey = sectionKeyFromTitle(page.title);
+    const lines = bodyBySection.get(sectionKey) ?? [];
+    page.blocks.forEach((block) => {
+      const line = draftBodyLineFromBlock(block);
+      if (line) {
+        lines.push(line);
+      }
+    });
+    if (lines.length) {
+      bodyBySection.set(sectionKey, lines);
+    }
+  });
+
+  return new Map(Array.from(bodyBySection.entries()).map(([sectionKey, lines]) => [sectionKey, lines.join("\n")]));
+}
+
 function draftFromExam(exam: Exam): ExamDraft {
   const sections: DraftSection[] = [];
+  const bodyBySection = collectPageBodies(exam);
 
   exam.questions.forEach((question, index) => {
     const [sectionTitle, ...subsectionParts] = question.section.split(/\s+/);
@@ -128,6 +203,7 @@ function draftFromExam(exam: Exam): ExamDraft {
       section.title = sectionTitle || `第${sections.length + 1}問`;
       sections.push(section);
     }
+    section.body = bodyBySection.get(section.title) ?? section.body;
 
     const mark: DraftMark = {
       id: `mark-${index + 1}`,
@@ -153,7 +229,7 @@ function draftFromExam(exam: Exam): ExamDraft {
     section.marks.push(mark);
   });
 
-  return { sections };
+  return normalizeDraft({ sections });
 }
 
 function sourceFromExam(exam: Exam | null | undefined): string {
@@ -221,7 +297,7 @@ function createDefaultQuestion(index: number, totalPoints: number, questionCount
     label,
     section: `第${index + 1}問`,
     prompt: "作成したTeXコードに対応する解答欄です。",
-    pageId: "draft-p1",
+    pageId: draftPageId(index),
     points,
     multi: false,
     options: ["0", "1", "2", "3", "4"].map((value) => ({ value, label: value, content: value })),
@@ -232,40 +308,76 @@ function createDefaultQuestion(index: number, totalPoints: number, questionCount
 
 function paragraphBlocks(body: string): ProblemBlock[] {
   return body
-    .split(/\n{2,}/)
+    .split(/\n+/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
-    .map((text) => ({ type: "paragraph", text }));
+    .map<ProblemBlock>((text) => {
+      if (text.startsWith("$$") && text.endsWith("$$")) {
+        return { type: "formula", latex: text.slice(2, -2) };
+      }
+
+      const imageMatch = text.match(/^\\includegraphics\{([^}]*)\}$/);
+      if (imageMatch) {
+        return { type: "figure", caption: imageMatch[1], alt: imageMatch[1], imageUrl: imageMatch[1] };
+      }
+
+      if (text.includes("\\begin{tikzpicture}") || text.includes("\\end{tikzpicture}")) {
+        return { type: "figure", caption: "TikZ source", alt: "TikZ source", tikz: text };
+      }
+
+      if (text.startsWith("【注】")) {
+        return { type: "note", text: text.slice(3) };
+      }
+
+      return { type: "paragraph", text };
+    });
 }
 
-function buildDraftPageBlocks(draft: ExamDraft, questions: QuestionSlot[], meta: AuthoringMeta): ProblemBlock[] {
+function buildSectionPageBlocks(section: DraftSection, questions: QuestionSlot[], questionIndex: { value: number }) {
   const blocks: ProblemBlock[] = [];
-  let questionIndex = 0;
-
-  draft.sections.forEach((section) => {
-    blocks.push({ type: "heading", text: section.title, level: 2 });
-    blocks.push(...paragraphBlocks(section.body));
-    section.marks.forEach(() => {
-      const question = questions[questionIndex];
-      questionIndex += 1;
+  blocks.push({ type: "heading", text: section.title, level: 2 });
+  blocks.push(...paragraphBlocks(section.body));
+  section.marks.forEach(() => {
+    const question = questions[questionIndex.value];
+    questionIndex.value += 1;
+    if (question) {
+      blocks.push({ type: "question", questionId: question.id });
+    }
+  });
+  section.subsections.forEach((subsection) => {
+    blocks.push({ type: "heading", text: subsection.title, level: 3 });
+    blocks.push(...paragraphBlocks(subsection.body));
+    subsection.marks.forEach(() => {
+      const question = questions[questionIndex.value];
+      questionIndex.value += 1;
       if (question) {
         blocks.push({ type: "question", questionId: question.id });
       }
     });
-    section.subsections.forEach((subsection) => {
-      blocks.push({ type: "heading", text: subsection.title, level: 3 });
-      blocks.push(...paragraphBlocks(subsection.body));
-      subsection.marks.forEach(() => {
-        const question = questions[questionIndex];
-        questionIndex += 1;
-        if (question) {
-          blocks.push({ type: "question", questionId: question.id });
-        }
-      });
-    });
   });
 
-  return blocks.length ? blocks : [{ type: "heading", text: meta.title, level: 2 }];
+  return blocks;
+}
+
+function buildDraftPages(draft: ExamDraft, questions: QuestionSlot[], meta: AuthoringMeta): ExamPage[] {
+  if (!draft.sections.length) {
+    return [
+      {
+        id: draftPageId(0),
+        pageNumber: 1,
+        title: meta.title,
+        blocks: [{ type: "heading", text: meta.title, level: 2 }]
+      }
+    ];
+  }
+
+  const questionIndex = { value: 0 };
+  return draft.sections.map((section, sectionIndex) => ({
+    id: draftPageId(sectionIndex),
+    pageNumber: sectionIndex + 1,
+    title: section.title,
+    blocks: buildSectionPageBlocks(section, questions, questionIndex)
+  }));
 }
 
 function answerValues(mark: DraftMark): string[] {
@@ -281,29 +393,44 @@ function optionsFromMark(mark: DraftMark) {
 }
 
 function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Exam | null | undefined): Exam {
-  const draft = parseAuthoringDraft(source);
+  const draft = normalizeDraft(parseAuthoringDraft(source));
   const draftEntries = getDraftMarkEntries(draft);
-  const fallbackSections = getMarkSections(source);
+  const questionCount = Math.max(1, meta.questionCount);
+  const questions = draftEntries.length
+    ? draftEntries.map<QuestionSlot>((entry, index) => {
+        const existingQuestion = initialExam?.questions[index];
+        return {
+          id: existingQuestion?.id ?? `draft-q${String(index + 1).padStart(2, "0")}`,
+          label: entry.mark.label,
+          section: entry.sectionTitle,
+          prompt: existingQuestion?.prompt ?? "作成したフォームに対応する解答欄です。",
+          pageId: draftPageId(entry.sectionIndex),
+          points: entry.mark.points,
+          multi: entry.mark.multi || answerValues(entry.mark).length > 1,
+          options: optionsFromMark(entry.mark),
+          correct: answerValues(entry.mark),
+          explanation: existingQuestion?.explanation ?? "投稿後に解説を調整してください。"
+        };
+      })
+    : Array.from({ length: questionCount }, (_item, index) =>
+        createDefaultQuestion(index, meta.totalPoints, questionCount)
+      );
+  const fallbackBlocks: ProblemBlock[] = [
+    { type: "heading", text: meta.title, level: 2 },
+    ...questions.map<ProblemBlock>((question) => ({ type: "question", questionId: question.id }))
+  ];
+  const pages: ExamPage[] = draftEntries.length
+    ? buildDraftPages(draft, questions, meta)
+    : [
+        {
+          id: draftPageId(0),
+          pageNumber: 1,
+          title: meta.title,
+          blocks: fallbackBlocks
+        }
+      ];
 
   if (initialExam) {
-    const questions = draftEntries.length
-      ? draftEntries.map<QuestionSlot>((entry, index) => {
-          const existingQuestion = initialExam.questions[index];
-          return {
-            id: existingQuestion?.id ?? `draft-q${String(index + 1).padStart(2, "0")}`,
-            label: entry.mark.label,
-            section: entry.sectionTitle,
-            prompt: existingQuestion?.prompt ?? "作成したフォームに対応する解答欄です。",
-            pageId: existingQuestion?.pageId ?? "draft-p1",
-            points: entry.mark.points,
-            multi: entry.mark.multi || answerValues(entry.mark).length > 1,
-            options: optionsFromMark(entry.mark),
-            correct: answerValues(entry.mark),
-            explanation: existingQuestion?.explanation ?? "投稿後に解説を調整してください。"
-          };
-        })
-      : initialExam.questions;
-
     return {
       ...initialExam,
       title: meta.title,
@@ -311,28 +438,11 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
       description: meta.description,
       durationMinutes: meta.durationMinutes,
       totalPoints: meta.totalPoints,
+      pages,
       questions,
       published: true
     };
   }
-
-  const questionCount = Math.max(1, meta.questionCount);
-  const questions = draftEntries.length
-    ? draftEntries.map<QuestionSlot>((entry, index) => ({
-        id: `draft-q${String(index + 1).padStart(2, "0")}`,
-        label: entry.mark.label,
-        section: entry.sectionTitle || fallbackSections[index] || `第${index + 1}問`,
-        prompt: "作成したフォームに対応する解答欄です。",
-        pageId: "draft-p1",
-        points: entry.mark.points,
-        multi: entry.mark.multi || answerValues(entry.mark).length > 1,
-        options: optionsFromMark(entry.mark),
-        correct: answerValues(entry.mark),
-        explanation: "投稿後に解説を調整してください。"
-      }))
-    : Array.from({ length: questionCount }, (_item, index) =>
-        createDefaultQuestion(index, meta.totalPoints, questionCount)
-      );
 
   return {
     id: `custom-${Date.now()}`,
@@ -346,14 +456,7 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
       "解答は右側のマークシート、または問題冊子中の選択肢をクリックして行うこと。",
       "制限時間が終了すると自動的に採点へ移る。"
     ],
-    pages: [
-      {
-        id: "draft-p1",
-        pageNumber: 1,
-        title: meta.title,
-        blocks: buildDraftPageBlocks(draft, questions, meta)
-      }
-    ],
+    pages,
     questions
   };
 }
@@ -369,11 +472,8 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const [publishState, setPublishState] = useState<"idle" | "published">("idle");
   const [authorMode, setAuthorMode] = useState<AuthorMode>("form");
   const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
-  const draft = useMemo(() => parseAuthoringDraft(source), [source]);
-  const previewExam = useMemo(
-    () => (initialExam ? buildPublishedExam(meta, source, initialExam) : null),
-    [initialExam, meta, source]
-  );
+  const draft = useMemo(() => normalizeDraft(parseAuthoringDraft(source)), [source]);
+  const previewExam = useMemo(() => buildPublishedExam(meta, source, initialExam), [initialExam, meta, source]);
   const sourceStats = useMemo(() => {
     const parsed = parseAuthoringLatex(source);
     return {
@@ -423,14 +523,16 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   };
 
   const applyDraft = (nextDraft: ExamDraft) => {
-    const nextQuestionCount = countDraftMarks(nextDraft);
-    const nextTotalPoints = sumDraftPoints(nextDraft);
-    setMeta((current) => ({
-      ...current,
-      questionCount: nextQuestionCount || current.questionCount,
-      totalPoints: nextQuestionCount ? nextTotalPoints : current.totalPoints
-    }));
-    setSource(serializeAuthoringDraft(meta, nextDraft));
+    const normalizedDraft = normalizeDraft(nextDraft);
+    const nextQuestionCount = countDraftMarks(normalizedDraft);
+    const nextTotalPoints = sumDraftPoints(normalizedDraft);
+    const nextMeta = {
+      ...meta,
+      questionCount: nextQuestionCount || meta.questionCount,
+      totalPoints: nextQuestionCount ? nextTotalPoints : meta.totalPoints
+    };
+    setMeta(nextMeta);
+    setSource(serializeAuthoringDraft(nextMeta, normalizedDraft));
   };
 
   return (
@@ -510,14 +612,11 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
             <div className="preview-heading">
               <h2>プレビュー</h2>
               <span>
-                {previewExam
-                  ? `ページ ${previewExam.pages.length} / 解答欄 ${sourceStats.answerSlots || sourceStats.marks}`
-                  : `大問 ${sourceStats.sections} / 小問 ${sourceStats.subsections} / 解答欄 ${
-                      sourceStats.answerSlots || sourceStats.marks
-                    }`}
+                ページ {previewExam.pages.length} / 大問 {sourceStats.sections} / 小問 {sourceStats.subsections} /
+                解答欄 {sourceStats.answerSlots || sourceStats.marks}
               </span>
             </div>
-            {previewExam ? <ExistingExamPreview exam={previewExam} /> : <CommonTestPreview draft={draft} meta={meta} />}
+            <PublishedExamPreview exam={previewExam} />
             {showValidationErrors && validationErrors.length ? (
               <div className="validation-errors" role="alert">
                 <strong>投稿できません</strong>
@@ -614,27 +713,32 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   );
 }
 
-function ExistingExamPreview({ exam }: { exam: Exam }) {
+function PublishedExamPreview({ exam }: { exam: Exam }) {
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
   );
-  const previewPages = exam.pages.slice(0, 3);
 
   return (
-    <div className="existing-exam-preview">
-      {exam.coverImageUrl ? (
-        <figure className="existing-preview-cover" aria-label={`${exam.title}の表紙プレビュー`}>
-          <img src={exam.coverImageUrl} alt={`${exam.title}の表紙`} />
-        </figure>
-      ) : null}
-      {previewPages.map((page) => (
+    <div className="published-exam-preview">
+      <article className="published-preview-cover" aria-label={`${exam.title}の表紙プレビュー`}>
+        <div className="cover-warning">試験開始の指示があるまで，この問題冊子の中を見てはいけません。</div>
+        <div className="cover-title-line">
+          <strong>{exam.title}</strong>
+          <span>
+            {exam.totalPoints}点
+            <br />
+            {exam.durationMinutes}分
+          </span>
+        </div>
+      </article>
+      {exam.pages.map((page) => (
         <section
-          className={`existing-preview-page ${page.pageImageUrl ? "exact" : ""}`}
+          className={`published-preview-page ${page.pageImageUrl ? "exact" : ""}`}
           key={page.id}
           aria-label={`${page.title}のプレビュー`}
         >
-          <div className="existing-preview-caption">
+          <div className="published-preview-caption">
             <span>{page.pageNumber}</span>
             <strong>{page.title}</strong>
           </div>
@@ -646,9 +750,6 @@ function ExistingExamPreview({ exam }: { exam: Exam }) {
           />
         </section>
       ))}
-      {exam.pages.length > previewPages.length ? (
-        <p className="existing-preview-note">残り {exam.pages.length - previewPages.length} ページ</p>
-      ) : null}
     </div>
   );
 }
@@ -738,14 +839,10 @@ function StructureEditor({ draft, onChange }: StructureEditorProps) {
           {draft.sections.map((section, sectionIndex) => (
             <article className="structure-section" key={section.id}>
               <div className="structure-section-head">
-                <label>
+                <div className="structure-section-title" aria-label={section.title}>
                   <span>大問</span>
-                  <input
-                    aria-label={`大問 ${sectionIndex + 1} タイトル`}
-                    value={section.title}
-                    onChange={(event) => updateSection(sectionIndex, { title: event.currentTarget.value })}
-                  />
-                </label>
+                  <strong>{section.title}</strong>
+                </div>
                 <button className="secondary-button" type="button" onClick={() => addSubsection(sectionIndex)}>
                   小問追加
                 </button>
@@ -855,22 +952,10 @@ function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
     <div className="structure-mark-list">
       {marks.map((mark, markIndex) => (
         <div className="structure-mark-row" key={mark.id}>
-          <label>
-            <span>番号</span>
-            <input
-              aria-label={`${mark.label} 解答番号`}
-              value={mark.label}
-              onChange={(event) => onUpdate(markIndex, { label: event.currentTarget.value })}
-            />
-          </label>
-          <label>
-            <span>正解</span>
-            <input
-              aria-label={`${mark.label} 正解`}
-              value={mark.answer}
-              onChange={(event) => onUpdate(markIndex, { answer: event.currentTarget.value })}
-            />
-          </label>
+          <div className="structure-mark-number" aria-label={`解答番号 ${mark.label}`}>
+            <span>解答番号</span>
+            <strong>{mark.label}</strong>
+          </div>
           <label>
             <span>配点</span>
             <input
@@ -882,9 +967,9 @@ function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
             />
           </label>
           <label>
-            <span>選択肢</span>
+            <span>選択肢数</span>
             <input
-              aria-label={`${mark.label} 選択肢`}
+              aria-label={`${mark.label} 選択肢数`}
               min={1}
               type="number"
               value={mark.choices}
@@ -892,6 +977,14 @@ function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
                 const choices = positiveInputNumber(event.currentTarget.value);
                 onUpdate(markIndex, { choices, optionContents: resizeChoices(mark, choices) });
               }}
+            />
+          </label>
+          <label>
+            <span>正解番号</span>
+            <input
+              aria-label={`${mark.label} 正解番号`}
+              value={mark.answer}
+              onChange={(event) => onUpdate(markIndex, { answer: event.currentTarget.value })}
             />
           </label>
           <label className="structure-choice-contents">
@@ -922,89 +1015,5 @@ function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
         </div>
       ))}
     </div>
-  );
-}
-
-function CommonTestPreview({ draft, meta }: { draft: ExamDraft; meta: AuthoringMeta }) {
-  const previewSections = draft.sections.slice(0, 2);
-
-  return (
-    <div className="common-test-preview">
-      <article className="common-test-page cover-preview">
-        <div className="cover-warning">試験開始の指示があるまで，この問題冊子の中を見てはいけません。</div>
-        <div className="cover-title-line">
-          <strong>{meta.title}</strong>
-          <span>
-            {meta.totalPoints}点
-            <br />
-            {meta.durationMinutes}分
-          </span>
-        </div>
-        <h3>注意事項</h3>
-        <ol>
-          <li>解答用紙に正しくマークされていない場合は，採点されないことがあります。</li>
-          <li>
-            この問題冊子は，解答番号が1から{meta.questionCount}まであり，配点は各問題ごとに明記されています。
-          </li>
-          <li>解答は，各問題にある所定の記号をクリックまたはタップをしマークしなさい。</li>
-        </ol>
-        <div className="sample-answer-row" aria-label="解答欄サンプル">
-          <span>10</span>
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((value) => (
-            <i className={value === 2 || value === 3 || value === 4 ? "filled" : ""} key={value}>
-              {value}
-            </i>
-          ))}
-        </div>
-      </article>
-
-      <article className="common-test-page problem-preview">
-        <div className="page-number">- 1 -</div>
-        {previewSections.length ? (
-          previewSections.map((section) => (
-            <section className="draft-preview-section" key={section.id}>
-              <h3>{section.title}</h3>
-              {section.body ? <p>{renderMathSegments(section.body)}</p> : null}
-              <PreviewMarks marks={section.marks} />
-              {section.subsections.map((subsection) => (
-                <section className="draft-preview-subsection" key={subsection.id}>
-                  <h4>{subsection.title}</h4>
-                  {subsection.body ? <p>{renderMathSegments(subsection.body)}</p> : null}
-                  <PreviewMarks marks={subsection.marks} />
-                </section>
-              ))}
-            </section>
-          ))
-        ) : (
-          <>
-            <h3>第1問</h3>
-            <p>フォームから大問，問題文，小問，マークを追加してください。</p>
-          </>
-        )}
-      </article>
-    </div>
-  );
-}
-
-function PreviewMarks({ marks }: { marks: DraftMark[] }) {
-  return (
-    <>
-      {marks.map((mark) => (
-        <div className="draft-preview-mark" key={mark.id}>
-          <p>
-            <span className="latex-mark">{mark.label}</span>
-            <span>（配点 {mark.points}）</span>
-          </p>
-          <div className="choice-preview">
-            {normalizeMarkChoices(mark).map((choice) => (
-              <button key={choice.value} type="button">
-                <i>{choice.value}</i>
-                {renderMathSegments(choice.content)}
-              </button>
-            ))}
-          </div>
-        </div>
-      ))}
-    </>
   );
 }

@@ -469,7 +469,7 @@ button:disabled {
 .booklet-page {
   min-height: 0;
   height: 100%;
-  overflow: hidden;
+  overflow: auto;
   padding: clamp(24px, 5vw, 58px);
   background:
     linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.86)),
@@ -480,6 +480,7 @@ button:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   padding: 0;
   background: transparent;
 }
@@ -1192,7 +1193,7 @@ button:disabled {
 .structure-heading,
 .structure-section-head {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
@@ -1237,6 +1238,20 @@ button:disabled {
   flex: 1;
 }
 
+.structure-section-title,
+.structure-mark-number {
+  display: grid;
+  gap: 4px;
+  min-width: 78px;
+}
+
+.structure-section-title strong,
+.structure-mark-number strong {
+  color: #263433;
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-size: 1rem;
+}
+
 .structure-section span,
 .structure-mark-row span {
   color: #5f685f;
@@ -1273,7 +1288,7 @@ button:disabled {
 
 .structure-mark-row {
   display: grid;
-  grid-template-columns: 58px minmax(92px, 1fr) 72px 72px auto auto;
+  grid-template-columns: 72px 72px 88px minmax(96px, 1fr) auto auto;
   align-items: end;
   gap: 8px;
   border-top: 1px solid #eee2d1;
@@ -1320,41 +1335,31 @@ button:disabled {
   padding-bottom: 8px;
 }
 
-.common-test-preview {
+.published-exam-preview {
   display: grid;
-  max-height: calc(100vh - 420px);
+  max-height: calc(100vh - 178px);
   gap: 12px;
   overflow: auto;
   padding-right: 4px;
 }
 
-.existing-exam-preview {
-  display: grid;
-  max-height: calc(100vh - 260px);
-  gap: 12px;
-  overflow: auto;
-  padding-right: 4px;
-}
-
-.existing-preview-cover,
-.existing-preview-page {
+.published-preview-cover,
+.published-preview-page {
   overflow: hidden;
   border: 1px solid #d3c8ba;
   border-radius: 4px;
   background: #fffefb;
 }
 
-.existing-preview-cover {
-  margin: 0;
+.published-preview-cover {
+  padding: 22px 28px;
+  color: #111;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 0.82rem;
+  line-height: 1.65;
 }
 
-.existing-preview-cover img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.existing-preview-caption {
+.published-preview-caption {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1365,7 +1370,7 @@ button:disabled {
   font-size: 0.78rem;
 }
 
-.existing-preview-caption span {
+.published-preview-caption span {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1377,14 +1382,14 @@ button:disabled {
   font-weight: 900;
 }
 
-.existing-preview-caption strong {
+.published-preview-caption strong {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.existing-preview-page .booklet-page {
+.published-preview-page .booklet-page {
   height: auto;
   min-height: 380px;
   overflow: visible;
@@ -1393,31 +1398,22 @@ button:disabled {
   box-shadow: none;
 }
 
-.existing-preview-page.exact .booklet-page.exact-page {
+.published-preview-page.exact .booklet-page.exact-page {
   width: 100%;
   height: auto;
   min-height: 0;
   aspect-ratio: 1247 / 1772;
 }
 
-.existing-preview-page.exact .exact-page-frame {
+.published-preview-page.exact .exact-page-frame {
   width: 100%;
   height: 100%;
   box-shadow: none;
 }
 
-.existing-preview-page .choice-button,
-.existing-preview-page .page-image-mark {
+.published-preview-page .choice-button,
+.published-preview-page .page-image-mark {
   cursor: default;
-}
-
-.existing-preview-note {
-  margin: 0;
-  color: #626d67;
-  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
-  font-size: 0.82rem;
-  font-weight: 800;
-  text-align: center;
 }
 
 .answer-settings {
