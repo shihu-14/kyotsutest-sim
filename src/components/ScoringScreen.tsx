@@ -15,8 +15,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
   const [visibleCount, setVisibleCount] = useState(() => (startComplete ? summary.gradedQuestions.length : 0));
   const rowRefs = useRef<Array<HTMLElement | null>>([]);
   const resultPanelRef = useRef<HTMLElement | null>(null);
-  const visibleItems = summary.gradedQuestions.slice(0, visibleCount);
-  const currentScore = visibleItems.reduce((sum, item) => sum + item.earnedPoints, 0);
   const isComplete = visibleCount >= summary.gradedQuestions.length;
 
   useEffect(() => {
@@ -53,13 +51,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
       <header className="screen-heading">
         <div>
           <h1>採点</h1>
-        </div>
-        <div className="score-counter" aria-live="polite">
-          <span>現在の合計点</span>
-          <strong>
-            {currentScore}
-            <small>/{summary.totalPoints}</small>
-          </strong>
         </div>
       </header>
 

@@ -110,4 +110,39 @@ describe("ExamRunner", () => {
 
     expect(document.querySelector(".booklet-scroll-surface.exact-scroll-surface")).toBeInTheDocument();
   });
+
+  it("can show the cover from the first page tab and navigate with side arrows", async () => {
+    const user = userEvent.setup();
+    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const onChangePage = vi.fn();
+
+    render(
+      <ExamRunner
+        answers={{}}
+        currentPageId={animeExam.pages[0].id}
+        deadline={Date.now() + 60_000}
+        exam={animeExam}
+        onChangePage={onChangePage}
+        onExpire={vi.fn()}
+        onFinish={vi.fn()}
+        onPause={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "表紙" }));
+
+    expect(screen.getByRole("article", { name: "漫画映画の表紙" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "前のページへ" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "次のページ" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "次のページへ" }));
+
+    expect(onChangePage).toHaveBeenCalledWith(animeExam.pages[0].id);
+    expect(screen.queryByRole("article", { name: "漫画映画の表紙" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "前のページへ" }));
+
+    expect(screen.getByRole("article", { name: "漫画映画の表紙" })).toBeInTheDocument();
+  });
 });

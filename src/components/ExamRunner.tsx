@@ -33,6 +33,7 @@ export function ExamRunner({
   onExpire
 }: ExamRunnerProps) {
   const [bookletZoom, setBookletZoom] = useState(1);
+  const [showCover, setShowCover] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
@@ -45,13 +46,30 @@ export function ExamRunner({
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
   const completeCount = answeredCount(exam, answers);
   const bookletStyle = { "--booklet-zoom": String(bookletZoom) } as CSSProperties;
+  const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
+  const canGoNext = showCover ? exam.pages.length > 0 : pageIndex < exam.pages.length - 1;
 
   const goPrevious = () => {
+    if (showCover) {
+      return;
+    }
+
+    if (pageIndex === 0 && exam.coverImageUrl) {
+      setShowCover(true);
+      return;
+    }
+
     const previousPage = exam.pages[Math.max(0, pageIndex - 1)];
     onChangePage(previousPage.id);
   };
 
   const goNext = () => {
+    if (showCover) {
+      setShowCover(false);
+      onChangePage(exam.pages[0]?.id ?? currentPageId);
+      return;
+    }
+
     const nextPage = exam.pages[Math.min(exam.pages.length - 1, pageIndex + 1)];
     onChangePage(nextPage.id);
   };
@@ -141,59 +159,90 @@ export function ExamRunner({
       <section className="exam-body">
         <div className="booklet-shell">
           <nav className="page-tabs" aria-label="問題ページ">
+            {exam.coverImageUrl ? (
+              <button
+                className={showCover ? "active cover-tab" : "cover-tab"}
+                type="button"
+                onClick={() => setShowCover(true)}
+              >
+                表紙
+              </button>
+            ) : null}
             {exam.pages.map((item) => (
               <button
-                className={item.id === page.id ? "active" : ""}
+                className={!showCover && item.id === page.id ? "active" : ""}
                 key={item.id}
                 type="button"
-                onClick={() => onChangePage(item.id)}
+                onClick={() => {
+                  setShowCover(false);
+                  onChangePage(item.id);
+                }}
               >
                 {item.pageNumber}
               </button>
             ))}
           </nav>
-          <div
-            aria-label="問題表示領域"
-            className="booklet-stage"
-            ref={bookletStageRef}
-            style={bookletStyle}
-            tabIndex={0}
-            onKeyDown={handleBookletKeyDown}
-            onWheel={handleBookletWheel}
-          >
-            <div className={`booklet-scroll-surface ${page.pageImageUrl ? "exact-scroll-surface" : ""}`}>
-              <ProblemBooklet
-                answers={answers}
-                page={page}
-                questionsById={questionsById}
-                reviewMode={reviewMode}
-                onToggleAnswer={onToggleAnswer}
-              />
-            </div>
-          </div>
-          <div className="page-turner">
-            <button className="secondary-button" disabled={pageIndex === 0} type="button" onClick={goPrevious}>
-              前のページ
-            </button>
-            <span>
-              {pageIndex + 1} / {exam.pages.length}
-            </span>
+          <div className="booklet-stage-shell">
             <button
-              className="secondary-button"
-              disabled={pageIndex === exam.pages.length - 1}
+              aria-label="前のページへ"
+              className="booklet-side-arrow previous"
+              disabled={!canGoPrevious}
+              type="button"
+              onClick={goPrevious}
+            >
+              ‹
+            </button>
+            <div
+              aria-label="問題表示領域"
+              className="booklet-stage"
+              ref={bookletStageRef}
+              style={bookletStyle}
+              tabIndex={0}
+              onKeyDown={handleBookletKeyDown}
+              onWheel={handleBookletWheel}
+            >
+              <div
+                className={`booklet-scroll-surface ${
+                  showCover || page.pageImageUrl ? "exact-scroll-surface" : ""
+                }`}
+              >
+                {showCover ? (
+                  <article className="booklet-page exact-page cover-page-display" aria-label={`${exam.title}の表紙`}>
+                    <div className="exact-page-frame cover-page-frame">
+                      <img className="exact-page-image" src={exam.coverImageUrl} alt={`${exam.title}の表紙`} />
+                    </div>
+                  </article>
+                ) : (
+                  <ProblemBooklet
+                    answers={answers}
+                    page={page}
+                    questionsById={questionsById}
+                    reviewMode={reviewMode}
+                    onToggleAnswer={onToggleAnswer}
+                  />
+                )}
+              </div>
+            </div>
+            <button
+              aria-label="次のページへ"
+              className="booklet-side-arrow next"
+              disabled={!canGoNext}
               type="button"
               onClick={goNext}
             >
-              次のページ
+              ›
             </button>
           </div>
         </div>
         <MarkSheet
-          activePageId={page.id}
+          activePageId={showCover ? "" : page.id}
           answers={answers}
           exam={exam}
           reviewMode={reviewMode}
-          onJumpToPage={onChangePage}
+          onJumpToPage={(pageId) => {
+            setShowCover(false);
+            onChangePage(pageId);
+          }}
           onToggleAnswer={onToggleAnswer}
         />
       </section>
