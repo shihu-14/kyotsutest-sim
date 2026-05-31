@@ -1428,9 +1428,15 @@ button:disabled {
   min-height: 0;
 }
 
+.inspector-pane {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+}
+
 .inspector-shell {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -1460,6 +1466,7 @@ button:disabled {
 .published-section-preview,
 .section-tex-editor {
   min-height: 0;
+  max-height: 100%;
   overflow: auto;
   padding: 12px;
 }

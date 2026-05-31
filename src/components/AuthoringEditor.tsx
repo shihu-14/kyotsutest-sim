@@ -52,6 +52,7 @@ const authoringTexPreamble = String.raw`\documentclass[b5paper,12pt]{article}
 \newcommand{\counterbox}{\stepcounter{kyotsuanswer}\fbox{\arabic{kyotsuanswer}}}
 \newcommand{\choice}[3]{\par\smallskip\noindent\textcircled{\scriptsize #2}\quad #3}
 \newcommand{\mark}[2][]{\counterbox}`;
+const animeSampleExamId = "anime-onlymark-2026";
 
 function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
   return (
@@ -189,24 +190,37 @@ function serializeChoiceForSection(mark: DraftMark, choice: DraftChoice): string
   return `\\choice{${mark.label}}{${choice.value}}{${choice.content}}`;
 }
 
+function bodyComment(label: string, hasBody: boolean): string {
+  return hasBody ? `% === ${label} ===` : `% === ${label}: ここに問題文を記述 ===`;
+}
+
+function markComment(mark: DraftMark): string {
+  const answer = mark.answer.trim() || "未設定";
+  return `% --- 解答番号 ${mark.label}: 正解 ${answer} / 配点 ${Math.max(0, mark.points)} / 選択肢 ${positiveChoiceCount(mark.choices)} ---`;
+}
+
 function serializeSectionSource(section: DraftSection): string {
   const lines = [`\\sectiontitle{${section.title}}`];
 
+  lines.push(bodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
   if (section.body.trim()) {
     lines.push(...section.body.trim().split("\n"));
   }
 
   section.marks.forEach((mark) => {
+    lines.push(markComment(mark));
     lines.push(serializeMarkForSection(mark));
     normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceForSection(mark, choice)));
   });
 
   section.subsections.forEach((subsection) => {
     lines.push("", `\\subsectiontitle{${subsection.title}}`);
+    lines.push(bodyComment(`小問本文: ${section.title} ${subsection.title}`, Boolean(subsection.body.trim())));
     if (subsection.body.trim()) {
       lines.push(...subsection.body.trim().split("\n"));
     }
     subsection.marks.forEach((mark) => {
+      lines.push(markComment(mark));
       lines.push(serializeMarkForSection(mark));
       normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceForSection(mark, choice)));
     });
@@ -270,9 +284,6 @@ function collectPageBodies(exam: Exam): Map<string, string> {
   exam.pages.forEach((page) => {
     const sectionKey = sectionKeyFromTitle(page.title);
     const lines = bodyBySection.get(sectionKey) ?? [];
-    if (page.pageImageUrl) {
-      lines.push(`\\includegraphics{${page.pageImageUrl}}`);
-    }
     page.blocks.forEach((block) => {
       const line = draftBodyLineFromBlock(block);
       if (line) {
@@ -331,7 +342,15 @@ function draftFromExam(exam: Exam): ExamDraft {
 
 function sourceFromExam(exam: Exam | null | undefined): string {
   if (!exam) {
-    return loadAuthorSource(defaultAuthoringSource);
+    const annotatedDefaultSource = serializeAuthoringDraft(
+      defaultAuthoringMeta,
+      normalizeSourceDraft(parseAuthoringDraft(defaultAuthoringSource))
+    );
+    return loadAuthorSource(annotatedDefaultSource);
+  }
+
+  if (exam.id === animeSampleExamId) {
+    return serializeAuthoringDraft(metaFromExam(exam), normalizeSourceDraft(parseAuthoringDraft(defaultAuthoringSource)));
   }
 
   return serializeAuthoringDraft(metaFromExam(exam), draftFromExam(exam));
@@ -421,9 +440,11 @@ function paragraphBlocks(body: string): ProblemBlock[] {
         return { type: "formula", latex: text.slice(2, -2) };
       }
 
-      const imageMatch = text.match(/^\\includegraphics\{([^}]*)\}$/);
+      const imageMatch = text.match(/^\\includegraphics(?:\[([^\]]*)\])?\{([^}]*)\}$/);
       if (imageMatch) {
-        return { type: "figure", caption: imageCaption(imageMatch[1]), alt: imageCaption(imageMatch[1]), imageUrl: imageMatch[1] };
+        const [_full, options, imageSource] = imageMatch;
+        const caption = options ? `${imageCaption(imageSource)} (${options})` : imageCaption(imageSource);
+        return { type: "figure", caption, alt: caption, imageUrl: imageSource };
       }
 
       if (text.includes("\\begin{tikzpicture}") || text.includes("\\end{tikzpicture}")) {
@@ -464,6 +485,10 @@ function buildSectionPageBlocks(section: DraftSection, questions: QuestionSlot[]
   return blocks;
 }
 
+function sectionHasAuthoredBody(section: DraftSection): boolean {
+  return Boolean(section.body.trim() || section.subsections.some((subsection) => subsection.body.trim()));
+}
+
 function findInitialPageForSection(
   initialExam: Exam | null | undefined,
   section: DraftSection,
@@ -500,7 +525,7 @@ function buildDraftPages(
   const questionIndex = { value: 0 };
   return draft.sections.map((section, sectionIndex) => {
     const initialPage = findInitialPageForSection(initialExam, section, sectionIndex);
-    const shouldUseExactPage = Boolean(initialPage?.pageImageUrl && !section.body.includes("\\includegraphics{data:"));
+    const shouldUseExactPage = Boolean(initialPage?.pageImageUrl && !sectionHasAuthoredBody(section));
 
     return {
       id: draftPageId(sectionIndex),
@@ -683,6 +708,19 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
     setSource(serializeAuthoringDraft(nextMeta, normalizedDraft));
   };
 
+  const applySourceDraft = (nextDraft: ExamDraft) => {
+    const normalizedDraft = normalizeSourceDraft(nextDraft);
+    const nextQuestionCount = countDraftMarks(normalizedDraft);
+    const nextTotalPoints = sumDraftPoints(normalizedDraft);
+    const nextMeta = {
+      ...meta,
+      questionCount: nextQuestionCount || meta.questionCount,
+      totalPoints: nextQuestionCount ? nextTotalPoints : meta.totalPoints
+    };
+    setMeta(nextMeta);
+    setSource(serializeAuthoringDraft(nextMeta, normalizedDraft));
+  };
+
   const applySelectedSectionSource = (nextSectionSource: string) => {
     if (!selectedSection) {
       return;
@@ -695,7 +733,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
       ...nextSection,
       id: selectedSection.id
     };
-    applyDraft(nextDraft);
+    applySourceDraft(nextDraft);
   };
 
   return (

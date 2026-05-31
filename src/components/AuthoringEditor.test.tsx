@@ -76,13 +76,16 @@ describe("AuthoringEditor", () => {
     await user.click(getButtonByText("投稿"));
 
     expect(onPublish).toHaveBeenCalledWith(expect.objectContaining({ id: exam.id, title: "編集済み漫画映画" }));
-    expect(onPublish.mock.calls[0][0].pages[0].pageImageUrl).toBeDefined();
+    expect(onPublish.mock.calls[0][0].pages[0].pageImageUrl).toBeUndefined();
     expect(onPublish.mock.calls[0][0].pages[0].blocks).toEqual(
-      expect.arrayContaining([expect.objectContaining({ questionId: "anime-q01", type: "question" })])
+      expect.arrayContaining([
+        expect.objectContaining({ text: expect.stringContaining("以下の連立方程式"), type: "paragraph" }),
+        expect.objectContaining({ questionId: "anime-q01", type: "question" })
+      ])
     );
   });
 
-  it("previews the selected exam from the editable draft and writes full choice TeX", async () => {
+  it("previews the selected exam from the editable TeX and writes guided comments", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
     const exam = sampleExams[1];
@@ -91,14 +94,16 @@ describe("AuthoringEditor", () => {
 
     expect(screen.getByRole("heading", { name: exam.title })).toBeInTheDocument();
     expect(screen.getByLabelText("大問一覧")).toBeInTheDocument();
-    expect(screen.getByLabelText("第1問のプレビュー")).toBeInTheDocument();
-    expect(screen.getByAltText(/PDF再現ページ/)).toBeInTheDocument();
+    const preview = screen.getByLabelText("第1問のプレビュー");
+    expect(preview).toBeInTheDocument();
+    expect(within(preview).getByText(/以下の連立方程式/)).toBeInTheDocument();
 
     await openSectionTex(user);
-    expect((screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value).toContain("\\includegraphics{");
-    expect((screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value).toContain(
-      "\\choice{1}{4}{【推しの子】}"
-    );
+    const source = (screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value;
+    expect(source).toContain("% === 大問本文: 第1問 ===");
+    expect(source).toContain("% --- 解答番号 1: 正解 4 / 配点 10 / 選択肢 4 ---");
+    expect(source).toContain("\\choice{1}{4}{【推しの子】}");
+    expect(source).not.toContain("page-01");
   });
 
   it("blocks publishing and shows red validation errors when marks do not match metadata", async () => {

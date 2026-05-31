@@ -221,6 +221,10 @@ export function parseAuthoringLatex(source: string): ParsedAuthoringDocument {
         return "";
       }
 
+      if (line.startsWith("%")) {
+        return "";
+      }
+
       const titleLine = line.match(/^\\examtitle\{([^}]*)\}$/);
       if (titleLine) {
         return `<h1>${escapeHtml(titleLine[1])}</h1>`;
@@ -281,53 +285,179 @@ export const defaultAuthoringMeta: AuthoringMeta = {
 
 export const defaultAuthoringSource = String.raw`\examtitle{漫画映画}
 \sectiontitle{第1問}
-以下の連立方程式において，各式 1 から 3 がそれぞれ画像 I から III に示されたアニメの名称の一部を表している。
+以下の連立方程式において, 各式 ① から ③ がそれぞれ画像 I から III に示されたアニメの名称の一部を表している。
+このとき, 式 \(n_d\:g'' atf-\) が表すアニメの名称として最も適当なものを選べ。
+$$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end{aligned}\right.$$
+% 元TeX画像: hibike.png, sidonia2.png, hurumetaru.png
 \mark[answer=4,points=10,choices=4]{1}
+\choice{1}{1}{おねがい☆ティーチャー}
+\choice{1}{2}{オーバーロード}
+\choice{1}{3}{オッドタクシー}
+\choice{1}{4}{【推しの子】}
 
 \sectiontitle{第2問}
 暗殺教室に関する次の問いに答えよ。
 \subsectiontitle{問1}
+第2期第十二話において, 赤羽業と浅野学秀が学期末テストで対決した。
+その勝敗を分けることとなったこの試験の最終問題として最も適当なものを選べ。
 \mark[answer=2,points=2,choices=4]{2}
+\choice{2}{1}{実数上の非負値可測関数に関する極限等式の証明}
+\choice{2}{2}{食塩水の濃度計算}
+\choice{2}{3}{体心立方格子構造の領域体積}
+\choice{2}{4}{放物線と面積二等分線}
 \subsectiontitle{問2}
+第2期第四話において登場人物同士がコードネームで呼び合う場面について, A から D に示す登場人物の本名に対応するコードネームを選べ。
+% 元TeX画像: ansatu_codename2_gray.pdf
 \mark[answer=4,points=2,choices=9]{3}
+\choice{3}{1}{野球バカ}
+\choice{3}{2}{鷹岡もどき}
+\choice{3}{3}{コロコロ上がり}
+\choice{3}{4}{中二半}
+\choice{3}{5}{すごいサル}
+\choice{3}{6}{女たらしクソ野郎}
+\choice{3}{7}{性別}
+\choice{3}{8}{ホームベース}
+\choice{3}{9}{変態終末期}
 \mark[answer=7,points=2,choices=9]{4}
+\choice{4}{1}{野球バカ}
+\choice{4}{2}{鷹岡もどき}
+\choice{4}{3}{コロコロ上がり}
+\choice{4}{4}{中二半}
+\choice{4}{5}{すごいサル}
+\choice{4}{6}{女たらしクソ野郎}
+\choice{4}{7}{性別}
+\choice{4}{8}{ホームベース}
+\choice{4}{9}{変態終末期}
 \mark[answer=2,points=3,choices=9]{5}
+\choice{5}{1}{野球バカ}
+\choice{5}{2}{鷹岡もどき}
+\choice{5}{3}{コロコロ上がり}
+\choice{5}{4}{中二半}
+\choice{5}{5}{すごいサル}
+\choice{5}{6}{女たらしクソ野郎}
+\choice{5}{7}{性別}
+\choice{5}{8}{ホームベース}
+\choice{5}{9}{変態終末期}
 \mark[answer=8,points=3,choices=9]{6}
+\choice{6}{1}{野球バカ}
+\choice{6}{2}{鷹岡もどき}
+\choice{6}{3}{コロコロ上がり}
+\choice{6}{4}{中二半}
+\choice{6}{5}{すごいサル}
+\choice{6}{6}{女たらしクソ野郎}
+\choice{6}{7}{性別}
+\choice{6}{8}{ホームベース}
+\choice{6}{9}{変態終末期}
 
 \sectiontitle{第3問}
-図中の X に入る最も適当な記号を選べ。
+以下のグラフおよび図は, あるアニメに関するものである。
+これらの内容に基づいて \(X\) に入る最も適当な記号を選べ。
+% 元TeX図: データ系列グラフと年表を tikzpicture で描画
 \mark[answer=3,points=10,choices=5]{7}
+\choice{7}{1}{\(\Omega\)}
+\choice{7}{2}{\(\alpha\)}
+\choice{7}{3}{\(\beta\)}
+\choice{7}{4}{\(\gamma\)}
+\choice{7}{5}{\(\delta\)}
 
 \sectiontitle{第4問}
-集合と分類に関する次の問いに答えよ。
+集合に関する以下の問いに答えよ。
 \subsectiontitle{問1}
+ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
+I: 綾小路清隆, II: 竈門禰豆子, III: 御坂美琴。
+% 元TeX図: 集合 A のベン図を tikzpicture で描画
 \mark[answer=4,points=4,choices=8]{8}
+\choice{8}{1}{AAA}
+\choice{8}{2}{AAĀ}
+\choice{8}{3}{AĀA}
+\choice{8}{4}{AĀĀ}
+\choice{8}{5}{ĀAA}
+\choice{8}{6}{ĀAĀ}
+\choice{8}{7}{ĀĀA}
+\choice{8}{8}{ĀĀĀ}
 \subsectiontitle{問2}
+ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
+I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
+% 元TeX図: 集合 A, B のベン図を tikzpicture で描画
 \mark[answer=4,points=4,choices=4]{9}
+\choice{9}{1}{A∩B}
+\choice{9}{2}{Ā∩B}
+\choice{9}{3}{A∩B̄}
+\choice{9}{4}{Ā∩B̄}
 \mark[answer=1,points=4,choices=4]{10}
+\choice{10}{1}{A∩B}
+\choice{10}{2}{Ā∩B}
+\choice{10}{3}{A∩B̄}
+\choice{10}{4}{Ā∩B̄}
 \mark[answer=1,points=4,choices=4]{11}
+\choice{11}{1}{A∩B}
+\choice{11}{2}{Ā∩B}
+\choice{11}{3}{A∩B̄}
+\choice{11}{4}{Ā∩B̄}
 
 \sectiontitle{第5問}
-漢字表記の読みとして最も適当なものを選べ。
+以下の問1から問3の下線部の漢字に相当する読みとして最も適当なものを選べ。
+問1: 『水素爆弾』の直撃にも堪えた序列第六位「天翼種」。
 \mark[answer=2,points=4,choices=3]{12}
+\choice{12}{1}{イマニティ}
+\choice{12}{2}{フリューゲル}
+\choice{12}{3}{ファンタズマ}
+問2: 「智慧之王」の声に従い暴食之王を起動。
 \mark[answer=1,points=3,choices=3]{13}
+\choice{13}{1}{ラファエル}
+\choice{13}{2}{メタトロン}
+\choice{13}{3}{ガブリエル}
+問3: 「超能力者」用の付帯施設は学校敷地内にまとまっているとは限らない。
 \mark[answer=2,points=3,choices=3]{14}
+\choice{14}{1}{レベル1}
+\choice{14}{2}{レベル5}
+\choice{14}{3}{レベル6}
 
 \sectiontitle{第6問}
-不等式の関係として最も適当な記号を選べ。
+画像 I から VI について関係式「I < II = III < IV < V << VI」が成り立っているとき, A と B, C と D に当てはまる記号として最も適当なものを選べ。
+% 元TeX画像: akusera.png, yotuba3.png, sinomiya.png, nanakusa.png, yanami.png, titanda.png, gozyou2.png, igarashi.png, issiki3.png, itinose.png
 \mark[answer=3,points=5,choices=3]{15}
+\choice{15}{1}{<}
+\choice{15}{2}{=}
+\choice{15}{3}{>}
 \mark[answer=1,points=5,choices=3]{16}
+\choice{16}{1}{<}
+\choice{16}{2}{=}
+\choice{16}{3}{>}
 
 \sectiontitle{第7問}
-口コミの内容に該当するアニメとして最も適当なものを選べ。
+以下の文章は, あるアニメに関する口コミである。この内容に該当するアニメとして最も適当なものを選べ。
+長ゼリフや会話劇, 妖怪のような存在に苦しめられる少女達, 独特な作画や演出に言及した複数の口コミが示されている。
+% 元TeX画像: unknown-icon.png, five-stars.png, three-stars.png, one-stars.png
 \mark[answer=1,points=10,choices=4]{17}
+\choice{17}{1}{化物語}
+\choice{17}{2}{虚構推理}
+\choice{17}{3}{呪術廻戦}
+\choice{17}{4}{モブサイコ100}
 
 \sectiontitle{第8問}
-英英辞典の説明が意味する語として最も適当なものを選べ。
+以下の英文は, 英語版 Wikipedia にも掲載されているアニメに関する単語の説明である。
+問1, 問2の説明が意味する単語を選べ。
+問1: romantic or deeply emotional relationships between female characters.
 \mark[answer=3,points=6,choices=4]{18}
+\choice{18}{1}{isekai}
+\choice{18}{2}{romcom}
+\choice{18}{3}{yuri}
+\choice{18}{4}{catgirl}
+問2: self-published work, often in manga or novel format, created by independent artists or groups.
 \mark[answer=4,points=6,choices=4]{19}
+\choice{19}{1}{manga}
+\choice{19}{2}{lightnovel}
+\choice{19}{3}{comiket}
+\choice{19}{4}{doujinshi}
 
 \sectiontitle{第9問}
-英文の空欄に当てはまる単語として最も適当なものを選べ。
+以下は「ノーゲーム・ノーライフ」に登場するあるゲームが行われている場面を描いたものである。
+空欄に当てはまる単語として最も適当なものを選べ。
+Sora and dreadless Siro overwhelmed driven native executing gods since enemies ___ feeblish humanity.
 \mark[answer=4,points=10,choices=4]{20}
+\choice{20}{1}{scoff}
+\choice{20}{2}{despise}
+\choice{20}{3}{inferior}
+\choice{20}{4}{underestimate}
 `;

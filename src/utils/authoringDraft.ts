@@ -96,6 +96,15 @@ function serializeChoice(mark: DraftMark, choice: DraftChoice): string {
   return `\\choice{${mark.label}}{${choice.value}}{${choice.content}}`;
 }
 
+function bodyComment(label: string, hasBody: boolean): string {
+  return hasBody ? `% === ${label} ===` : `% === ${label}: ここに問題文を記述 ===`;
+}
+
+function markComment(mark: DraftMark): string {
+  const answer = mark.answer.trim() || "未設定";
+  return `% --- 解答番号 ${mark.label}: 正解 ${answer} / 配点 ${Math.max(0, mark.points)} / 選択肢 ${positiveChoiceCount(mark.choices)} ---`;
+}
+
 function createSection(index: number, title = `第${index + 1}問`): DraftSection {
   return {
     id: `section-${index + 1}`,
@@ -232,19 +241,25 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
 
   draft.sections.forEach((section) => {
     lines.push("", `\\sectiontitle{${section.title}}`);
+    lines.push(bodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
     if (section.body.trim()) {
       lines.push(...section.body.trim().split("\n"));
     }
     section.marks.forEach((mark) => {
+      lines.push(markComment(mark));
       lines.push(serializeMark(mark));
       normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
     });
     section.subsections.forEach((subsection) => {
       lines.push("", `\\subsectiontitle{${subsection.title}}`);
+      lines.push(
+        bodyComment(`小問本文: ${section.title} ${subsection.title}`, Boolean(subsection.body.trim()))
+      );
       if (subsection.body.trim()) {
         lines.push(...subsection.body.trim().split("\n"));
       }
       subsection.marks.forEach((mark) => {
+        lines.push(markComment(mark));
         lines.push(serializeMark(mark));
         normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
       });
