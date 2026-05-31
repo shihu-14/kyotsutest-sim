@@ -15,9 +15,12 @@ body {
   min-width: 320px;
   margin: 0;
   background:
-    linear-gradient(90deg, rgba(31, 42, 46, 0.04) 1px, transparent 1px),
-    linear-gradient(#f8f5ee, #ebe3d4);
-  background-size: 24px 24px, auto;
+    linear-gradient(rgba(63, 111, 144, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63, 111, 144, 0.18) 1px, transparent 1px),
+    linear-gradient(rgba(63, 111, 144, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(63, 111, 144, 0.07) 1px, transparent 1px),
+    #fbfcf5;
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px, auto;
 }
 
 button,
@@ -842,22 +845,31 @@ button:disabled {
 }
 
 .exam-card-main {
+  position: relative;
   display: grid;
-  grid-template-rows: minmax(300px, 1fr) auto;
+  grid-template-rows: minmax(520px, 1fr);
   gap: 0;
   height: 100%;
   min-height: 100%;
+  isolation: isolate;
 }
 
 .exam-card-copy {
+  position: relative;
+  z-index: 1;
+  grid-area: 1 / 1;
+  align-self: end;
   display: flex;
   min-width: 0;
   flex-direction: column;
   justify-content: space-between;
   gap: 12px;
-  border-top: 1px solid #e1d4be;
-  background: #fffdf8;
-  padding: 16px;
+  border: 1px solid rgba(216, 202, 180, 0.84);
+  margin: 14px;
+  background: rgba(255, 253, 248, 0.94);
+  box-shadow: 0 16px 36px rgba(52, 41, 22, 0.14);
+  padding: 14px;
+  backdrop-filter: blur(8px);
 }
 
 .exam-title-row {
@@ -926,9 +938,9 @@ button:disabled {
 }
 
 .exam-cover-thumb {
-  order: -1;
+  grid-area: 1 / 1;
   display: flex;
-  align-items: center;
+  align-items: start;
   justify-content: center;
   min-height: 0;
   height: 100%;
@@ -938,7 +950,7 @@ button:disabled {
   background:
     radial-gradient(circle at 50% 20%, rgba(240, 120, 37, 0.12), transparent 34%),
     linear-gradient(180deg, #fffaf1, #eee2cd);
-  padding: 16px;
+  padding: 18px 18px 196px;
 }
 
 .exam-cover-thumb img,
@@ -1095,7 +1107,8 @@ button:disabled {
 
 .stopwatch-timer {
   --timer-size: 92px;
-  --timer-crown-angle: -90deg;
+  --timer-crown-angle: 90deg;
+  --timer-css-crown-angle: calc(90deg - var(--timer-crown-angle));
   --timer-accent: #ffc04d;
   --timer-track: rgba(255, 192, 77, 0.2);
   --timer-fill: color-mix(in srgb, var(--timer-accent) 28%, var(--timer-face));
@@ -1173,7 +1186,7 @@ button:disabled {
   place-items: center;
   border-radius: 50%;
   background: conic-gradient(
-    from var(--timer-crown-angle),
+    from var(--timer-css-crown-angle),
     var(--timer-fill) 0deg var(--timer-progress-angle),
     var(--timer-face) var(--timer-progress-angle) 360deg
   );
@@ -3118,8 +3131,8 @@ button:disabled {
 }
 
 .page-tabs {
-  --page-tab-width: 50px;
-  --cover-tab-width: 46px;
+  --page-tab-width: calc(50px * 1.45);
+  --cover-tab-width: calc(46px * 1.8);
   display: flex;
   gap: 0;
   width: min(100%, calc(var(--cover-tab-width) + (13 * var(--page-tab-width))));
@@ -5418,7 +5431,7 @@ button:disabled {
   }
 
   .exam-card-main {
-    grid-template-rows: minmax(260px, 1fr) auto;
+    grid-template-rows: minmax(520px, 1fr);
   }
 
   .design-candidate-tabs {
