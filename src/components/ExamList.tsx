@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Exam } from "../types";
+import { EditorDesignPreview } from "./EditorDesignPreview";
 import { ExamDesignPreview } from "./ExamDesignPreview";
 import { HomeDesignPreview } from "./HomeDesignPreview";
 import { PageNavDesignPreview } from "./PageNavDesignPreview";
@@ -14,7 +15,9 @@ interface ExamListProps {
 }
 
 export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: ExamListProps) {
-  const [homeMode, setHomeMode] = useState<"exams" | "designs" | "timers" | "pageNavs" | "homes">("exams");
+  const [homeMode, setHomeMode] = useState<"exams" | "designs" | "timers" | "pageNavs" | "homes" | "editors">(
+    "exams"
+  );
   const previewExam = exams.find((exam) => exam.pages.some((page) => page.pageImageUrl)) ?? exams[0];
 
   return (
@@ -61,6 +64,14 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
           >
             ページ候補
           </button>
+          <button
+            aria-pressed={homeMode === "editors"}
+            className="secondary-button"
+            type="button"
+            onClick={() => setHomeMode("editors")}
+          >
+            編集候補
+          </button>
           <button className="secondary-button" type="button" onClick={onOpenEditor}>
             新規作成
           </button>
@@ -75,6 +86,8 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
         <TimerDesignPreview exam={previewExam} />
       ) : homeMode === "pageNavs" && previewExam ? (
         <PageNavDesignPreview exam={previewExam} />
+      ) : homeMode === "editors" && previewExam ? (
+        <EditorDesignPreview exam={previewExam} />
       ) : (
         <section className="exam-grid" aria-label="公開中の試験一覧">
           {exams
@@ -85,7 +98,6 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
                   <div className="exam-card-copy">
                     <div className="exam-title-row">
                       <div>
-                        <p className="eyebrow">{exam.subject}</p>
                         <h2>{exam.title}</h2>
                       </div>
                       <details className="exam-actions">
@@ -100,7 +112,6 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
                         </div>
                       </details>
                     </div>
-                    <p>{exam.description}</p>
                     <dl className="exam-meta">
                       <div>
                         <dt>時間</dt>

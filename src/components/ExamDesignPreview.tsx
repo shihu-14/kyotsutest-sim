@@ -160,7 +160,6 @@ export function ExamDesignPreview({ exam }: ExamDesignPreviewProps) {
                 <span>{previewPage?.title ?? "第1問"}</span>
               </div>
               <div className="candidate-status">
-                <span>解答済み 0/{exam.questions.length}</span>
                 <span>第1問</span>
               </div>
             </header>

@@ -22,6 +22,8 @@ describe("ExamList", () => {
 
     expect(screen.getByRole("button", { name: "新規作成" })).toBeInTheDocument();
     expect(screen.getByLabelText(`${exam.title}の表紙`)).toBeInTheDocument();
+    expect(screen.queryByText(exam.subject)).not.toBeInTheDocument();
+    expect(screen.queryByText(exam.description)).not.toBeInTheDocument();
 
     const card = screen.getByRole("heading", { name: exam.title }).closest("article");
     expect(card).not.toBeNull();
@@ -147,11 +149,36 @@ describe("ExamList", () => {
 
     expect(screen.getByRole("heading", { name: "ホーム画面デザイン候補" })).toBeInTheDocument();
     expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Command Slateのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "01 Light Commandのプレビュー" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("tab", { name: /06 Stripe Metrics/ }));
 
     expect(screen.getByRole("article", { name: "06 Stripe Metricsのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
+  });
+
+  it("opens the editor design candidate mode and switches between ten candidates", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "編集候補" }));
+
+    expect(screen.getByRole("heading", { name: "編集画面デザイン候補" })).toBeInTheDocument();
+    expect(screen.getAllByRole("tab")).toHaveLength(10);
+    expect(screen.getByRole("article", { name: "01 Overleaf Splitのプレビュー" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /10 Review Studio/ }));
+
+    expect(screen.getByRole("article", { name: "10 Review Studioのプレビュー" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
   });
 

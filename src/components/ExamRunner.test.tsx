@@ -28,6 +28,7 @@ describe("ExamRunner", () => {
     expect(screen.getByLabelText("問題表示領域")).toBeInTheDocument();
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveTextContent(/^\d{2}:\d{2}$/);
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveClass("timer-color-stadium-alert");
+    expect(screen.queryByText("解答済み")).not.toBeInTheDocument();
 
     await user.click(screen.getByText("試験終了"));
 
@@ -154,7 +155,7 @@ describe("ExamRunner", () => {
     await user.click(screen.getByRole("button", { name: "表紙" }));
 
     expect(screen.getByRole("article", { name: "漫画映画の表紙" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "前のページへ" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "前のページへ" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "次のページ" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "次のページへ" }));

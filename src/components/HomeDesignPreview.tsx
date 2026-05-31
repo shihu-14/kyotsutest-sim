@@ -15,32 +15,32 @@ interface HomeCandidate {
 
 const homeCandidates: HomeCandidate[] = [
   {
-    id: "command-slate",
-    name: "01 Command Slate",
-    shortName: "Slate",
-    themeClass: "home-preview-command-slate",
-    intent: "3番の運用ダッシュボードを基準にした濃色案"
+    id: "light-command",
+    name: "01 Light Command",
+    shortName: "Command",
+    themeClass: "home-preview-light-command",
+    intent: "管理画面の密度を保った明るい基準案"
   },
   {
-    id: "vercel-grid",
-    name: "02 Vercel Grid",
+    id: "vercel-cards",
+    name: "02 Vercel Cards",
     shortName: "Vercel",
-    themeClass: "home-preview-vercel-grid",
-    intent: "余白と細線で試験を管理する白基調案"
+    themeClass: "home-preview-vercel-cards",
+    intent: "余白と細い枠で表紙を見せる白基調案"
   },
   {
-    id: "linear-board",
-    name: "03 Linear Board",
+    id: "linear-light",
+    name: "03 Linear Light",
     shortName: "Linear",
-    themeClass: "home-preview-linear-board",
-    intent: "一覧性と状態表示を優先する暗色ボード案"
+    themeClass: "home-preview-linear-light",
+    intent: "一覧性と状態表示を明るく整理する案"
   },
   {
-    id: "github-issues",
-    name: "04 GitHub Issues",
+    id: "github-light",
+    name: "04 GitHub Light",
     shortName: "Issues",
-    themeClass: "home-preview-github-issues",
-    intent: "行動ボタンを抑えて状態確認を前面に出す案"
+    themeClass: "home-preview-github-light",
+    intent: "行動ボタンを抑えて情報を読みやすくする案"
   },
   {
     id: "notion-desk",
@@ -57,11 +57,11 @@ const homeCandidates: HomeCandidate[] = [
     intent: "指標とカードを同じ面に置く分析寄り案"
   },
   {
-    id: "figma-canvas",
-    name: "07 Figma Canvas",
+    id: "figma-light",
+    name: "07 Figma Light",
     shortName: "Canvas",
-    themeClass: "home-preview-figma-canvas",
-    intent: "操作バーと作業面をはっきり分ける案"
+    themeClass: "home-preview-figma-light",
+    intent: "操作バーと作業面を明るい面で分ける案"
   },
   {
     id: "school-console",
@@ -78,11 +78,11 @@ const homeCandidates: HomeCandidate[] = [
     intent: "答案用紙色に合わせた紙面管理案"
   },
   {
-    id: "wood-terminal",
-    name: "10 Wood Terminal",
+    id: "wood-paper",
+    name: "10 Wood Paper",
     shortName: "Wood",
-    themeClass: "home-preview-wood-terminal",
-    intent: "木の背景上に管理端末を置く案"
+    themeClass: "home-preview-wood-paper",
+    intent: "木の背景上に白い試験カードを置く案"
   }
 ];
 
@@ -153,7 +153,6 @@ export function HomeDesignPreview({ exams }: HomeDesignPreviewProps) {
                     {exam.coverImageUrl ? <img src={exam.coverImageUrl} alt="" /> : null}
                   </div>
                   <div>
-                    <small>{exam.subject}</small>
                     <strong>{exam.title}</strong>
                     <p>{exam.durationMinutes}分 / {exam.questions.length}問 / {exam.totalPoints}点</p>
                   </div>

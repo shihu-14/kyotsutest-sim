@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from "react";
 import type { AnswerValue, Exam, QuestionSlot, UserAnswers } from "../types";
-import { answeredCount } from "../utils/answer";
 import { useCountdown } from "../hooks/useCountdown";
 import { MarkSheet } from "./MarkSheet";
 import { ProblemBooklet } from "./ProblemBooklet";
@@ -45,7 +44,6 @@ export function ExamRunner({
   const page = exam.pages.find((candidate) => candidate.id === currentPageId) ?? exam.pages[0];
   const pageIndex = exam.pages.findIndex((candidate) => candidate.id === page.id);
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
-  const completeCount = answeredCount(exam, answers);
   const bookletStyle = { "--booklet-zoom": String(bookletZoom) } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
@@ -127,12 +125,6 @@ export function ExamRunner({
     <main className="exam-layout exam-mode-background">
       <header className="exam-toolbar" aria-label="試験操作">
         <div className="toolbar-metrics">
-          <div className="metric">
-            <span>解答済み</span>
-            <strong>
-              {completeCount}/{exam.questions.length}
-            </strong>
-          </div>
           {!reviewMode ? (
             <StopwatchTimer
               formatted={countdown.formatted}
@@ -186,15 +178,16 @@ export function ExamRunner({
             ))}
           </nav>
           <div className="booklet-stage-shell">
-            <button
-              aria-label="前のページへ"
-              className="booklet-side-arrow previous"
-              disabled={!canGoPrevious}
-              type="button"
-              onClick={goPrevious}
-            >
-              ‹
-            </button>
+            {canGoPrevious ? (
+              <button
+                aria-label="前のページへ"
+                className="booklet-side-arrow previous"
+                type="button"
+                onClick={goPrevious}
+              >
+                ‹
+              </button>
+            ) : null}
             <div
               aria-label="問題表示領域"
               className="booklet-stage"
@@ -222,15 +215,11 @@ export function ExamRunner({
                 )}
               </div>
             </div>
-            <button
-              aria-label="次のページへ"
-              className="booklet-side-arrow next"
-              disabled={!canGoNext}
-              type="button"
-              onClick={goNext}
-            >
-              ›
-            </button>
+            {canGoNext ? (
+              <button aria-label="次のページへ" className="booklet-side-arrow next" type="button" onClick={goNext}>
+                ›
+              </button>
+            ) : null}
           </div>
         </div>
         <MarkSheet
