@@ -74,4 +74,29 @@ describe("ExamList", () => {
     expect(onEdit).toHaveBeenCalledWith(exam);
     expect(onDelete).toHaveBeenCalledWith(exam.id);
   });
+
+  it("opens the exam screen design candidate mode and switches between ten candidates", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "画面候補" }));
+
+    expect(screen.getByRole("heading", { name: "解答画面デザイン候補" })).toBeInTheDocument();
+    expect(screen.getAllByRole("tab")).toHaveLength(10);
+    expect(screen.getByRole("article", { name: "01 Focus Commandのプレビュー" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /06 Carbon Console/ }));
+
+    expect(screen.getByRole("article", { name: "06 Carbon Consoleのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
+  });
 });
