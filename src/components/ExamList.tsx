@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Exam } from "../types";
 import { ExamDesignPreview } from "./ExamDesignPreview";
+import { PageNavDesignPreview } from "./PageNavDesignPreview";
 import { TimerDesignPreview } from "./TimerDesignPreview";
 
 interface ExamListProps {
@@ -12,7 +13,7 @@ interface ExamListProps {
 }
 
 export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: ExamListProps) {
-  const [homeMode, setHomeMode] = useState<"exams" | "designs" | "timers">("exams");
+  const [homeMode, setHomeMode] = useState<"exams" | "designs" | "timers" | "pageNavs">("exams");
   const previewExam = exams.find((exam) => exam.pages.some((page) => page.pageImageUrl)) ?? exams[0];
 
   return (
@@ -43,6 +44,14 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
           >
             時間候補
           </button>
+          <button
+            aria-pressed={homeMode === "pageNavs"}
+            className="secondary-button"
+            type="button"
+            onClick={() => setHomeMode("pageNavs")}
+          >
+            ページ候補
+          </button>
           <button className="secondary-button" type="button" onClick={onOpenEditor}>
             新規作成
           </button>
@@ -53,6 +62,8 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
         <ExamDesignPreview exam={previewExam} />
       ) : homeMode === "timers" && previewExam ? (
         <TimerDesignPreview exam={previewExam} />
+      ) : homeMode === "pageNavs" && previewExam ? (
+        <PageNavDesignPreview exam={previewExam} />
       ) : (
         <section className="exam-grid" aria-label="公開中の試験一覧">
           {exams

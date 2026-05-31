@@ -129,4 +129,29 @@ describe("ExamList", () => {
       "timer-color-stadium-alert"
     );
   });
+
+  it("opens the page navigation design candidate mode and switches between ten candidates", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "ページ候補" }));
+
+    expect(screen.getByRole("heading", { name: "ページ遷移UI候補" })).toBeInTheDocument();
+    expect(screen.getAllByRole("tab")).toHaveLength(10);
+    expect(screen.getByRole("article", { name: "01 Round Dotsのプレビュー" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /09 Map Pins/ }));
+
+    expect(screen.getByRole("article", { name: "09 Map Pinsのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
+  });
 });

@@ -1488,6 +1488,342 @@ button:disabled {
   font-weight: 900;
 }
 
+.page-nav-design-canvas {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 610px;
+  overflow: hidden;
+  border: 1px solid rgba(71, 58, 36, 0.18);
+  border-radius: 8px;
+  background: #fffaf1;
+}
+
+.page-nav-stage {
+  min-height: 0;
+  background: #c77a2d url("../assets/on-table-image.jpg") center / cover no-repeat;
+  padding: 22px;
+}
+
+.page-nav-preview {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 14px;
+  min-height: 500px;
+}
+
+.page-nav-sample {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.page-nav-sample button,
+.page-nav-sample-arrow {
+  border: 0;
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-weight: 900;
+}
+
+.page-nav-sample button {
+  display: grid;
+  place-items: center;
+  color: #243230;
+}
+
+.page-nav-sample button.active {
+  color: #ffffff;
+}
+
+.page-nav-sample-workspace {
+  display: grid;
+  grid-template-columns: 48px minmax(260px, 1fr) 48px;
+  gap: 16px;
+  align-items: center;
+  min-height: 410px;
+}
+
+.page-nav-sample-arrow {
+  display: grid;
+  width: 44px;
+  height: 78px;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(36, 42, 48, 0.34);
+  color: #ffffff;
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+.page-nav-paper-sample {
+  display: grid;
+  align-content: start;
+  justify-self: center;
+  width: min(360px, 76%);
+  aspect-ratio: 1247 / 1772;
+  background: #ffffff;
+  padding: 42px 44px;
+  box-shadow: 0 12px 24px rgba(36, 24, 8, 0.18);
+}
+
+.page-nav-paper-sample strong {
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 1.1rem;
+}
+
+.page-nav-paper-sample p,
+.page-nav-paper-sample div {
+  margin: 14px 0 0;
+  background: #d9d9d9;
+}
+
+.page-nav-paper-sample p {
+  height: 8px;
+}
+
+.page-nav-paper-sample div {
+  height: 140px;
+}
+
+.page-nav-round-dots .page-nav-sample button {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #b9ab94;
+  border-radius: 50%;
+  background: #fffaf1;
+}
+
+.page-nav-round-dots .page-nav-sample button.active {
+  border-color: #107b70;
+  background: #107b70;
+}
+
+.page-nav-segmented-rail .page-nav-sample {
+  display: grid;
+  grid-template-columns: repeat(14, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid rgba(39, 53, 52, 0.34);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.78);
+  gap: 0;
+}
+
+.page-nav-segmented-rail .page-nav-sample button {
+  min-height: 34px;
+  border-right: 1px solid rgba(39, 53, 52, 0.22);
+  background: transparent;
+}
+
+.page-nav-segmented-rail .page-nav-sample button.active {
+  background: #d4552d;
+}
+
+.page-nav-timeline .page-nav-sample {
+  position: relative;
+  justify-content: space-between;
+  padding: 12px 4px 0;
+}
+
+.page-nav-timeline .page-nav-sample::before {
+  position: absolute;
+  right: 14px;
+  top: 30px;
+  left: 14px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.78);
+  content: "";
+}
+
+.page-nav-timeline .page-nav-sample button {
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #fffdf8;
+  font-size: 0.72rem;
+}
+
+.page-nav-timeline .page-nav-sample button.active {
+  background: #1d70b8;
+}
+
+.page-nav-thumbnail-strip .page-nav-sample {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.page-nav-thumbnail-strip .page-nav-sample button {
+  width: 54px;
+  height: 70px;
+  flex: 0 0 auto;
+  border: 2px solid #ffffff;
+  border-radius: 3px;
+  background:
+    linear-gradient(#d8d8d8, #d8d8d8) 50% 14px / 28px 5px no-repeat,
+    linear-gradient(#d8d8d8, #d8d8d8) 50% 24px / 34px 5px no-repeat,
+    #fffdf8;
+  box-shadow: 0 6px 14px rgba(48, 26, 8, 0.18);
+}
+
+.page-nav-thumbnail-strip .page-nav-sample button.active {
+  border-color: #ff4d00;
+  background-color: #fff1e8;
+  color: #ff4d00;
+}
+
+.page-nav-vertical-index {
+  grid-template-columns: 92px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.page-nav-vertical-index .page-nav-sample {
+  grid-column: 1;
+  grid-row: 1;
+  align-self: stretch;
+  overflow-y: auto;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 8px;
+}
+
+.page-nav-vertical-index .page-nav-sample button {
+  width: 100%;
+  min-height: 30px;
+  border-radius: 4px;
+  background: transparent;
+}
+
+.page-nav-vertical-index .page-nav-sample button.active {
+  background: #273534;
+}
+
+.page-nav-vertical-index .page-nav-sample-workspace {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.page-nav-breadcrumb-chips .page-nav-sample button {
+  min-width: 44px;
+  height: 34px;
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.88);
+  padding: 0 12px;
+}
+
+.page-nav-breadcrumb-chips .page-nav-sample button + button::before {
+  margin-right: 9px;
+  color: #7b5a34;
+  content: "/";
+}
+
+.page-nav-breadcrumb-chips .page-nav-sample button.active {
+  background: #b8862f;
+}
+
+.page-nav-command-palette .page-nav-sample {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-radius: 10px;
+  background: #202a2f;
+  padding: 10px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.22);
+}
+
+.page-nav-command-palette .page-nav-sample::before {
+  grid-column: 1 / -1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.62);
+  padding-bottom: 7px;
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  content: "Jump to page";
+}
+
+.page-nav-command-palette .page-nav-sample button {
+  min-height: 30px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #eef7f7;
+}
+
+.page-nav-command-palette .page-nav-sample button.active {
+  background: #38f8ff;
+  color: #071014;
+}
+
+.page-nav-minimal-stepper .page-nav-sample {
+  justify-content: center;
+}
+
+.page-nav-minimal-stepper .page-nav-sample button {
+  min-width: 48px;
+  height: 36px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.page-nav-minimal-stepper .page-nav-sample button:not(:first-child):not(.active):not(:last-child) {
+  display: none;
+}
+
+.page-nav-minimal-stepper .page-nav-sample button:first-child::after {
+  content: " ←";
+}
+
+.page-nav-minimal-stepper .page-nav-sample button:last-child::before {
+  content: "→ ";
+}
+
+.page-nav-minimal-stepper .page-nav-sample button.active {
+  background: #111111;
+}
+
+.page-nav-map-pins .page-nav-sample {
+  align-items: flex-start;
+  min-height: 64px;
+  padding-top: 8px;
+}
+
+.page-nav-map-pins .page-nav-sample button {
+  position: relative;
+  width: 34px;
+  height: 42px;
+  border-radius: 50% 50% 50% 4px;
+  background: #fff8eb;
+  color: #7f2800;
+  transform: rotate(-45deg);
+}
+
+.page-nav-map-pins .page-nav-sample button span {
+  transform: rotate(45deg);
+}
+
+.page-nav-map-pins .page-nav-sample button.active {
+  background: #ff4d00;
+}
+
+.page-nav-exam-ticket .page-nav-sample {
+  gap: 0;
+}
+
+.page-nav-exam-ticket .page-nav-sample button {
+  min-width: 58px;
+  height: 38px;
+  border-right: 1px dashed rgba(94, 36, 24, 0.36);
+  background: #fff6d9;
+  color: #5e2418;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%);
+}
+
+.page-nav-exam-ticket .page-nav-sample button.active {
+  background: #d4552d;
+  color: #ffffff;
+}
+
 .booklet-shell {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -1514,7 +1850,7 @@ button:disabled {
   overflow: auto;
   border-radius: 8px;
   background: transparent;
-  box-shadow: inset 0 0 0 1px rgba(96, 45, 13, 0.16);
+  box-shadow: none;
   padding: 8px 14px 14px;
 }
 
@@ -1888,8 +2224,8 @@ button:disabled {
   position: relative;
   align-items: flex-start;
   flex-shrink: 0;
-  min-height: 42px;
-  margin-bottom: 2px;
+  min-height: 0;
+  margin-bottom: 0;
 }
 
 .exam-mode-background .toolbar-metrics {
@@ -1899,8 +2235,8 @@ button:disabled {
 }
 
 .exam-mode-background .mark-sheet {
-  height: calc(100% - 62px);
-  margin-top: 62px;
+  height: calc(100% - 118px);
+  margin-top: 118px;
 }
 
 .mark-sheet {

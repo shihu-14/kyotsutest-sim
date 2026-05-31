@@ -27,6 +27,7 @@ describe("ExamRunner", () => {
     expect(document.querySelector('input[type="range"][aria-label="問題表示倍率"]')).not.toBeInTheDocument();
     expect(screen.getByLabelText("問題表示領域")).toBeInTheDocument();
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveTextContent(/^\d{2}:\d{2}$/);
+    expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveClass("timer-color-stadium-alert");
 
     await user.click(screen.getByText("試験終了"));
 
@@ -110,6 +111,7 @@ describe("ExamRunner", () => {
     );
 
     expect(document.querySelector(".booklet-scroll-surface.exact-scroll-surface")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: animeExam.title, level: 1 })).not.toBeInTheDocument();
   });
 
   it("can show the cover from the first page tab and navigate with side arrows", async () => {

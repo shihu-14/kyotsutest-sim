@@ -125,10 +125,7 @@ export function ExamRunner({
 
   return (
     <main className="exam-layout exam-mode-background">
-      <header className="exam-toolbar">
-        <div>
-          <h1>{exam.title}</h1>
-        </div>
+      <header className="exam-toolbar" aria-label="試験操作">
         <div className="toolbar-metrics">
           <div className="metric">
             <span>解答済み</span>
@@ -142,7 +139,7 @@ export function ExamRunner({
               label={`残り時間 ${countdown.formatted}`}
               remainingMs={countdown.remainingMs}
               totalMs={totalTimeMs}
-              variant="timer-exam-seal"
+              variant="timer-exam-seal timer-color-stadium-alert"
             />
           ) : null}
           {reviewMode ? (
