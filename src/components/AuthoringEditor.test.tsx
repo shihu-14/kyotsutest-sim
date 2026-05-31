@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../data/sampleExam";
+import type { AuthoringMeta } from "../types";
 import { AuthoringEditor } from "./AuthoringEditor";
 
 vi.mock("@monaco-editor/react", () => ({
@@ -11,13 +12,33 @@ vi.mock("@monaco-editor/react", () => ({
 }));
 
 describe("AuthoringEditor", () => {
+  const authorSourceKey = "kyotsu-test-sim:author-source";
+  const authorMetaKey = "kyotsu-test-sim:author-meta";
+
   beforeEach(() => {
     window.localStorage.clear();
   });
 
-  async function enterSource(user: ReturnType<typeof userEvent.setup>, source: string) {
-    await user.click(screen.getByRole("tab", { name: "詳細TeX" }));
-    fireEvent.change(screen.getByLabelText("TeXコード入力"), { target: { value: source } });
+  function primeAuthoringState(source: string, overrides: Partial<AuthoringMeta> = {}) {
+    const points = Array.from(source.matchAll(/points=(\d+)/g)).reduce((sum, match) => sum + Number(match[1]), 0);
+    const questionCount = source.match(/\\mark/g)?.length ?? 0;
+    window.localStorage.setItem(authorSourceKey, source);
+    window.localStorage.setItem(
+      authorMetaKey,
+      JSON.stringify({
+        title: overrides.title ?? "Parsed",
+        subject: overrides.subject ?? "Parsed",
+        description: overrides.description ?? "",
+        questionCount,
+        totalPoints: points,
+        durationMinutes: overrides.durationMinutes ?? 60,
+        ...overrides
+      })
+    );
+  }
+
+  async function openSectionTex(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(getButtonByText("大問TeX"));
   }
 
   function getSettingsDialog() {
@@ -69,11 +90,11 @@ describe("AuthoringEditor", () => {
     render(<AuthoringEditor initialExam={exam} onBack={vi.fn()} onPublish={onPublish} />);
 
     expect(screen.getByRole("heading", { name: exam.title })).toBeInTheDocument();
-    expect(screen.getByLabelText(`${exam.title}の表紙プレビュー`)).toBeInTheDocument();
+    expect(screen.getByLabelText("大問一覧")).toBeInTheDocument();
     expect(screen.getByLabelText("第1問のプレビュー")).toBeInTheDocument();
-    expect(screen.queryByAltText("第1問 方程式クイズのPDF再現ページ")).not.toBeInTheDocument();
+    expect(screen.queryByAltText(/PDF再現ページ/)).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: "詳細TeX" }));
+    await openSectionTex(user);
     expect((screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value).toContain(
       "\\choice{1}{4}{【推しの子】}"
     );
@@ -86,9 +107,9 @@ describe("AuthoringEditor", () => {
 \sectiontitle{第1問}
 \mark[answer=1,points=5,choices=4]{1}`;
 
+    primeAuthoringState(source, { questionCount: 2, totalPoints: 5 });
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
-    await enterSource(user, source);
     await user.click(getButtonByText("投稿"));
 
     expect(onPublish).not.toHaveBeenCalled();
@@ -106,9 +127,9 @@ describe("AuthoringEditor", () => {
 \subsectiontitle{問2}
 \mark[answer=2,points=6,choices=4]{2}`;
 
+    primeAuthoringState(source);
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
-    await enterSource(user, source);
     await user.click(getButtonByText("設定"));
 
     const settingsDialog = getSettingsDialog();
@@ -137,20 +158,20 @@ describe("AuthoringEditor", () => {
 \sectiontitle{第1問}
 \mark[answer=1,points=4,choices=4]{1}`;
 
+    primeAuthoringState(source);
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
-    await enterSource(user, source);
-    await user.click(screen.getByRole("tab", { name: "フォーム" }));
     expect(screen.queryByLabelText("大問 1 タイトル")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("第1問")).toBeInTheDocument();
+    expect(screen.getByLabelText("第1問 本文")).toBeInTheDocument();
+    await user.click(getButtonByText("選択肢を編集"));
     fireEvent.change(screen.getByLabelText("1 マーク内容"), {
       target: { value: "Alpha\nBeta\nGamma\nDelta" }
     });
     expect(screen.getByText("Alpha")).toBeInTheDocument();
-    await user.click(getButtonByText("大問追加"));
-    expect(screen.getByLabelText("第2問")).toBeInTheDocument();
+    await user.click(getButtonByText("追加"));
+    expect(screen.getByLabelText("第2問 本文")).toBeInTheDocument();
     await user.click(getButtonsByText("小問追加")[0]);
-    await user.click(getButtonsByText("マーク追加")[1]);
+    await user.click(getButtonsByText("解答欄追加")[1]);
     await user.click(getButtonByText("投稿"));
 
     expect(onPublish).toHaveBeenCalledWith(
@@ -168,7 +189,7 @@ describe("AuthoringEditor", () => {
               expect.objectContaining({ content: "Delta" })
             ]
           }),
-          expect.objectContaining({ label: "2", section: "第1問 問1", points: 1 })
+          expect.objectContaining({ label: "2", section: "第2問 問1", points: 1 })
         ]
       })
     );
@@ -181,10 +202,9 @@ describe("AuthoringEditor", () => {
 \sectiontitle{第1問}
 \mark[answer=1,points=100,choices=4]{1}`;
 
+    primeAuthoringState(source);
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
-    await enterSource(user, source);
-    await user.click(screen.getByRole("tab", { name: "フォーム" }));
     await user.click(getButtonByText("設定"));
 
     const settingsDialog = getSettingsDialog();
@@ -193,9 +213,8 @@ describe("AuthoringEditor", () => {
     await user.type(questionCountInput, "1");
     await user.click(getButtonByText("閉じる"));
 
-    const answerInput = screen.getByLabelText("1 正解番号");
-    await user.clear(answerInput);
-    await user.type(answerInput, "1|3");
+    await user.click(screen.getByLabelText("1 複数回答"));
+    await user.click(within(screen.getByLabelText("1 正解番号")).getByText("3"));
     await user.click(getButtonByText("投稿"));
 
     expect(onPublish).toHaveBeenCalledWith(

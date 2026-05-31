@@ -27,7 +27,7 @@ interface AuthoringEditorProps {
 
 type TextMetaKey = "title" | "subject" | "description";
 type NumberMetaKey = "questionCount" | "totalPoints" | "durationMinutes";
-type AuthorMode = "form" | "tex";
+type InspectorTab = "preview" | "tex";
 
 const textFields: Array<{ key: TextMetaKey; label: string; multiline?: boolean }> = [
   { key: "title", label: "タイトル" },
@@ -43,6 +43,15 @@ const numberFields: Array<{ key: NumberMetaKey; label: string; suffix: string }>
 const previewAnswers: UserAnswers = {};
 const ignorePreviewAnswer = () => undefined;
 const draftPageId = (sectionIndex: number) => `draft-p${sectionIndex + 1}`;
+const authoringTexPreamble = String.raw`\documentclass[b5paper,12pt]{article}
+\usepackage{amsmath,amssymb,graphicx,tikz,xcolor}
+\newcounter{kyotsuanswer}
+\newcommand{\examtitle}[1]{\def\KyotsuExamTitle{#1}}
+\newcommand{\sectiontitle}[1]{\section*{#1}}
+\newcommand{\subsectiontitle}[1]{\subsection*{#1}}
+\newcommand{\counterbox}{\stepcounter{kyotsuanswer}\fbox{\arabic{kyotsuanswer}}}
+\newcommand{\choice}[3]{\par\smallskip\noindent\textcircled{\scriptsize #2}\quad #3}
+\newcommand{\mark}[2][]{\counterbox}`;
 
 function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
   return (
@@ -117,6 +126,10 @@ function cloneDraft(draft: ExamDraft): ExamDraft {
   };
 }
 
+function positiveChoiceCount(count: number): number {
+  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 1;
+}
+
 function normalizeDraft(draft: ExamDraft): ExamDraft {
   let nextMarkNumber = 1;
 
@@ -138,6 +151,66 @@ function normalizeDraft(draft: ExamDraft): ExamDraft {
       }))
     }))
   };
+}
+
+function serializeMarkForSection(mark: DraftMark): string {
+  const attrs = [
+    `answer=${mark.answer}`,
+    `points=${Math.max(0, mark.points)}`,
+    `choices=${positiveChoiceCount(mark.choices)}`,
+    mark.multi ? "multi=true" : ""
+  ].filter(Boolean);
+
+  return `\\mark[${attrs.join(",")}]{${mark.label}}`;
+}
+
+function serializeChoiceForSection(mark: DraftMark, choice: DraftChoice): string {
+  return `\\choice{${mark.label}}{${choice.value}}{${choice.content}}`;
+}
+
+function serializeSectionSource(section: DraftSection): string {
+  const lines = [`\\sectiontitle{${section.title}}`];
+
+  if (section.body.trim()) {
+    lines.push(...section.body.trim().split("\n"));
+  }
+
+  section.marks.forEach((mark) => {
+    lines.push(serializeMarkForSection(mark));
+    normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceForSection(mark, choice)));
+  });
+
+  section.subsections.forEach((subsection) => {
+    lines.push("", `\\subsectiontitle{${subsection.title}}`);
+    if (subsection.body.trim()) {
+      lines.push(...subsection.body.trim().split("\n"));
+    }
+    subsection.marks.forEach((mark) => {
+      lines.push(serializeMarkForSection(mark));
+      normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceForSection(mark, choice)));
+    });
+  });
+
+  return `${lines.join("\n").trim()}\n`;
+}
+
+function buildSectionCompileSource(meta: AuthoringMeta, section: DraftSection): string {
+  return `${authoringTexPreamble}\n\\begin{document}\n\\examtitle{${meta.title}}\n${serializeSectionSource(section)}\\end{document}\n`;
+}
+
+function getSectionMarkEntries(section: DraftSection) {
+  return [
+    ...section.marks.map((mark) => ({ mark })),
+    ...section.subsections.flatMap((subsection) => subsection.marks.map((mark) => ({ mark })))
+  ];
+}
+
+function sectionPointTotal(section: DraftSection): number {
+  return getSectionMarkEntries(section).reduce((sum, entry) => sum + entry.mark.points, 0);
+}
+
+function sectionMarkCount(section: DraftSection): number {
+  return getSectionMarkEntries(section).length;
 }
 
 function draftBodyLineFromBlock(block: ProblemBlock): string | null {
@@ -470,10 +543,24 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [publishState, setPublishState] = useState<"idle" | "published">("idle");
-  const [authorMode, setAuthorMode] = useState<AuthorMode>("form");
+  const [selectedSectionIndex, setSelectedSectionIndex] = useState(0);
+  const [inspectorTab, setInspectorTab] = useState<InspectorTab>("preview");
   const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
   const draft = useMemo(() => normalizeDraft(parseAuthoringDraft(source)), [source]);
   const previewExam = useMemo(() => buildPublishedExam(meta, source, initialExam), [initialExam, meta, source]);
+  const selectedSection =
+    draft.sections[Math.min(selectedSectionIndex, Math.max(0, draft.sections.length - 1))] ?? null;
+  const selectedPage = previewExam.pages[Math.min(selectedSectionIndex, Math.max(0, previewExam.pages.length - 1))] ?? null;
+  const selectedSectionSource = selectedSection ? serializeSectionSource(selectedSection) : "";
+  const selectedCompileSize = selectedSection ? buildSectionCompileSource(meta, selectedSection).length : 0;
+  const sectionTotals = useMemo(
+    () =>
+      draft.sections.map((section) => ({
+        marks: sectionMarkCount(section),
+        points: sectionPointTotal(section)
+      })),
+    [draft.sections]
+  );
   const sourceStats = useMemo(() => {
     const parsed = parseAuthoringLatex(source);
     return {
@@ -535,13 +622,44 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
     setSource(serializeAuthoringDraft(nextMeta, normalizedDraft));
   };
 
+  const applySelectedSectionSource = (nextSectionSource: string) => {
+    if (!selectedSection) {
+      return;
+    }
+
+    const parsed = normalizeDraft(parseAuthoringDraft(nextSectionSource));
+    const nextSection = parsed.sections[0] ?? createDraftSection(selectedSectionIndex);
+    const nextDraft = cloneDraft(draft);
+    nextDraft.sections[selectedSectionIndex] = {
+      ...nextSection,
+      id: selectedSection.id
+    };
+    applyDraft(nextDraft);
+  };
+
   return (
     <main className="author-layout">
-      <header className="exam-toolbar">
+      <header className="author-topbar">
         <div>
-          <p className="eyebrow">{initialExam ? "Edit exam" : "New exam"}</p>
+          <p className="eyebrow">{initialExam ? "Edit exam" : "New exam"} / Authoring console</p>
           <h1>{initialExam ? meta.title || initialExam.title : "新規作成"}</h1>
         </div>
+        <dl className="author-summary" aria-label="編集サマリー">
+          <div>
+            <dt>大問</dt>
+            <dd>{draft.sections.length}</dd>
+          </div>
+          <div>
+            <dt>解答欄</dt>
+            <dd>{sourceStats.marks}</dd>
+          </div>
+          <div className={sumDraftPoints(draft) === meta.totalPoints ? "" : "mismatch"}>
+            <dt>配点</dt>
+            <dd>
+              {sumDraftPoints(draft)}/{meta.totalPoints}
+            </dd>
+          </div>
+        </dl>
         <div className="author-actions">
           <span className={`save-state ${isDirty ? "dirty" : ""}`}>
             {publishState === "published" ? "投稿済み" : isDirty ? "未保存" : "保存済み"}
@@ -561,62 +679,70 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
         </div>
       </header>
 
-      <section className="author-grid">
-        <div className="editor-pane">
-          <div className="editor-pane-header">
-            <h2>{authorMode === "form" ? "作問フォーム" : "詳細TeX"}</h2>
-            <div className="author-mode-tabs" role="tablist" aria-label="編集モード">
-              <button
-                aria-selected={authorMode === "form"}
-                className={authorMode === "form" ? "active" : ""}
-                role="tab"
-                type="button"
-                onClick={() => setAuthorMode("form")}
-              >
-                フォーム
-              </button>
-              <button
-                aria-selected={authorMode === "tex"}
-                className={authorMode === "tex" ? "active" : ""}
-                role="tab"
-                type="button"
-                onClick={() => setAuthorMode("tex")}
-              >
-                詳細TeX
-              </button>
-            </div>
-          </div>
-          {authorMode === "form" ? (
-            <StructureEditor draft={draft} onChange={applyDraft} />
-          ) : (
-            <Editor
-              height="calc(100vh - 188px)"
-              defaultLanguage="latex"
-              theme="vs-light"
-              value={source}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 14,
-                lineNumbers: "on",
-                wordWrap: "on",
-                tabSize: 2,
-                automaticLayout: true
-              }}
-              onChange={(nextSource) => setSource(nextSource ?? "")}
-            />
-          )}
-        </div>
+      <section className="author-workspace">
+        <SectionNavigator
+          draft={draft}
+          sectionTotals={sectionTotals}
+          selectedSectionIndex={selectedSectionIndex}
+          onAddSection={() => {
+            applyDraft({ sections: [...draft.sections, createDraftSection(draft.sections.length)] });
+            setSelectedSectionIndex(draft.sections.length);
+          }}
+          onSelectSection={setSelectedSectionIndex}
+        />
 
-        <aside className="author-side">
-          <section className="preview-pane" aria-label="共通テスト形式プレビュー">
-            <div className="preview-heading">
-              <h2>プレビュー</h2>
-              <span>
-                ページ {previewExam.pages.length} / 大問 {sourceStats.sections} / 小問 {sourceStats.subsections} /
-                解答欄 {sourceStats.answerSlots || sourceStats.marks}
-              </span>
+        <section className="section-editor-pane" aria-label="選択中の大問編集">
+          {selectedSection ? (
+            <SectionEditor
+              section={selectedSection}
+              sectionIndex={selectedSectionIndex}
+              onChange={(nextSection) => {
+                const nextDraft = cloneDraft(draft);
+                nextDraft.sections[selectedSectionIndex] = nextSection;
+                applyDraft(nextDraft);
+              }}
+            />
+          ) : null}
+        </section>
+
+        <aside className="inspector-pane">
+          <section className="inspector-shell" aria-label="大問プレビューとTeX">
+            <div className="inspector-heading">
+              <div>
+                <p className="eyebrow">Section compiler</p>
+                <h2>{selectedSection?.title ?? "大問"}</h2>
+              </div>
+              <div className="inspector-tabs" role="tablist" aria-label="プレビューとTeX">
+                <button
+                  aria-selected={inspectorTab === "preview"}
+                  className={inspectorTab === "preview" ? "active" : ""}
+                  role="tab"
+                  type="button"
+                  onClick={() => setInspectorTab("preview")}
+                >
+                  プレビュー
+                </button>
+                <button
+                  aria-selected={inspectorTab === "tex"}
+                  className={inspectorTab === "tex" ? "active" : ""}
+                  role="tab"
+                  type="button"
+                  onClick={() => setInspectorTab("tex")}
+                >
+                  大問TeX
+                </button>
+              </div>
             </div>
-            <PublishedExamPreview exam={previewExam} />
+            {inspectorTab === "preview" && selectedPage ? (
+              <PublishedSectionPreview exam={previewExam} page={selectedPage} />
+            ) : null}
+            {inspectorTab === "tex" && selectedSection ? (
+              <SectionTexEditor
+                compileSize={selectedCompileSize}
+                source={selectedSectionSource}
+                onChange={applySelectedSectionSource}
+              />
+            ) : null}
             {showValidationErrors && validationErrors.length ? (
               <div className="validation-errors" role="alert">
                 <strong>投稿できません</strong>
@@ -713,205 +839,263 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   );
 }
 
-function PublishedExamPreview({ exam }: { exam: Exam }) {
+interface SectionNavigatorProps {
+  draft: ExamDraft;
+  sectionTotals: Array<{ marks: number; points: number }>;
+  selectedSectionIndex: number;
+  onAddSection: () => void;
+  onSelectSection: (sectionIndex: number) => void;
+}
+
+function SectionNavigator({
+  draft,
+  sectionTotals,
+  selectedSectionIndex,
+  onAddSection,
+  onSelectSection
+}: SectionNavigatorProps) {
+  return (
+    <aside className="section-nav-pane" aria-label="大問一覧">
+      <div className="section-nav-head">
+        <div>
+          <p className="eyebrow">Sections</p>
+          <h2>大問一覧</h2>
+        </div>
+        <button className="compact secondary-button" type="button" onClick={onAddSection}>
+          追加
+        </button>
+      </div>
+      <div className="section-nav-list">
+        {draft.sections.map((section, index) => {
+          const totals = sectionTotals[index] ?? { marks: 0, points: 0 };
+          return (
+            <button
+              aria-current={index === selectedSectionIndex ? "page" : undefined}
+              className={index === selectedSectionIndex ? "active" : ""}
+              key={section.id}
+              type="button"
+              onClick={() => onSelectSection(index)}
+            >
+              <span>{section.title}</span>
+              <small>
+                {totals.marks}欄 / {totals.points}点
+              </small>
+            </button>
+          );
+        })}
+      </div>
+    </aside>
+  );
+}
+
+function PublishedSectionPreview({ exam, page }: { exam: Exam; page: ExamPage }) {
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
   );
 
   return (
-    <div className="published-exam-preview">
-      <article className="published-preview-cover" aria-label={`${exam.title}の表紙プレビュー`}>
-        <div className="cover-warning">試験開始の指示があるまで，この問題冊子の中を見てはいけません。</div>
-        <div className="cover-title-line">
-          <strong>{exam.title}</strong>
-          <span>
-            {exam.totalPoints}点
-            <br />
-            {exam.durationMinutes}分
-          </span>
+    <div className="published-section-preview">
+      <section
+        className={`published-preview-page ${page.pageImageUrl ? "exact" : ""}`}
+        aria-label={`${page.title}のプレビュー`}
+      >
+        <div className="published-preview-caption">
+          <span>{page.pageNumber}</span>
+          <strong>{page.title}</strong>
         </div>
-      </article>
-      {exam.pages.map((page) => (
-        <section
-          className={`published-preview-page ${page.pageImageUrl ? "exact" : ""}`}
-          key={page.id}
-          aria-label={`${page.title}のプレビュー`}
-        >
-          <div className="published-preview-caption">
-            <span>{page.pageNumber}</span>
-            <strong>{page.title}</strong>
-          </div>
-          <ProblemBooklet
-            answers={previewAnswers}
-            page={page}
-            questionsById={questionsById}
-            onToggleAnswer={ignorePreviewAnswer}
-          />
-        </section>
-      ))}
+        <ProblemBooklet
+          answers={previewAnswers}
+          page={page}
+          questionsById={questionsById}
+          onToggleAnswer={ignorePreviewAnswer}
+        />
+      </section>
     </div>
   );
 }
 
-interface StructureEditorProps {
-  draft: ExamDraft;
-  onChange: (draft: ExamDraft) => void;
+interface SectionTexEditorProps {
+  compileSize: number;
+  source: string;
+  onChange: (source: string) => void;
 }
 
-function StructureEditor({ draft, onChange }: StructureEditorProps) {
-  const updateSection = (sectionIndex: number, updates: Partial<DraftSection>) => {
-    const nextDraft = cloneDraft(draft);
-    nextDraft.sections[sectionIndex] = { ...nextDraft.sections[sectionIndex], ...updates };
-    onChange(nextDraft);
-  };
+function SectionTexEditor({ compileSize, source, onChange }: SectionTexEditorProps) {
+  return (
+    <div className="section-tex-editor">
+      <div className="tex-runtime-strip" aria-label="TeX共通設定">
+        <span>共通パッケージとマクロは裏で読み込み済み</span>
+        <code>{Math.ceil(compileSize / 1024)}KB unit</code>
+      </div>
+      <Editor
+        height="calc(100vh - 252px)"
+        defaultLanguage="latex"
+        theme="vs-light"
+        value={source}
+        options={{
+          minimap: { enabled: false },
+          fontSize: 13,
+          lineNumbers: "on",
+          wordWrap: "on",
+          tabSize: 2,
+          automaticLayout: true
+        }}
+        onChange={(nextSource) => onChange(nextSource ?? "")}
+      />
+    </div>
+  );
+}
 
+interface SectionEditorProps {
+  section: DraftSection;
+  sectionIndex: number;
+  onChange: (section: DraftSection) => void;
+}
+
+function SectionEditor({ section, sectionIndex, onChange }: SectionEditorProps) {
+  const updateSection = (updates: Partial<DraftSection>) => {
+    onChange({ ...section, ...updates });
+  };
   const updateSubsection = (
-    sectionIndex: number,
     subsectionIndex: number,
     updates: Partial<DraftSubsection>
   ) => {
-    const nextDraft = cloneDraft(draft);
-    nextDraft.sections[sectionIndex].subsections[subsectionIndex] = {
-      ...nextDraft.sections[sectionIndex].subsections[subsectionIndex],
-      ...updates
-    };
-    onChange(nextDraft);
+    const subsections = section.subsections.map((subsection, index) =>
+      index === subsectionIndex ? { ...subsection, ...updates } : subsection
+    );
+    updateSection({ subsections });
   };
 
   const updateMark = (
-    sectionIndex: number,
     subsectionIndex: number | null,
     markIndex: number,
     updates: Partial<DraftMark>
   ) => {
-    const nextDraft = cloneDraft(draft);
-    const marks =
-      subsectionIndex === null
-        ? nextDraft.sections[sectionIndex].marks
-        : nextDraft.sections[sectionIndex].subsections[subsectionIndex].marks;
-    marks[markIndex] = { ...marks[markIndex], ...updates };
-    onChange(nextDraft);
+    if (subsectionIndex === null) {
+      const marks = section.marks.map((mark, index) => (index === markIndex ? { ...mark, ...updates } : mark));
+      updateSection({ marks });
+      return;
+    }
+
+    const subsections = section.subsections.map((subsection, index) => {
+      if (index !== subsectionIndex) {
+        return subsection;
+      }
+
+      return {
+        ...subsection,
+        marks: subsection.marks.map((mark, itemIndex) =>
+          itemIndex === markIndex ? { ...mark, ...updates } : mark
+        )
+      };
+    });
+    updateSection({ subsections });
   };
 
-  const addSection = () => {
-    onChange({ sections: [...draft.sections, createDraftSection(draft.sections.length)] });
+  const addSubsection = () => {
+    updateSection({
+      subsections: [...section.subsections, createDraftSubsection(sectionIndex, section.subsections.length)]
+    });
   };
 
-  const addSubsection = (sectionIndex: number) => {
-    const nextDraft = cloneDraft(draft);
-    const section = nextDraft.sections[sectionIndex];
-    section.subsections.push(createDraftSubsection(sectionIndex, section.subsections.length));
-    onChange(nextDraft);
+  const addMark = (subsectionIndex: number | null) => {
+    const mark = createDraftMark(String(sectionMarkCount(section) + 1));
+    if (subsectionIndex === null) {
+      updateSection({ marks: [...section.marks, mark] });
+      return;
+    }
+
+    const subsections = section.subsections.map((subsection, index) =>
+      index === subsectionIndex ? { ...subsection, marks: [...subsection.marks, mark] } : subsection
+    );
+    updateSection({ subsections });
   };
 
-  const addMark = (sectionIndex: number, subsectionIndex: number | null) => {
-    const nextDraft = cloneDraft(draft);
-    const label = String(countDraftMarks(nextDraft) + 1);
-    const target =
-      subsectionIndex === null
-        ? nextDraft.sections[sectionIndex].marks
-        : nextDraft.sections[sectionIndex].subsections[subsectionIndex].marks;
-    target.push(createDraftMark(label));
-    onChange(nextDraft);
-  };
+  const removeMark = (subsectionIndex: number | null, markIndex: number) => {
+    if (subsectionIndex === null) {
+      updateSection({ marks: section.marks.filter((_mark, index) => index !== markIndex) });
+      return;
+    }
 
-  const removeMark = (sectionIndex: number, subsectionIndex: number | null, markIndex: number) => {
-    const nextDraft = cloneDraft(draft);
-    const target =
-      subsectionIndex === null
-        ? nextDraft.sections[sectionIndex].marks
-        : nextDraft.sections[sectionIndex].subsections[subsectionIndex].marks;
-    target.splice(markIndex, 1);
-    onChange(nextDraft);
+    const subsections = section.subsections.map((subsection, index) =>
+      index === subsectionIndex
+        ? { ...subsection, marks: subsection.marks.filter((_mark, itemIndex) => itemIndex !== markIndex) }
+        : subsection
+    );
+    updateSection({ subsections });
   };
 
   return (
-    <section className="structure-editor" aria-label="問題構成エディタ">
-      <div className="structure-heading">
-        <h2>問題構成</h2>
-        <button className="secondary-button" type="button" onClick={addSection}>
-          大問追加
-        </button>
-      </div>
-      {draft.sections.length ? (
-        <div className="structure-list">
-          {draft.sections.map((section, sectionIndex) => (
-            <article className="structure-section" key={section.id}>
-              <div className="structure-section-head">
-                <div className="structure-section-title" aria-label={section.title}>
-                  <span>大問</span>
-                  <strong>{section.title}</strong>
-                </div>
-                <button className="secondary-button" type="button" onClick={() => addSubsection(sectionIndex)}>
-                  小問追加
-                </button>
-                <button className="secondary-button" type="button" onClick={() => addMark(sectionIndex, null)}>
-                  マーク追加
-                </button>
-              </div>
-              <label className="structure-body">
-                <span>本文</span>
-                <textarea
-                  aria-label={`${section.title} 本文`}
-                  rows={2}
-                  value={section.body}
-                  onChange={(event) => updateSection(sectionIndex, { body: event.currentTarget.value })}
-                />
-              </label>
-              <MarkList
-                marks={section.marks}
-                prefix={section.title}
-                onRemove={(markIndex) => removeMark(sectionIndex, null, markIndex)}
-                onUpdate={(markIndex, updates) => updateMark(sectionIndex, null, markIndex, updates)}
-              />
-              {section.subsections.map((subsection, subsectionIndex) => (
-                <section className="structure-subsection" key={subsection.id}>
-                  <div className="structure-section-head">
-                    <label>
-                      <span>小問</span>
-                      <input
-                        aria-label={`${section.title} 小問 ${subsectionIndex + 1} タイトル`}
-                        value={subsection.title}
-                        onChange={(event) =>
-                          updateSubsection(sectionIndex, subsectionIndex, { title: event.currentTarget.value })
-                        }
-                      />
-                    </label>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={() => addMark(sectionIndex, subsectionIndex)}
-                    >
-                      マーク追加
-                    </button>
-                  </div>
-                  <label className="structure-body">
-                    <span>本文</span>
-                    <textarea
-                      aria-label={`${section.title} ${subsection.title} 本文`}
-                      rows={2}
-                      value={subsection.body}
-                      onChange={(event) =>
-                        updateSubsection(sectionIndex, subsectionIndex, { body: event.currentTarget.value })
-                      }
-                    />
-                  </label>
-                  <MarkList
-                    marks={subsection.marks}
-                    prefix={`${section.title} ${subsection.title}`}
-                    onRemove={(markIndex) => removeMark(sectionIndex, subsectionIndex, markIndex)}
-                    onUpdate={(markIndex, updates) =>
-                      updateMark(sectionIndex, subsectionIndex, markIndex, updates)
-                    }
-                  />
-                </section>
-              ))}
-            </article>
-          ))}
+    <div className="section-editor">
+      <div className="section-editor-head">
+        <div>
+          <p className="eyebrow">Structured form</p>
+          <h2>{section.title}</h2>
         </div>
-      ) : null}
-    </section>
+        <div className="section-editor-actions">
+          <button className="secondary-button compact" type="button" onClick={addSubsection}>
+            小問追加
+          </button>
+          <button className="primary-button compact" type="button" onClick={() => addMark(null)}>
+            解答欄追加
+          </button>
+        </div>
+      </div>
+      <label className="section-body-field">
+        <span>本文</span>
+        <textarea
+          aria-label={`${section.title} 本文`}
+          rows={6}
+          value={section.body}
+          onChange={(event) => updateSection({ body: event.currentTarget.value })}
+        />
+      </label>
+      <section className="answer-editor-group" aria-label={`${section.title} 解答欄`}>
+        <div className="answer-editor-head">
+          <h3>解答欄</h3>
+          <small>{section.marks.length}件</small>
+        </div>
+        <MarkList
+          marks={section.marks}
+          prefix={section.title}
+          onRemove={(markIndex) => removeMark(null, markIndex)}
+          onUpdate={(markIndex, updates) => updateMark(null, markIndex, updates)}
+        />
+      </section>
+      {section.subsections.map((subsection, subsectionIndex) => (
+        <section className="subsection-editor" key={subsection.id}>
+          <div className="subsection-editor-head">
+            <label>
+              <span>小問</span>
+              <input
+                aria-label={`${section.title} 小問 ${subsectionIndex + 1} タイトル`}
+                value={subsection.title}
+                onChange={(event) => updateSubsection(subsectionIndex, { title: event.currentTarget.value })}
+              />
+            </label>
+            <button className="secondary-button compact" type="button" onClick={() => addMark(subsectionIndex)}>
+              解答欄追加
+            </button>
+          </div>
+          <label className="section-body-field">
+            <span>本文</span>
+            <textarea
+              aria-label={`${section.title} ${subsection.title} 本文`}
+              rows={4}
+              value={subsection.body}
+              onChange={(event) => updateSubsection(subsectionIndex, { body: event.currentTarget.value })}
+            />
+          </label>
+          <MarkList
+            marks={subsection.marks}
+            prefix={`${section.title} ${subsection.title}`}
+            onRemove={(markIndex) => removeMark(subsectionIndex, markIndex)}
+            onUpdate={(markIndex, updates) => updateMark(subsectionIndex, markIndex, updates)}
+          />
+        </section>
+      ))}
+    </div>
   );
 }
 
@@ -943,10 +1127,41 @@ function positiveInputNumber(value: string): number {
   return Number.isFinite(numericValue) ? Math.max(1, numericValue) : 1;
 }
 
+function answerValuesFromMark(mark: DraftMark): string[] {
+  return mark.answer.split("|").map((value) => value.trim()).filter(Boolean);
+}
+
 function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
+  const [expandedChoices, setExpandedChoices] = useState<Set<string>>(() => new Set());
+
   if (!marks.length) {
-    return null;
+    return <p className="empty-answer-list">この範囲には解答欄がありません。</p>;
   }
+
+  const toggleChoiceEditor = (markId: string) => {
+    setExpandedChoices((current) => {
+      const next = new Set(current);
+      if (next.has(markId)) {
+        next.delete(markId);
+      } else {
+        next.add(markId);
+      }
+      return next;
+    });
+  };
+
+  const updateCorrectAnswer = (markIndex: number, mark: DraftMark, value: string) => {
+    if (!mark.multi) {
+      onUpdate(markIndex, { answer: value });
+      return;
+    }
+
+    const currentValues = answerValuesFromMark(mark);
+    const nextValues = currentValues.includes(value)
+      ? currentValues.filter((candidate) => candidate !== value)
+      : [...currentValues, value];
+    onUpdate(markIndex, { answer: nextValues.join("|") });
+  };
 
   return (
     <div className="structure-mark-list">
@@ -981,37 +1196,57 @@ function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
           </label>
           <label>
             <span>正解番号</span>
-            <input
-              aria-label={`${mark.label} 正解番号`}
-              value={mark.answer}
-              onChange={(event) => onUpdate(markIndex, { answer: event.currentTarget.value })}
-            />
-          </label>
-          <label className="structure-choice-contents">
-            <span>マーク内容</span>
-            <textarea
-              aria-label={`${mark.label} マーク内容`}
-              rows={Math.min(6, Math.max(2, mark.choices))}
-              value={choiceText(mark)}
-              onChange={(event) => {
-                const optionContents = choicesFromText(event.currentTarget.value);
-                onUpdate(markIndex, { choices: optionContents.length, optionContents });
-              }}
-            />
+            <div className="answer-choice-buttons" aria-label={`${mark.label} 正解番号`}>
+              {normalizeMarkChoices(mark).map((choice) => {
+                const selected = answerValuesFromMark(mark).includes(choice.value);
+                return (
+                  <button
+                    aria-pressed={selected}
+                    className={selected ? "selected" : ""}
+                    key={choice.value}
+                    type="button"
+                    onClick={() => updateCorrectAnswer(markIndex, mark, choice.value)}
+                  >
+                    {choice.value}
+                  </button>
+                );
+              })}
+            </div>
           </label>
           <label className="structure-check">
             <input
               aria-label={`${mark.label} 複数回答`}
               checked={mark.multi}
               type="checkbox"
-              onChange={(event) => onUpdate(markIndex, { multi: event.currentTarget.checked })}
+              onChange={(event) => {
+                const multi = event.currentTarget.checked;
+                const firstAnswer = answerValuesFromMark(mark)[0] ?? "1";
+                onUpdate(markIndex, { multi, answer: multi ? mark.answer : firstAnswer });
+              }}
             />
             <span>複数</span>
           </label>
           <button className="secondary-button" type="button" onClick={() => onRemove(markIndex)}>
             削除
           </button>
+          <button className="text-button compact" type="button" onClick={() => toggleChoiceEditor(mark.id)}>
+            選択肢を編集
+          </button>
           <span className="structure-mark-context">{prefix}</span>
+          {expandedChoices.has(mark.id) ? (
+            <label className="structure-choice-contents">
+              <span>選択肢内容</span>
+              <textarea
+                aria-label={`${mark.label} マーク内容`}
+                rows={Math.min(6, Math.max(2, mark.choices))}
+                value={choiceText(mark)}
+                onChange={(event) => {
+                  const optionContents = choicesFromText(event.currentTarget.value);
+                  onUpdate(markIndex, { choices: optionContents.length, optionContents });
+                }}
+              />
+            </label>
+          ) : null}
         </div>
       ))}
     </div>
