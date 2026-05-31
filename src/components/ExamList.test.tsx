@@ -147,11 +147,11 @@ describe("ExamList", () => {
 
     expect(screen.getByRole("heading", { name: "ページ遷移UI候補" })).toBeInTheDocument();
     expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Round Dotsのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "02 Exam Railのプレビュー" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: /09 Map Pins/ }));
+    await user.click(screen.getByRole("tab", { name: /09 Orange Rail/ }));
 
-    expect(screen.getByRole("article", { name: "09 Map Pinsのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "09 Orange Railのプレビュー" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
   });
 });

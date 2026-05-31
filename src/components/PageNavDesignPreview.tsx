@@ -15,79 +15,79 @@ interface PageNavCandidate {
 
 const pageNavCandidates: PageNavCandidate[] = [
   {
-    id: "round-dots",
-    name: "01 Round Dots",
-    shortName: "Dots",
-    themeClass: "page-nav-round-dots",
-    intent: "現在の丸ボタンを基準にした最小案"
+    id: "flat-rail",
+    name: "01 Flat Rail",
+    shortName: "Flat",
+    themeClass: "page-nav-flat-rail",
+    intent: "2番を基準にした最も素直な分割レール"
   },
   {
-    id: "segmented-rail",
-    name: "02 Segmented Rail",
-    shortName: "Rail",
-    themeClass: "page-nav-segmented-rail",
-    intent: "横長レールでページ全体を一覧する案"
+    id: "exam-rail",
+    name: "02 Exam Rail",
+    shortName: "Exam",
+    themeClass: "page-nav-exam-rail",
+    intent: "実試験へ採用する答案欄寄せの分割レール"
   },
   {
-    id: "timeline",
-    name: "03 Timeline",
-    shortName: "Line",
-    themeClass: "page-nav-timeline",
-    intent: "進行状況を一本線で見せる案"
+    id: "compact-rail",
+    name: "03 Compact Rail",
+    shortName: "Compact",
+    themeClass: "page-nav-compact-rail",
+    intent: "高さを抑えて問題表示を広く残す分割レール"
   },
   {
-    id: "thumbnail-strip",
-    name: "04 Thumbnail Strip",
-    shortName: "Thumb",
-    themeClass: "page-nav-thumbnail-strip",
-    intent: "紙面サムネイルとして選ぶ案"
-  },
-  {
-    id: "vertical-index",
-    name: "05 Vertical Index",
-    shortName: "Index",
-    themeClass: "page-nav-vertical-index",
-    intent: "左側の索引で素早く移動する案"
-  },
-  {
-    id: "breadcrumb-chips",
-    name: "06 Breadcrumb Chips",
-    shortName: "Crumb",
-    themeClass: "page-nav-breadcrumb-chips",
-    intent: "パンくず風に現在位置を追う案"
-  },
-  {
-    id: "command-palette",
-    name: "07 Command Palette",
-    shortName: "Cmd",
-    themeClass: "page-nav-command-palette",
-    intent: "暗いコマンドバーとしてまとめる案"
-  },
-  {
-    id: "minimal-stepper",
-    name: "08 Minimal Stepper",
-    shortName: "Step",
-    themeClass: "page-nav-minimal-stepper",
-    intent: "必要な前後関係だけを出す案"
-  },
-  {
-    id: "map-pins",
-    name: "09 Map Pins",
-    shortName: "Pins",
-    themeClass: "page-nav-map-pins",
-    intent: "木目上にピンを置いたように示す案"
-  },
-  {
-    id: "exam-ticket",
-    name: "10 Exam Ticket",
+    id: "ticket-rail",
+    name: "04 Ticket Rail",
     shortName: "Ticket",
-    themeClass: "page-nav-exam-ticket",
-    intent: "受験票の切符片のように並べる案"
+    themeClass: "page-nav-ticket-rail",
+    intent: "受験票の区切りを思わせる分割レール"
+  },
+  {
+    id: "dark-rail",
+    name: "05 Dark Rail",
+    shortName: "Dark",
+    themeClass: "page-nav-dark-rail",
+    intent: "暗色バーで現在ページを強く出す分割レール"
+  },
+  {
+    id: "paper-rail",
+    name: "06 Paper Rail",
+    shortName: "Paper",
+    themeClass: "page-nav-paper-rail",
+    intent: "紙片が連なるように見せる分割レール"
+  },
+  {
+    id: "progress-rail",
+    name: "07 Progress Rail",
+    shortName: "Progress",
+    themeClass: "page-nav-progress-rail",
+    intent: "左からの進行量を背景で示す分割レール"
+  },
+  {
+    id: "index-rail",
+    name: "08 Index Rail",
+    shortName: "Index",
+    themeClass: "page-nav-index-rail",
+    intent: "見出し付きでページ群を索引化する分割レール"
+  },
+  {
+    id: "orange-rail",
+    name: "09 Orange Rail",
+    shortName: "Orange",
+    themeClass: "page-nav-orange-rail",
+    intent: "答案欄のオレンジに寄せた分割レール"
+  },
+  {
+    id: "outline-rail",
+    name: "10 Outline Rail",
+    shortName: "Outline",
+    themeClass: "page-nav-outline-rail",
+    intent: "線だけで軽く見せる分割レール"
   }
 ];
 
 export function PageNavDesignPreview({ exam }: PageNavDesignPreviewProps) {
-  const [activeCandidateId, setActiveCandidateId] = useState(pageNavCandidates[0].id);
+  const [activeCandidateId, setActiveCandidateId] = useState(pageNavCandidates[1].id);
   const activeCandidate =
     pageNavCandidates.find((candidate) => candidate.id === activeCandidateId) ?? pageNavCandidates[0];
   const pageItems = [
