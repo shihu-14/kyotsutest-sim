@@ -107,7 +107,6 @@ export function ExamRunner({
     <main className="exam-layout">
       <header className="exam-toolbar">
         <div>
-          <p className="eyebrow">{reviewMode ? "Review mode" : "Exam mode"}</p>
           <h1>{exam.title}</h1>
         </div>
         <div className="toolbar-metrics">

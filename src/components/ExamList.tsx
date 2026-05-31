@@ -13,7 +13,6 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
     <main className="screen screen-narrow">
       <header className="screen-heading">
         <div>
-          <p className="eyebrow">Published exams</p>
           <h1>共通テスト形式 ウェブ模試</h1>
         </div>
         <button className="secondary-button" type="button" onClick={onOpenEditor}>

@@ -1,6 +1,13 @@
 import type { ReactNode } from "react";
 import katex from "katex";
 import type { AuthoringMeta } from "../types";
+import animePage01 from "../assets/anime-pages/page-01.jpg";
+import animePage04 from "../assets/anime-pages/page-04.jpg";
+import animePage05 from "../assets/anime-pages/page-05.jpg";
+import animePage06 from "../assets/anime-pages/page-06.jpg";
+import animePage07 from "../assets/anime-pages/page-07.jpg";
+import animePage09 from "../assets/anime-pages/page-09.jpg";
+import animePage10 from "../assets/anime-pages/page-10.jpg";
 
 export interface ParsedMark {
   id: string;
@@ -309,12 +316,24 @@ export const defaultAuthoringMeta: AuthoringMeta = {
   durationMinutes: 40
 };
 
+export const defaultEnvironmentSource = String.raw`\definecolor{beige}{RGB}{252,252,252}
+\pagecolor{beige}
+\linespread{1.5}
+\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}`;
+
+export const defaultCoverSource = String.raw`\item 解答用紙に正しくマークされていない場合は, 採点されないことがあります。
+\item この問題冊子は, 全13ページで構成されています。問題は第1問から第9問まであり, 一部の問題には小問が含まれます。配点は各問題ごとに明記されています。
+\item 試験中に問題冊子の印刷不鮮明，ページの落丁・乱丁及び問題の不備等に気付いた場合は教えてください。
+\item 解答は，各問題にある所定の記号をクリックまたはタップをしマークしなさい。
+\item 試験中の他のウェブサイトおよび書籍等の閲覧は禁止します。
+\item 試験終了後, 問題冊子は持ち帰りなさい。`;
+
 export const defaultAuthoringSource = String.raw`\examtitle{漫画映画}
 \sectiontitle{第1問}
 以下の連立方程式において, 各式 ① から ③ がそれぞれ画像 I から III に示されたアニメの名称の一部を表している。
 このとき, 式 \(n_d\:g'' atf-\) が表すアニメの名称として最も適当なものを選べ。
 $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end{aligned}\right.$$
-% 元TeX画像: hibike.png, sidonia2.png, hurumetaru.png
+\includegraphics[width=0.72\linewidth]{${animePage01}}
 \mark[answer=4,points=10,choices=4]{1}
 \choice{1}{1}{おねがい☆ティーチャー}
 \choice{1}{2}{オーバーロード}
@@ -333,7 +352,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \choice{2}{4}{放物線と面積二等分線}
 \subsectiontitle{問2}
 第2期第四話において登場人物同士がコードネームで呼び合う場面について, A から D に示す登場人物の本名に対応するコードネームを選べ。
-% 元TeX画像: ansatu_codename2_gray.pdf
+\includegraphics[width=0.72\linewidth]{${animePage04}}
 \mark[answer=4,points=2,choices=9]{3}
 \choice{3}{1}{野球バカ}
 \choice{3}{2}{鷹岡もどき}
@@ -378,7 +397,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \sectiontitle{第3問}
 以下のグラフおよび図は, あるアニメに関するものである。
 これらの内容に基づいて \(X\) に入る最も適当な記号を選べ。
-% 元TeX図: データ系列グラフと年表を tikzpicture で描画
+\includegraphics[width=0.72\linewidth]{${animePage05}}
 \mark[answer=3,points=10,choices=5]{7}
 \choice{7}{1}{\(\Omega\)}
 \choice{7}{2}{\(\alpha\)}
@@ -391,7 +410,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \subsectiontitle{問1}
 ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
 I: 綾小路清隆, II: 竈門禰豆子, III: 御坂美琴。
-% 元TeX図: 集合 A のベン図を tikzpicture で描画
+\includegraphics[width=0.72\linewidth]{${animePage06}}
 \mark[answer=4,points=4,choices=8]{8}
 \choice{8}{1}{AAA}
 \choice{8}{2}{AAĀ}
@@ -404,7 +423,7 @@ I: 綾小路清隆, II: 竈門禰豆子, III: 御坂美琴。
 \subsectiontitle{問2}
 ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
 I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
-% 元TeX図: 集合 A, B のベン図を tikzpicture で描画
+\includegraphics[width=0.72\linewidth]{${animePage07}}
 \mark[answer=4,points=4,choices=4]{9}
 \choice{9}{1}{A∩B}
 \choice{9}{2}{Ā∩B}
@@ -441,7 +460,7 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 
 \sectiontitle{第6問}
 画像 I から VI について関係式「I < II = III < IV < V << VI」が成り立っているとき, A と B, C と D に当てはまる記号として最も適当なものを選べ。
-% 元TeX画像: akusera.png, yotuba3.png, sinomiya.png, nanakusa.png, yanami.png, titanda.png, gozyou2.png, igarashi.png, issiki3.png, itinose.png
+\includegraphics[width=0.72\linewidth]{${animePage09}}
 \mark[answer=3,points=5,choices=3]{15}
 \choice{15}{1}{<}
 \choice{15}{2}{=}
@@ -454,7 +473,7 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 \sectiontitle{第7問}
 以下の文章は, あるアニメに関する口コミである。この内容に該当するアニメとして最も適当なものを選べ。
 長ゼリフや会話劇, 妖怪のような存在に苦しめられる少女達, 独特な作画や演出に言及した複数の口コミが示されている。
-% 元TeX画像: unknown-icon.png, five-stars.png, three-stars.png, one-stars.png
+\includegraphics[width=0.72\linewidth]{${animePage10}}
 \mark[answer=1,points=10,choices=4]{17}
 \choice{17}{1}{化物語}
 \choice{17}{2}{虚構推理}

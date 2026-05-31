@@ -37,7 +37,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
     <main className="screen scoring-screen">
       <header className="screen-heading">
         <div>
-          <p className="eyebrow">Scoring</p>
           <h1>採点</h1>
         </div>
         <div className="score-counter" aria-live="polite">

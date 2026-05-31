@@ -105,6 +105,10 @@ function markComment(mark: DraftMark): string {
   return `% --- 解答番号 ${mark.label}: 正解 ${answer} / 配点 ${Math.max(0, mark.points)} / 選択肢 ${positiveChoiceCount(mark.choices)} ---`;
 }
 
+export function shouldOmitSubsectionTitle(section: DraftSection, subsection: DraftSubsection): boolean {
+  return section.marks.length === 0 && section.subsections.length === 1 && subsection.title.trim() === "問1";
+}
+
 function layoutCommentLines(): string[] {
   return [
     "% --- preview設定: 必要なら次の行を有効化して調整 ---",
@@ -206,11 +210,18 @@ export function parseAuthoringDraft(source: string): ExamDraft {
     if (
       inCommentBlock ||
       !line ||
-      line.startsWith("%") ||
       line.startsWith("\\documentclass") ||
       line.startsWith("\\begin{document}") ||
       line.startsWith("\\end{document}")
     ) {
+      return;
+    }
+
+    if (line.startsWith("%")) {
+      if (line.startsWith("% === 小問本文:") && currentSection && !currentSubsection) {
+        currentSubsection = createSubsection(sections.length - 1, currentSection.subsections.length, "問1");
+        currentSection.subsections.push(currentSubsection);
+      }
       return;
     }
 
@@ -308,9 +319,16 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
       normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
     });
     section.subsections.forEach((subsection) => {
-      lines.push("", `\\subsectiontitle{${subsection.title}}`);
+      const omitSubsectionTitle = shouldOmitSubsectionTitle(section, subsection);
+      lines.push("");
+      if (!omitSubsectionTitle) {
+        lines.push(`\\subsectiontitle{${subsection.title}}`);
+      }
       lines.push(
-        bodyComment(`小問本文: ${section.title} ${subsection.title}`, Boolean(subsection.body.trim()))
+        bodyComment(
+          omitSubsectionTitle ? `小問本文: ${section.title}` : `小問本文: ${section.title} ${subsection.title}`,
+          Boolean(subsection.body.trim())
+        )
       );
       if (subsection.body.trim()) {
         lines.push(...subsection.body.trim().split("\n"));
@@ -338,7 +356,9 @@ export function getDraftMarkEntries(draft: ExamDraft): DraftMarkEntry[] {
     ...section.subsections.flatMap((subsection, subsectionIndex) =>
       subsection.marks.map((mark, markIndex) => ({
         mark,
-        sectionTitle: `${section.title} ${subsection.title}`,
+        sectionTitle: shouldOmitSubsectionTitle(section, subsection)
+          ? section.title
+          : `${section.title} ${subsection.title}`,
         sectionIndex,
         subsectionIndex,
         markIndex

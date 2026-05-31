@@ -4,6 +4,8 @@ const ANSWERS_PREFIX = "kyotsu-test-sim:answers:";
 const DEADLINE_PREFIX = "kyotsu-test-sim:deadline:";
 const AUTHOR_SOURCE_KEY = "kyotsu-test-sim:author-source";
 const AUTHOR_META_KEY = "kyotsu-test-sim:author-meta";
+const AUTHOR_ENVIRONMENT_KEY = "kyotsu-test-sim:author-environment";
+const AUTHOR_COVER_KEY = "kyotsu-test-sim:author-cover";
 
 export function loadAnswers(examId: string): UserAnswers {
   const raw = window.localStorage.getItem(`${ANSWERS_PREFIX}${examId}`);
@@ -51,6 +53,22 @@ export function saveAuthorSource(source: string): void {
 
 export function loadAuthorSource(fallback: string): string {
   return window.localStorage.getItem(AUTHOR_SOURCE_KEY) ?? fallback;
+}
+
+export function saveAuthorEnvironment(source: string): void {
+  window.localStorage.setItem(AUTHOR_ENVIRONMENT_KEY, source);
+}
+
+export function loadAuthorEnvironment(fallback: string): string {
+  return window.localStorage.getItem(AUTHOR_ENVIRONMENT_KEY) ?? fallback;
+}
+
+export function saveAuthorCover(source: string): void {
+  window.localStorage.setItem(AUTHOR_COVER_KEY, source);
+}
+
+export function loadAuthorCover(fallback: string): string {
+  return window.localStorage.getItem(AUTHOR_COVER_KEY) ?? fallback;
 }
 
 export function saveAuthorMeta(meta: AuthoringMeta): void {

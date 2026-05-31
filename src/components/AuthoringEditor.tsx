@@ -9,6 +9,7 @@ import {
   normalizeMarkChoices,
   parseAuthoringDraft,
   serializeAuthoringDraft,
+  shouldOmitSubsectionTitle,
   sumDraftPoints,
   type DraftChoice,
   type DraftMark,
@@ -16,8 +17,24 @@ import {
   type DraftSubsection,
   type ExamDraft
 } from "../utils/authoringDraft";
-import { defaultAuthoringMeta, defaultAuthoringSource, parseAuthoringLatex } from "../utils/latex";
-import { loadAuthorMeta, loadAuthorSource, saveAuthorMeta, saveAuthorSource } from "../utils/storage";
+import {
+  defaultAuthoringMeta,
+  defaultAuthoringSource,
+  defaultCoverSource,
+  defaultEnvironmentSource,
+  normalizePreviewText,
+  parseAuthoringLatex
+} from "../utils/latex";
+import {
+  loadAuthorCover,
+  loadAuthorEnvironment,
+  loadAuthorMeta,
+  loadAuthorSource,
+  saveAuthorCover,
+  saveAuthorEnvironment,
+  saveAuthorMeta,
+  saveAuthorSource
+} from "../utils/storage";
 
 interface AuthoringEditorProps {
   initialExam?: Exam | null;
@@ -36,7 +53,7 @@ const textFields: Array<{ key: TextMetaKey; label: string; multiline?: boolean }
 ];
 
 const numberFields: Array<{ key: NumberMetaKey; label: string; suffix: string }> = [
-  { key: "questionCount", label: "設問数", suffix: "問" },
+  { key: "questionCount", label: "問題数", suffix: "問" },
   { key: "totalPoints", label: "配点", suffix: "点" },
   { key: "durationMinutes", label: "制限時間", suffix: "分" }
 ];
@@ -326,8 +343,17 @@ function serializeSectionSource(section: DraftSection): string {
   });
 
   section.subsections.forEach((subsection) => {
-    lines.push("", `\\subsectiontitle{${subsection.title}}`);
-    lines.push(bodyComment(`小問本文: ${section.title} ${subsection.title}`, Boolean(subsection.body.trim())));
+    const omitSubsectionTitle = shouldOmitSubsectionTitle(section, subsection);
+    lines.push("");
+    if (!omitSubsectionTitle) {
+      lines.push(`\\subsectiontitle{${subsection.title}}`);
+    }
+    lines.push(
+      bodyComment(
+        omitSubsectionTitle ? `小問本文: ${section.title}` : `小問本文: ${section.title} ${subsection.title}`,
+        Boolean(subsection.body.trim())
+      )
+    );
     if (subsection.body.trim()) {
       lines.push(...subsection.body.trim().split("\n"));
     }
@@ -341,8 +367,8 @@ function serializeSectionSource(section: DraftSection): string {
   return `${lines.join("\n").trim()}\n`;
 }
 
-function buildSectionCompileSource(meta: AuthoringMeta, section: DraftSection): string {
-  return `${authoringTexPreamble}\n\\begin{document}\n\\examtitle{${meta.title}}\n${serializeSectionSource(section)}\\end{document}\n`;
+function buildSectionCompileSource(meta: AuthoringMeta, section: DraftSection, environmentSource: string): string {
+  return `${authoringTexPreamble}\n${environmentSource}\n\\begin{document}\n\\examtitle{${meta.title}}\n${serializeSectionSource(section)}\\end{document}\n`;
 }
 
 function getSectionMarkEntries(section: DraftSection) {
@@ -468,6 +494,41 @@ function sourceFromExam(exam: Exam | null | undefined): string {
   return serializeAuthoringDraft(metaFromExam(exam), draftFromExam(exam));
 }
 
+function environmentFromExam(exam: Exam | null | undefined): string {
+  if (!exam) {
+    return loadAuthorEnvironment(defaultEnvironmentSource);
+  }
+
+  return defaultEnvironmentSource;
+}
+
+function coverSourceFromExam(exam: Exam | null | undefined): string {
+  if (!exam) {
+    return loadAuthorCover(defaultCoverSource);
+  }
+
+  if (exam.id === animeSampleExamId) {
+    return defaultCoverSource;
+  }
+
+  return exam.instructions.map((instruction) => `\\item ${instruction}`).join("\n") || defaultCoverSource;
+}
+
+function coverInstructionsFromSource(source: string): string[] {
+  const instructions = source
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !line.startsWith("%"))
+    .filter((line) => !/^\\(?:begin|end)\{enumerate\}/.test(line))
+    .map((line) => normalizePreviewText(line.replace(/^\\item\s*/, "")))
+    .filter(Boolean);
+
+  return instructions.length
+    ? instructions
+    : defaultCoverSource.split("\n").map((line) => normalizePreviewText(line.replace(/^\\item\s*/, "")));
+}
+
 function getMarkSections(source: string): string[] {
   const sections: string[] = [];
   let currentSection = "第1問";
@@ -499,11 +560,11 @@ function validateAuthoring(source: string, meta: AuthoringMeta): string[] {
   const errors = [...parsed.errors];
 
   if (parsed.marks.length < meta.questionCount) {
-    errors.push(`設定された設問数は${meta.questionCount}問ですが、問題文内のマークは${parsed.marks.length}個です。`);
+    errors.push(`設定された問題数は${meta.questionCount}問ですが、問題文内のマークは${parsed.marks.length}個です。`);
   }
 
   if (parsed.marks.length > meta.questionCount) {
-    errors.push(`問題文内のマークは${parsed.marks.length}個ですが、設定された設問数は${meta.questionCount}問です。`);
+    errors.push(`問題文内のマークは${parsed.marks.length}個ですが、設定された問題数は${meta.questionCount}問です。`);
   }
 
   const parsedTotal = parsed.marks.reduce((sum, mark) => sum + mark.points, 0);
@@ -592,8 +653,8 @@ function imageStyleFromOptions(rawOptions: string | undefined): Record<string, s
   return Object.keys(style).length ? style : undefined;
 }
 
-function layoutFromSection(section: DraftSection) {
-  const body = [section.body, ...section.subsections.map((subsection) => subsection.body)].join("\n");
+function layoutFromSection(section: DraftSection, environmentSource: string) {
+  const body = [environmentSource, section.body, ...section.subsections.map((subsection) => subsection.body)].join("\n");
   const colors = texColorMap(body);
   const layout: NonNullable<ExamPage["layout"]> = {};
 
@@ -689,7 +750,9 @@ function buildSectionPageBlocks(section: DraftSection, questions: QuestionSlot[]
     }
   });
   section.subsections.forEach((subsection) => {
-    blocks.push({ type: "heading", text: subsection.title, level: 3 });
+    if (!shouldOmitSubsectionTitle(section, subsection)) {
+      blocks.push({ type: "heading", text: subsection.title, level: 3 });
+    }
     blocks.push(...paragraphBlocks(subsection.body));
     subsection.marks.forEach(() => {
       const question = questions[questionIndex.value];
@@ -727,7 +790,8 @@ function buildDraftPages(
   draft: ExamDraft,
   questions: QuestionSlot[],
   meta: AuthoringMeta,
-  initialExam: Exam | null | undefined
+  initialExam: Exam | null | undefined,
+  environmentSource: string
 ): ExamPage[] {
   if (!draft.sections.length) {
     return [
@@ -752,7 +816,7 @@ function buildDraftPages(
       pageImageUrl: shouldUseExactPage ? initialPage?.pageImageUrl : undefined,
       pageImageAlt: shouldUseExactPage ? initialPage?.pageImageAlt : undefined,
       markAreas: shouldUseExactPage ? initialPage?.markAreas : undefined,
-      layout: shouldUseExactPage ? undefined : layoutFromSection(section),
+      layout: shouldUseExactPage ? undefined : layoutFromSection(section, environmentSource),
       blocks: buildSectionPageBlocks(section, questions, questionIndex)
     };
   });
@@ -770,7 +834,13 @@ function optionsFromMark(mark: DraftMark) {
   }));
 }
 
-function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Exam | null | undefined): Exam {
+function buildPublishedExam(
+  meta: AuthoringMeta,
+  source: string,
+  initialExam: Exam | null | undefined,
+  environmentSource: string,
+  coverSource: string
+): Exam {
   const draft = normalizeSourceDraft(parseAuthoringDraft(source));
   const draftEntries = getDraftMarkEntries(draft);
   const questionCount = Math.max(1, meta.questionCount);
@@ -798,7 +868,7 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
     ...questions.map<ProblemBlock>((question) => ({ type: "question", questionId: question.id }))
   ];
   const pages: ExamPage[] = draftEntries.length
-    ? buildDraftPages(draft, questions, meta, initialExam)
+    ? buildDraftPages(draft, questions, meta, initialExam, environmentSource)
     : [
         {
           id: draftPageId(0),
@@ -814,6 +884,7 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
       title: meta.title,
       subject: meta.subject,
       description: meta.description,
+      instructions: coverInstructionsFromSource(coverSource),
       durationMinutes: meta.durationMinutes,
       totalPoints: meta.totalPoints,
       pages,
@@ -830,10 +901,7 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
     published: true,
     totalPoints: meta.totalPoints,
     description: meta.description,
-    instructions: [
-      "解答は右側のマークシート、または問題冊子中の選択肢をクリックして行うこと。",
-      "制限時間が終了すると自動的に採点へ移る。"
-    ],
+    instructions: coverInstructionsFromSource(coverSource),
     pages,
     questions
   };
@@ -842,22 +910,28 @@ function buildPublishedExam(meta: AuthoringMeta, source: string, initialExam: Ex
 export function AuthoringEditor({ initialExam = null, onBack, onPublish }: AuthoringEditorProps) {
   const [source, setSource] = useState(() => sourceFromExam(initialExam));
   const [meta, setMeta] = useState(() => metaFromExam(initialExam));
+  const [environmentSource, setEnvironmentSource] = useState(() => environmentFromExam(initialExam));
+  const [coverSource, setCoverSource] = useState(() => coverSourceFromExam(initialExam));
   const [savedSource, setSavedSource] = useState(source);
   const [savedMeta, setSavedMeta] = useState(meta);
+  const [savedEnvironmentSource, setSavedEnvironmentSource] = useState(environmentSource);
+  const [savedCoverSource, setSavedCoverSource] = useState(coverSource);
   const [showLeaveDialog, setShowLeaveDialog] = useState(false);
-  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [publishState, setPublishState] = useState<"idle" | "published">("idle");
   const [selectedSectionIndex, setSelectedSectionIndex] = useState(0);
   const [centerTab, setCenterTab] = useState<CenterTab>("form");
   const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
   const draft = useMemo(() => normalizeSourceDraft(parseAuthoringDraft(source)), [source]);
-  const previewExam = useMemo(() => buildPublishedExam(meta, source, initialExam), [initialExam, meta, source]);
+  const previewExam = useMemo(
+    () => buildPublishedExam(meta, source, initialExam, environmentSource, coverSource),
+    [coverSource, environmentSource, initialExam, meta, source]
+  );
   const selectedSection =
     draft.sections[Math.min(selectedSectionIndex, Math.max(0, draft.sections.length - 1))] ?? null;
   const selectedPage = previewExam.pages[Math.min(selectedSectionIndex, Math.max(0, previewExam.pages.length - 1))] ?? null;
   const selectedSectionSource = selectedSection ? serializeSectionSource(selectedSection) : "";
-  const selectedCompileSize = selectedSection ? buildSectionCompileSource(meta, selectedSection).length : 0;
+  const selectedCompileSize = selectedSection ? buildSectionCompileSource(meta, selectedSection, environmentSource).length : 0;
   const sectionTotals = useMemo(
     () =>
       draft.sections.map((section) => ({
@@ -876,13 +950,21 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
       answerSlots: source.match(/\\counterbox/g)?.length ?? 0
     };
   }, [draft, source]);
-  const isDirty = source !== savedSource || !sameMeta(meta, savedMeta);
+  const isDirty =
+    source !== savedSource ||
+    !sameMeta(meta, savedMeta) ||
+    environmentSource !== savedEnvironmentSource ||
+    coverSource !== savedCoverSource;
 
   const saveDraft = () => {
     saveAuthorSource(source);
     saveAuthorMeta(meta);
+    saveAuthorEnvironment(environmentSource);
+    saveAuthorCover(coverSource);
     setSavedSource(source);
     setSavedMeta(meta);
+    setSavedEnvironmentSource(environmentSource);
+    setSavedCoverSource(coverSource);
   };
 
   const publishDraft = () => {
@@ -893,7 +975,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
 
     saveDraft();
     setPublishState("published");
-    onPublish(buildPublishedExam(meta, source, initialExam));
+    onPublish(buildPublishedExam(meta, source, initialExam, environmentSource, coverSource));
   };
 
   const requestBack = () => {
@@ -955,36 +1037,46 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
     applySourceDraft(nextDraft);
   };
 
+  const appendImageToSelectedSection = (imageSource: string) => {
+    const selectedIndex = Math.min(selectedSectionIndex, Math.max(0, draft.sections.length - 1));
+    const section = draft.sections[selectedIndex];
+    if (!section) {
+      return;
+    }
+
+    const nextDraft = cloneDraft(draft);
+    const nextLine = `\\includegraphics{${imageSource}}`;
+    nextDraft.sections[selectedIndex] = {
+      ...section,
+      body: section.body.trim() ? `${section.body.trim()}\n${nextLine}` : nextLine
+    };
+    applySourceDraft(nextDraft);
+  };
+
   return (
     <main className="author-layout">
       <header className="author-topbar">
         <div>
-          <p className="eyebrow">{initialExam ? "Edit exam" : "New exam"} / Authoring console</p>
           <h1>{initialExam ? meta.title || initialExam.title : "新規作成"}</h1>
         </div>
         <dl className="author-summary" aria-label="編集サマリー">
           <div>
-            <dt>大問</dt>
-            <dd>{draft.sections.length}</dd>
+            <dt>大問数</dt>
+            <dd>{draft.sections.length}問</dd>
           </div>
           <div>
-            <dt>解答欄</dt>
-            <dd>{sourceStats.marks}</dd>
+            <dt>問題数</dt>
+            <dd>{sourceStats.marks}問</dd>
           </div>
           <div className={sumDraftPoints(draft) === meta.totalPoints ? "" : "mismatch"}>
             <dt>配点</dt>
-            <dd>
-              {sumDraftPoints(draft)}/{meta.totalPoints}
-            </dd>
+            <dd>{sumDraftPoints(draft)}点</dd>
           </div>
         </dl>
         <div className="author-actions">
           <span className={`save-state ${isDirty ? "dirty" : ""}`}>
             {publishState === "published" ? "投稿済み" : isDirty ? "未保存" : "保存済み"}
           </span>
-          <button className="secondary-button" type="button" onClick={() => setShowSettingsDialog(true)}>
-            設定
-          </button>
           <button className="primary-button" type="button" onClick={saveDraft}>
             一時保存
           </button>
@@ -1000,19 +1092,23 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
       <section className="author-workspace">
         <SectionNavigator
           draft={draft}
+          environmentSource={environmentSource}
+          coverSource={coverSource}
           sectionTotals={sectionTotals}
           selectedSectionIndex={selectedSectionIndex}
           onAddSection={() => {
             applyDraft({ sections: [...draft.sections, createDraftSection(draft.sections.length)] });
             setSelectedSectionIndex(draft.sections.length);
           }}
+          onChangeCover={setCoverSource}
+          onChangeEnvironment={setEnvironmentSource}
+          onUploadImage={appendImageToSelectedSection}
           onSelectSection={setSelectedSectionIndex}
         />
 
         <section className="section-editor-pane" aria-label="選択中の大問編集">
           <div className="center-pane-heading">
             <div>
-              <p className="eyebrow">{centerTab === "form" ? "Structured form" : "Section TeX"}</p>
               <h2>{selectedSection?.title ?? "大問"}</h2>
             </div>
             <div className="center-tabs" role="tablist" aria-label="中央編集モード">
@@ -1037,15 +1133,18 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
             </div>
           </div>
           {centerTab === "form" && selectedSection ? (
-            <SectionEditor
-              section={selectedSection}
-              sectionIndex={selectedSectionIndex}
-              onChange={(nextSection) => {
-                const nextDraft = cloneDraft(draft);
-                nextDraft.sections[selectedSectionIndex] = nextSection;
-                applyDraft(nextDraft);
-              }}
-            />
+            <div className="center-form-scroll">
+              <BasicSettingsPanel meta={meta} onNumberChange={updateNumberMeta} onTextChange={updateTextMeta} />
+              <SectionEditor
+                section={selectedSection}
+                sectionIndex={selectedSectionIndex}
+                onChange={(nextSection) => {
+                  const nextDraft = cloneDraft(draft);
+                  nextDraft.sections[selectedSectionIndex] = nextSection;
+                  applyDraft(nextDraft);
+                }}
+              />
+            </div>
           ) : null}
           {centerTab === "tex" && selectedSection ? (
             <SectionTexEditor
@@ -1060,7 +1159,6 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
           <section className="inspector-shell" aria-label="大問プレビュー">
             <div className="inspector-heading">
               <div>
-                <p className="eyebrow">Preview</p>
                 <h2>{selectedSection?.title ?? "大問"}</h2>
               </div>
             </div>
@@ -1080,58 +1178,6 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
           </section>
         </aside>
       </section>
-
-      {showSettingsDialog ? (
-        <div className="dialog-backdrop" role="presentation">
-          <section
-            className="confirm-dialog settings-dialog"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="settings-dialog-title"
-          >
-            <h2 id="settings-dialog-title">設定</h2>
-            <div className="meta-form">
-              {textFields.map((field) => (
-                <label className={field.multiline ? "wide" : ""} key={field.key}>
-                  <span>{field.label}</span>
-                  {field.multiline ? (
-                    <textarea
-                      rows={3}
-                      value={meta[field.key]}
-                      onChange={(event) => updateTextMeta(field.key, event.currentTarget.value)}
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={meta[field.key]}
-                      onChange={(event) => updateTextMeta(field.key, event.currentTarget.value)}
-                    />
-                  )}
-                </label>
-              ))}
-              {numberFields.map((field) => (
-                <label key={field.key}>
-                  <span>{field.label}</span>
-                  <div className="number-input">
-                    <input
-                      min={0}
-                      type="number"
-                      value={meta[field.key]}
-                      onChange={(event) => updateNumberMeta(field.key, event.currentTarget.value)}
-                    />
-                    <small>{field.suffix}</small>
-                  </div>
-                </label>
-              ))}
-            </div>
-            <div className="dialog-actions">
-              <button className="primary-button" type="button" onClick={() => setShowSettingsDialog(false)}>
-                閉じる
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
 
       {showLeaveDialog ? (
         <div className="dialog-backdrop" role="presentation">
@@ -1165,24 +1211,40 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
 
 interface SectionNavigatorProps {
   draft: ExamDraft;
+  environmentSource: string;
+  coverSource: string;
   sectionTotals: Array<{ marks: number; points: number }>;
   selectedSectionIndex: number;
   onAddSection: () => void;
+  onChangeCover: (source: string) => void;
+  onChangeEnvironment: (source: string) => void;
+  onUploadImage: (imageSource: string) => void;
   onSelectSection: (sectionIndex: number) => void;
 }
 
 function SectionNavigator({
   draft,
+  environmentSource,
+  coverSource,
   sectionTotals,
   selectedSectionIndex,
   onAddSection,
+  onChangeCover,
+  onChangeEnvironment,
+  onUploadImage,
   onSelectSection
 }: SectionNavigatorProps) {
   return (
     <aside className="section-nav-pane" aria-label="大問一覧">
+      <AuthorEnvironmentPanel
+        coverSource={coverSource}
+        environmentSource={environmentSource}
+        onChangeCover={onChangeCover}
+        onChangeEnvironment={onChangeEnvironment}
+        onUploadImage={onUploadImage}
+      />
       <div className="section-nav-head">
         <div>
-          <p className="eyebrow">Sections</p>
           <h2>大問一覧</h2>
         </div>
         <button className="compact secondary-button" type="button" onClick={onAddSection}>
@@ -1202,13 +1264,129 @@ function SectionNavigator({
             >
               <span>{section.title}</span>
               <small>
-                {totals.marks}欄 / {totals.points}点
+                {totals.marks}問 / {totals.points}点
               </small>
             </button>
           );
         })}
       </div>
     </aside>
+  );
+}
+
+interface AuthorEnvironmentPanelProps {
+  environmentSource: string;
+  coverSource: string;
+  onChangeEnvironment: (source: string) => void;
+  onChangeCover: (source: string) => void;
+  onUploadImage: (imageSource: string) => void;
+}
+
+function AuthorEnvironmentPanel({
+  environmentSource,
+  coverSource,
+  onChangeEnvironment,
+  onChangeCover,
+  onUploadImage
+}: AuthorEnvironmentPanelProps) {
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+
+  const uploadImage = (file: File | undefined) => {
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        onUploadImage(reader.result);
+      }
+    });
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <section className="environment-editor-panel" aria-label="環境と表紙">
+      <label>
+        <span>環境TeX</span>
+        <textarea
+          aria-label="環境TeX"
+          rows={5}
+          value={environmentSource}
+          onChange={(event) => onChangeEnvironment(event.currentTarget.value)}
+        />
+      </label>
+      <label>
+        <span>表紙注意事項TeX</span>
+        <textarea
+          aria-label="表紙注意事項TeX"
+          rows={6}
+          value={coverSource}
+          onChange={(event) => onChangeCover(event.currentTarget.value)}
+        />
+      </label>
+      <button className="secondary-button compact" type="button" onClick={() => imageInputRef.current?.click()}>
+        画像追加
+      </button>
+      <input
+        accept="image/*"
+        aria-label="共通画像アップロード"
+        className="visually-hidden-file"
+        ref={imageInputRef}
+        type="file"
+        onChange={(event) => {
+          uploadImage(event.currentTarget.files?.[0]);
+          event.currentTarget.value = "";
+        }}
+      />
+    </section>
+  );
+}
+
+interface BasicSettingsPanelProps {
+  meta: AuthoringMeta;
+  onTextChange: (key: TextMetaKey, value: string) => void;
+  onNumberChange: (key: NumberMetaKey, value: string) => void;
+}
+
+function BasicSettingsPanel({ meta, onTextChange, onNumberChange }: BasicSettingsPanelProps) {
+  return (
+    <section className="basic-settings-panel" aria-label="基本設定">
+      <div className="meta-form compact-meta-form">
+        {textFields.map((field) => (
+          <label className={field.multiline ? "wide" : ""} key={field.key}>
+            <span>{field.label}</span>
+            {field.multiline ? (
+              <textarea
+                rows={2}
+                value={meta[field.key]}
+                onChange={(event) => onTextChange(field.key, event.currentTarget.value)}
+              />
+            ) : (
+              <input
+                type="text"
+                value={meta[field.key]}
+                onChange={(event) => onTextChange(field.key, event.currentTarget.value)}
+              />
+            )}
+          </label>
+        ))}
+        {numberFields.map((field) => (
+          <label key={field.key}>
+            <span>{field.label}</span>
+            <div className="number-input">
+              <input
+                min={0}
+                type="number"
+                value={meta[field.key]}
+                onChange={(event) => onNumberChange(field.key, event.currentTarget.value)}
+              />
+              <small>{field.suffix}</small>
+            </div>
+          </label>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -1278,7 +1456,6 @@ interface SectionEditorProps {
 }
 
 function SectionEditor({ section, sectionIndex, onChange }: SectionEditorProps) {
-  const imageInputRef = useRef<HTMLInputElement | null>(null);
   const updateSection = (updates: Partial<DraftSection>) => {
     onChange({ ...section, ...updates });
   };
@@ -1319,28 +1496,23 @@ function SectionEditor({ section, sectionIndex, onChange }: SectionEditorProps) 
   };
 
   const addSubsection = () => {
-    updateSection({
-      subsections: [...section.subsections, createDraftSubsection(sectionIndex, section.subsections.length)]
-    });
-  };
-
-  const appendImageToBody = (imageSource: string) => {
-    const nextLine = `\\includegraphics{${imageSource}}`;
-    updateSection({ body: section.body.trim() ? `${section.body.trim()}\n${nextLine}` : nextLine });
-  };
-
-  const uploadImage = (file: File | undefined) => {
-    if (!file) {
+    const firstSubsection = createDraftSubsection(sectionIndex, section.subsections.length);
+    if (!section.subsections.length && section.marks.length) {
+      updateSection({
+        marks: [],
+        subsections: [
+          {
+            ...firstSubsection,
+            marks: section.marks
+          }
+        ]
+      });
       return;
     }
 
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      if (typeof reader.result === "string") {
-        appendImageToBody(reader.result);
-      }
+    updateSection({
+      subsections: [...section.subsections, firstSubsection]
     });
-    reader.readAsDataURL(file);
   };
 
   const addMark = (subsectionIndex: number | null) => {
@@ -1377,23 +1549,11 @@ function SectionEditor({ section, sectionIndex, onChange }: SectionEditorProps) 
           <button className="secondary-button compact" type="button" onClick={addSubsection}>
             小問追加
           </button>
-          <button className="secondary-button compact" type="button" onClick={() => imageInputRef.current?.click()}>
-            画像追加
-          </button>
-          <input
-            accept="image/*"
-            aria-label={`${section.title} 画像アップロード`}
-            className="visually-hidden-file"
-            ref={imageInputRef}
-            type="file"
-            onChange={(event) => {
-              uploadImage(event.currentTarget.files?.[0]);
-              event.currentTarget.value = "";
-            }}
-          />
-          <button className="primary-button compact" type="button" onClick={() => addMark(null)}>
-            解答欄追加
-          </button>
+          {!section.subsections.length ? (
+            <button className="primary-button compact" type="button" onClick={() => addMark(null)}>
+              解答欄追加
+            </button>
+          ) : null}
         </div>
       </div>
       <label className="section-body-field">
@@ -1405,18 +1565,20 @@ function SectionEditor({ section, sectionIndex, onChange }: SectionEditorProps) 
           onChange={(event) => updateSection({ body: event.currentTarget.value })}
         />
       </label>
-      <section className="answer-editor-group" aria-label={`${section.title} 解答欄`}>
-        <div className="answer-editor-head">
-          <h3>解答欄</h3>
-          <small>{section.marks.length}件</small>
-        </div>
-        <MarkList
-          marks={section.marks}
-          prefix={section.title}
-          onRemove={(markIndex) => removeMark(null, markIndex)}
-          onUpdate={(markIndex, updates) => updateMark(null, markIndex, updates)}
-        />
-      </section>
+      {!section.subsections.length ? (
+        <section className="answer-editor-group" aria-label={`${section.title} 解答欄`}>
+          <div className="answer-editor-head">
+            <h3>解答欄</h3>
+            <small>{section.marks.length}件</small>
+          </div>
+          <MarkList
+            marks={section.marks}
+            prefix={section.title}
+            onRemove={(markIndex) => removeMark(null, markIndex)}
+            onUpdate={(markIndex, updates) => updateMark(null, markIndex, updates)}
+          />
+        </section>
+      ) : null}
       {section.subsections.map((subsection, subsectionIndex) => (
         <section className="subsection-editor" key={subsection.id}>
           <div className="subsection-editor-head">

@@ -50,7 +50,8 @@ describe("authoring draft utilities", () => {
 
     expect(source).toContain("\\examtitle{Sample}");
     expect(source).toContain("\\sectiontitle{第1問}");
-    expect(source).toContain("\\subsectiontitle{問1}");
+    expect(source).not.toContain("\\subsectiontitle{問1}");
+    expect(source).toContain("% === 小問本文: 第1問");
     expect(source).toContain("\\mark[answer=2,points=5,choices=4]{1}");
     expect(source).toContain("\\choice{1}{1}{A}");
     expect(source).toContain("\\choice{1}{2}{B}");
