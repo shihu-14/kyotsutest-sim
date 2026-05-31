@@ -142,7 +142,7 @@ export function ExamRunner({
               label={`残り時間 ${countdown.formatted}`}
               remainingMs={countdown.remainingMs}
               totalMs={totalTimeMs}
-              variant="timer-classic-amber"
+              variant="timer-exam-seal"
             />
           ) : null}
           {reviewMode ? (

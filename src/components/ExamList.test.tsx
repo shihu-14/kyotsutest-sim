@@ -117,7 +117,7 @@ describe("ExamList", () => {
 
     expect(screen.getByRole("heading", { name: "制限時間デザイン候補" })).toBeInTheDocument();
     expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Classic Amberのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "02 Exam Sealのプレビュー" })).toBeInTheDocument();
     expect(screen.getAllByRole("timer", { name: /残り時間/ })).toHaveLength(4);
 
     await user.click(screen.getByRole("tab", { name: /09 Stadium Alert/ }));

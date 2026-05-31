@@ -1071,6 +1071,7 @@ button:disabled {
   --timer-size: 92px;
   --timer-accent: #ffc04d;
   --timer-track: rgba(255, 192, 77, 0.2);
+  --timer-fill: color-mix(in srgb, var(--timer-accent) 28%, var(--timer-face));
   --timer-face: #fffdf7;
   --timer-text: #2f2a20;
   --timer-muted: rgba(47, 42, 32, 0.62);
@@ -1079,7 +1080,7 @@ button:disabled {
   display: grid;
   width: calc(var(--timer-size) + 18px);
   min-width: calc(var(--timer-size) + 18px);
-  height: calc(var(--timer-size) + 28px);
+  height: calc(var(--timer-size) * 1.18);
   place-items: end center;
   color: var(--timer-text);
   font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
@@ -1090,7 +1091,7 @@ button:disabled {
   top: 0;
   left: 50%;
   width: calc(var(--timer-size) * 0.28);
-  height: calc(var(--timer-size) * 0.16);
+  height: calc(var(--timer-size) * 0.18);
   border-radius: 5px 5px 2px 2px;
   background: var(--timer-accent);
   transform: translateX(-50%);
@@ -1099,7 +1100,7 @@ button:disabled {
 
 .stopwatch-side-button {
   position: absolute;
-  top: calc(var(--timer-size) * 0.16);
+  top: calc(var(--timer-size) * 0.1);
   width: calc(var(--timer-size) * 0.2);
   height: calc(var(--timer-size) * 0.13);
   border-radius: 4px;
@@ -1124,7 +1125,7 @@ button:disabled {
   height: var(--timer-size);
   place-items: center;
   border-radius: 50%;
-  background: conic-gradient(from -90deg, var(--timer-accent) var(--timer-progress), var(--timer-track) 0);
+  background: var(--timer-accent);
   box-shadow: 0 10px 24px var(--timer-shadow), inset 0 0 0 2px color-mix(in srgb, var(--timer-accent) 76%, white);
 }
 
@@ -1163,23 +1164,15 @@ button:disabled {
   height: calc(var(--timer-size) * 0.66);
   place-items: center;
   border-radius: 50%;
-  background: var(--timer-face);
+  background: conic-gradient(from -90deg, var(--timer-fill) var(--timer-progress), var(--timer-face) 0);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--timer-accent) 24%, transparent);
   text-align: center;
-}
-
-.stopwatch-kicker,
-.stopwatch-meter-text {
-  display: block;
-  color: var(--timer-muted);
-  font-size: calc(var(--timer-size) * 0.095);
-  font-weight: 900;
-  line-height: 1;
 }
 
 .stopwatch-face strong {
   display: block;
   color: var(--timer-text);
-  font-size: calc(var(--timer-size) * 0.17);
+  font-size: calc(var(--timer-size) * 0.19);
   font-weight: 950;
   line-height: 1.05;
 }
@@ -1194,6 +1187,7 @@ button:disabled {
 .timer-classic-amber {
   --timer-accent: #ffc04d;
   --timer-track: rgba(255, 192, 77, 0.22);
+  --timer-fill: #ffe5aa;
   --timer-face: #fffefa;
   --timer-text: #3b2a0a;
   --timer-muted: rgba(59, 42, 10, 0.58);
@@ -1202,6 +1196,7 @@ button:disabled {
 .timer-exam-seal {
   --timer-accent: #d4552d;
   --timer-track: rgba(212, 85, 45, 0.16);
+  --timer-fill: #ffd7c9;
   --timer-face: #fff8ef;
   --timer-text: #5e2418;
   --timer-muted: rgba(94, 36, 24, 0.6);
@@ -1211,6 +1206,7 @@ button:disabled {
 .timer-digital-neon {
   --timer-accent: #38f8ff;
   --timer-track: rgba(56, 248, 255, 0.13);
+  --timer-fill: #123e43;
   --timer-face: #071014;
   --timer-text: #dffcff;
   --timer-muted: rgba(223, 252, 255, 0.54);
@@ -1224,6 +1220,7 @@ button:disabled {
 .timer-minimal-ink {
   --timer-accent: #111111;
   --timer-track: #e6e6e6;
+  --timer-fill: #d9d9d9;
   --timer-face: #ffffff;
   --timer-text: #111111;
   --timer-muted: #777777;
@@ -1233,6 +1230,7 @@ button:disabled {
 .timer-public-blue {
   --timer-accent: #1d70b8;
   --timer-track: #dbe8f2;
+  --timer-fill: #dbe8f2;
   --timer-face: #ffffff;
   --timer-text: #0b0c0c;
   --timer-muted: #505a5f;
@@ -1249,6 +1247,7 @@ button:disabled {
 .timer-carbon-gauge {
   --timer-accent: #33b1ff;
   --timer-track: #393939;
+  --timer-fill: #1d3d53;
   --timer-face: #161616;
   --timer-text: #f4f4f4;
   --timer-muted: #a8a8a8;
@@ -1263,6 +1262,7 @@ button:disabled {
 .timer-glass-dial {
   --timer-accent: #0a84ff;
   --timer-track: rgba(10, 132, 255, 0.16);
+  --timer-fill: rgba(10, 132, 255, 0.18);
   --timer-face: rgba(255, 255, 255, 0.68);
   --timer-text: #17202c;
   --timer-muted: rgba(23, 32, 44, 0.6);
@@ -1277,6 +1277,7 @@ button:disabled {
   --timer-size: 78px;
   --timer-accent: #7c3aed;
   --timer-track: rgba(124, 58, 237, 0.14);
+  --timer-fill: #e5d8ff;
   --timer-face: #fbfaff;
   --timer-text: #29125c;
   --timer-muted: rgba(41, 18, 92, 0.56);
@@ -1286,6 +1287,7 @@ button:disabled {
 .timer-stadium-alert {
   --timer-accent: #ff4d00;
   --timer-track: rgba(255, 77, 0, 0.18);
+  --timer-fill: #5c250c;
   --timer-face: #1f1109;
   --timer-text: #fff2e8;
   --timer-muted: rgba(255, 242, 232, 0.62);
@@ -1299,6 +1301,7 @@ button:disabled {
 .timer-paper-brass {
   --timer-accent: #b8862f;
   --timer-track: rgba(184, 134, 47, 0.22);
+  --timer-fill: #ead29c;
   --timer-face: #fff6d9;
   --timer-text: #3a280b;
   --timer-muted: rgba(58, 40, 11, 0.6);

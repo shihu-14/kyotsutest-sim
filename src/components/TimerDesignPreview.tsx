@@ -106,7 +106,7 @@ function formatDuration(ms: number) {
 }
 
 export function TimerDesignPreview({ exam }: TimerDesignPreviewProps) {
-  const [activeCandidateId, setActiveCandidateId] = useState(timerCandidates[0].id);
+  const [activeCandidateId, setActiveCandidateId] = useState(timerCandidates[1].id);
   const activeCandidate = timerCandidates.find((candidate) => candidate.id === activeCandidateId) ?? timerCandidates[0];
   const totalMs = exam.durationMinutes * 60 * 1000;
   const samples = [

@@ -16,11 +16,10 @@ function clampProgress(remainingMs: number, totalMs: number) {
   return Math.min(1, Math.max(0, remainingMs / totalMs));
 }
 
-export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "timer-classic-amber", label }: StopwatchTimerProps) {
+export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "timer-exam-seal", label }: StopwatchTimerProps) {
   const progress = clampProgress(remainingMs, totalMs);
   const style = {
-    "--timer-progress": `${progress * 100}%`,
-    "--timer-angle": `${progress * 360}deg`
+    "--timer-progress": `${progress * 100}%`
   } as CSSProperties;
 
   return (
@@ -35,9 +34,7 @@ export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "tim
       <div className="stopwatch-side-button right" aria-hidden="true" />
       <div className="stopwatch-dial">
         <div className="stopwatch-face">
-          <span className="stopwatch-kicker">残り</span>
           <strong>{formatted}</strong>
-          <span className="stopwatch-meter-text">{Math.round(progress * 100)}%</span>
         </div>
       </div>
     </div>
