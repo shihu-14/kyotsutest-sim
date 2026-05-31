@@ -122,6 +122,11 @@ describe("ExamList", () => {
 
     await user.click(screen.getByRole("tab", { name: /09 Stadium Alert/ }));
 
-    expect(screen.getByRole("article", { name: "09 Stadium Alertのプレビュー" })).toBeInTheDocument();
+    const preview = screen.getByRole("article", { name: "09 Stadium Alertのプレビュー" });
+    expect(preview).toBeInTheDocument();
+    expect(within(preview).getAllByRole("timer", { name: /残り時間/ })[0]).toHaveClass(
+      "timer-exam-seal",
+      "timer-color-stadium-alert"
+    );
   });
 });

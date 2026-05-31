@@ -20,81 +20,81 @@ const timerCandidates: TimerCandidate[] = [
     id: "classic-amber",
     name: "01 Classic Amber",
     shortName: "Amber",
-    reference: "Provided stopwatch",
-    themeClass: "timer-classic-amber",
-    intent: "提示画像に近い黄色いストップウォッチ"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-classic-amber",
+    intent: "形を固定したまま琥珀色だけを試す"
   },
   {
     id: "exam-seal",
     name: "02 Exam Seal",
     shortName: "Seal",
-    reference: "Common test paper",
+    reference: "Color only",
     themeClass: "timer-exam-seal",
-    intent: "試験用紙に馴染む赤い検印風"
+    intent: "元の赤い検印色に戻した基準案"
   },
   {
     id: "digital-neon",
     name: "03 Digital Neon",
     shortName: "Neon",
-    reference: "Sports timer",
-    themeClass: "timer-digital-neon",
-    intent: "暗い画面で即座に読める発光表示"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-digital-neon",
+    intent: "形を固定したまま青緑の強い色だけを試す"
   },
   {
     id: "minimal-ink",
     name: "04 Minimal Ink",
     shortName: "Ink",
-    reference: "Swiss clock",
-    themeClass: "timer-minimal-ink",
-    intent: "白黒で邪魔をしない最小表現"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-minimal-ink",
+    intent: "形を固定したまま墨色だけを試す"
   },
   {
     id: "public-blue",
     name: "05 Public Blue",
     shortName: "Public",
-    reference: "Public service UI",
-    themeClass: "timer-public-blue",
-    intent: "高コントラストで緊急度を明確にする"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-public-blue",
+    intent: "形を固定したまま公的な青だけを試す"
   },
   {
     id: "carbon-gauge",
     name: "06 Carbon Gauge",
     shortName: "Carbon",
-    reference: "Technical console",
-    themeClass: "timer-carbon-gauge",
-    intent: "計器盤として残量を数値化する"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-carbon-gauge",
+    intent: "形を固定したまま濃い計器色だけを試す"
   },
   {
     id: "glass-dial",
     name: "07 Glass Dial",
     shortName: "Glass",
-    reference: "Native glass UI",
-    themeClass: "timer-glass-dial",
-    intent: "透明な盤面で背景を生かす"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-glass-dial",
+    intent: "形を固定したまま薄い水色だけを試す"
   },
   {
     id: "bento-compact",
     name: "08 Bento Compact",
     shortName: "Bento",
-    reference: "Compact dashboard",
-    themeClass: "timer-bento-compact",
-    intent: "小さなツールバーに収まる密度"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-bento-compact",
+    intent: "形を固定したまま紫系だけを試す"
   },
   {
     id: "stadium-alert",
     name: "09 Stadium Alert",
     shortName: "Alert",
-    reference: "Scoreboard",
-    themeClass: "timer-stadium-alert",
-    intent: "終盤の圧を強く出す大型表示"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-stadium-alert",
+    intent: "形を固定したまま警告色だけを試す"
   },
   {
     id: "paper-brass",
     name: "10 Paper Brass",
     shortName: "Brass",
-    reference: "Desk object",
-    themeClass: "timer-paper-brass",
-    intent: "木目背景に置いた金属計器"
+    reference: "Color only",
+    themeClass: "timer-exam-seal timer-color-paper-brass",
+    intent: "形を固定したまま真鍮色だけを試す"
   }
 ];
 

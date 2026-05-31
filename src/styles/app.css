@@ -55,7 +55,7 @@ button:disabled {
 .exam-mode-background {
   width: 100%;
   max-width: none;
-  padding: 14px 24px 18px;
+  padding: 10px 24px 18px;
   background: #c77a2d url("../assets/on-table-image.jpg") center / cover no-repeat;
 }
 
@@ -1083,7 +1083,7 @@ button:disabled {
   display: grid;
   width: calc(var(--timer-size) + 18px);
   min-width: calc(var(--timer-size) + 18px);
-  height: calc(var(--timer-size) * 1.18);
+  height: calc(var(--timer-size) * 1.13);
   place-items: end center;
   color: var(--timer-text);
   font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
@@ -1094,7 +1094,7 @@ button:disabled {
   top: 0;
   left: 50%;
   width: calc(var(--timer-size) * 0.28);
-  height: calc(var(--timer-size) * 0.18);
+  height: calc(var(--timer-size) * 0.13);
   border-radius: 5px 5px 2px 2px;
   background: var(--timer-accent);
   transform: translateX(-50%);
@@ -1155,7 +1155,7 @@ button:disabled {
 .stopwatch-face strong {
   display: block;
   color: var(--timer-text);
-  font-size: calc(var(--timer-size) * 0.19);
+  font-size: calc(var(--timer-size) * 0.22);
   font-weight: 950;
   line-height: 1.05;
 }
@@ -1177,13 +1177,13 @@ button:disabled {
 }
 
 .timer-exam-seal {
-  --timer-accent: #f07825;
-  --timer-track: rgba(240, 120, 37, 0.16);
-  --timer-fill: #ffe4d2;
-  --timer-face: #fffaf4;
-  --timer-text: #a84312;
-  --timer-muted: rgba(168, 67, 18, 0.58);
-  --timer-shadow: rgba(195, 82, 22, 0.18);
+  --timer-accent: #d4552d;
+  --timer-track: rgba(212, 85, 45, 0.16);
+  --timer-fill: #ffd7c9;
+  --timer-face: #fff8ef;
+  --timer-text: #5e2418;
+  --timer-muted: rgba(94, 36, 24, 0.6);
+  --timer-shadow: rgba(146, 63, 28, 0.2);
 }
 
 .timer-digital-neon {
@@ -1290,18 +1290,108 @@ button:disabled {
   --timer-shadow: rgba(85, 47, 8, 0.24);
 }
 
+.timer-color-classic-amber {
+  --timer-accent: #ffc04d;
+  --timer-track: rgba(255, 192, 77, 0.18);
+  --timer-fill: #ffe5aa;
+  --timer-face: #fffefa;
+  --timer-text: #3b2a0a;
+  --timer-muted: rgba(59, 42, 10, 0.58);
+  --timer-shadow: rgba(84, 46, 5, 0.18);
+}
+
+.timer-color-digital-neon {
+  --timer-accent: #00a6b8;
+  --timer-track: rgba(0, 166, 184, 0.14);
+  --timer-fill: #c8fbff;
+  --timer-face: #f5feff;
+  --timer-text: #06464d;
+  --timer-muted: rgba(6, 70, 77, 0.58);
+  --timer-shadow: rgba(0, 95, 105, 0.18);
+}
+
+.timer-color-minimal-ink {
+  --timer-accent: #252525;
+  --timer-track: rgba(37, 37, 37, 0.12);
+  --timer-fill: #e2e2e2;
+  --timer-face: #ffffff;
+  --timer-text: #111111;
+  --timer-muted: rgba(17, 17, 17, 0.56);
+  --timer-shadow: rgba(0, 0, 0, 0.12);
+}
+
+.timer-color-public-blue {
+  --timer-accent: #1d70b8;
+  --timer-track: rgba(29, 112, 184, 0.14);
+  --timer-fill: #dbe8f2;
+  --timer-face: #ffffff;
+  --timer-text: #123c5d;
+  --timer-muted: rgba(18, 60, 93, 0.58);
+  --timer-shadow: rgba(29, 112, 184, 0.16);
+}
+
+.timer-color-carbon-gauge {
+  --timer-accent: #54616b;
+  --timer-track: rgba(84, 97, 107, 0.16);
+  --timer-fill: #d9e0e5;
+  --timer-face: #f7f9fa;
+  --timer-text: #25313a;
+  --timer-muted: rgba(37, 49, 58, 0.58);
+  --timer-shadow: rgba(34, 45, 52, 0.18);
+}
+
+.timer-color-glass-dial {
+  --timer-accent: #64a9dc;
+  --timer-track: rgba(100, 169, 220, 0.14);
+  --timer-fill: #dff1ff;
+  --timer-face: #fbfdff;
+  --timer-text: #1c5278;
+  --timer-muted: rgba(28, 82, 120, 0.56);
+  --timer-shadow: rgba(55, 80, 120, 0.18);
+}
+
+.timer-color-bento-compact {
+  --timer-accent: #7c3aed;
+  --timer-track: rgba(124, 58, 237, 0.14);
+  --timer-fill: #e5d8ff;
+  --timer-face: #fbfaff;
+  --timer-text: #29125c;
+  --timer-muted: rgba(41, 18, 92, 0.56);
+  --timer-shadow: rgba(78, 38, 145, 0.14);
+}
+
+.timer-color-stadium-alert {
+  --timer-accent: #ff4d00;
+  --timer-track: rgba(255, 77, 0, 0.16);
+  --timer-fill: #ffd6c2;
+  --timer-face: #fff7f2;
+  --timer-text: #7f2800;
+  --timer-muted: rgba(127, 40, 0, 0.58);
+  --timer-shadow: rgba(255, 77, 0, 0.18);
+}
+
+.timer-color-paper-brass {
+  --timer-accent: #b8862f;
+  --timer-track: rgba(184, 134, 47, 0.18);
+  --timer-fill: #ead29c;
+  --timer-face: #fff6d9;
+  --timer-text: #3a280b;
+  --timer-muted: rgba(58, 40, 11, 0.6);
+  --timer-shadow: rgba(85, 47, 8, 0.2);
+}
+
 .timer-preview-large {
   --timer-size: 228px;
   width: calc(var(--timer-size) + 36px);
   min-width: calc(var(--timer-size) + 36px);
-  height: calc(var(--timer-size) + 64px);
+  height: calc(var(--timer-size) * 1.13);
 }
 
 .timer-preview-small {
   --timer-size: 118px;
   width: calc(var(--timer-size) + 26px);
   min-width: calc(var(--timer-size) + 26px);
-  height: calc(var(--timer-size) + 42px);
+  height: calc(var(--timer-size) * 1.13);
 }
 
 .timer-design-mode {
@@ -1795,8 +1885,22 @@ button:disabled {
 }
 
 .exam-layout .exam-toolbar {
+  position: relative;
+  align-items: flex-start;
   flex-shrink: 0;
-  margin-bottom: 6px;
+  min-height: 42px;
+  margin-bottom: 2px;
+}
+
+.exam-mode-background .toolbar-metrics {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+.exam-mode-background .mark-sheet {
+  height: calc(100% - 62px);
+  margin-top: 62px;
 }
 
 .mark-sheet {
@@ -3537,6 +3641,15 @@ button:disabled {
   .toolbar-metrics {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .exam-mode-background .toolbar-metrics {
+    position: static;
+  }
+
+  .exam-mode-background .mark-sheet {
+    height: 100%;
+    margin-top: 0;
   }
 
   .home-actions {
