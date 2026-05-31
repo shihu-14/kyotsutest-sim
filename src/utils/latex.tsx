@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import katex from "katex";
 import type { AuthoringMeta } from "../types";
-import animePage01 from "../assets/anime-pages/page-01.jpg";
-import animePage04 from "../assets/anime-pages/page-04.jpg";
-import animePage05 from "../assets/anime-pages/page-05.jpg";
-import animePage06 from "../assets/anime-pages/page-06.jpg";
-import animePage07 from "../assets/anime-pages/page-07.jpg";
-import animePage09 from "../assets/anime-pages/page-09.jpg";
-import animePage10 from "../assets/anime-pages/page-10.jpg";
+import animeFigure01 from "../assets/anime-crops/page-01-figures.jpg";
+import animeFigure04 from "../assets/anime-crops/page-04-figure.jpg";
+import animeFigure05 from "../assets/anime-crops/page-05-figures.jpg";
+import animeFigure06 from "../assets/anime-crops/page-06-figure.jpg";
+import animeFigure07 from "../assets/anime-crops/page-07-figure.jpg";
+import animeFigure09 from "../assets/anime-crops/page-09-figures.jpg";
+import animeFigure10 from "../assets/anime-crops/page-10-figure.jpg";
 
 export interface ParsedMark {
   id: string;
@@ -316,10 +316,21 @@ export const defaultAuthoringMeta: AuthoringMeta = {
   durationMinutes: 40
 };
 
-export const defaultEnvironmentSource = String.raw`\definecolor{beige}{RGB}{252,252,252}
+export const defaultEnvironmentSource = String.raw`\usepackage[inner=0.9in,outer=0.9in,top=80pt,bottom=0.76in]{geometry}
+\usepackage{adjustbox,tcolorbox,ulem,soul,setspace,letterspace,subfig,ifthen,multicol,tabularx,booktabs,enumitem,relsize,mathtools,mathcomp,siunitx,pifont,graphicx,caption,fancyhdr,titlesec,parskip,array,transparent,changepage}
+\graphicspath{{Images/}}
+\captionsetup{justification=raggedright,singlelinecheck=false,font=scriptsize}
+\definecolor{beige}{RGB}{252,252,252}
 \pagecolor{beige}
 \linespread{1.5}
-\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}`;
+\setmainfont[Scale=1.1]{Times New Roman}
+\setmainjfont[Scale=1.0,Weight=2,Renderer=Harfbuzz,LetterSpace=11]{Hiragino Mincho ProN}
+\setsansjfont{Hiragino Kaku Gothic ProN W3}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\newgeometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}`;
 
 export const defaultCoverSource = String.raw`\item 解答用紙に正しくマークされていない場合は, 採点されないことがあります。
 \item この問題冊子は, 全13ページで構成されています。問題は第1問から第9問まであり, 一部の問題には小問が含まれます。配点は各問題ごとに明記されています。
@@ -333,7 +344,7 @@ export const defaultAuthoringSource = String.raw`\examtitle{漫画映画}
 以下の連立方程式において, 各式 ① から ③ がそれぞれ画像 I から III に示されたアニメの名称の一部を表している。
 このとき, 式 \(n_d\:g'' atf-\) が表すアニメの名称として最も適当なものを選べ。
 $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end{aligned}\right.$$
-\includegraphics[width=0.72\linewidth]{${animePage01}}
+\includegraphics[width=0.86\linewidth]{${animeFigure01}}
 \mark[answer=4,points=10,choices=4]{1}
 \choice{1}{1}{おねがい☆ティーチャー}
 \choice{1}{2}{オーバーロード}
@@ -352,7 +363,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \choice{2}{4}{放物線と面積二等分線}
 \subsectiontitle{問2}
 第2期第四話において登場人物同士がコードネームで呼び合う場面について, A から D に示す登場人物の本名に対応するコードネームを選べ。
-\includegraphics[width=0.72\linewidth]{${animePage04}}
+\includegraphics[width=0.58\linewidth]{${animeFigure04}}
 \mark[answer=4,points=2,choices=9]{3}
 \choice{3}{1}{野球バカ}
 \choice{3}{2}{鷹岡もどき}
@@ -397,7 +408,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \sectiontitle{第3問}
 以下のグラフおよび図は, あるアニメに関するものである。
 これらの内容に基づいて \(X\) に入る最も適当な記号を選べ。
-\includegraphics[width=0.72\linewidth]{${animePage05}}
+\includegraphics[width=0.88\linewidth]{${animeFigure05}}
 \mark[answer=3,points=10,choices=5]{7}
 \choice{7}{1}{\(\Omega\)}
 \choice{7}{2}{\(\alpha\)}
@@ -410,7 +421,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \subsectiontitle{問1}
 ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
 I: 綾小路清隆, II: 竈門禰豆子, III: 御坂美琴。
-\includegraphics[width=0.72\linewidth]{${animePage06}}
+\includegraphics[width=0.88\linewidth]{${animeFigure06}}
 \mark[answer=4,points=4,choices=8]{8}
 \choice{8}{1}{AAA}
 \choice{8}{2}{AAĀ}
@@ -423,7 +434,7 @@ I: 綾小路清隆, II: 竈門禰豆子, III: 御坂美琴。
 \subsectiontitle{問2}
 ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
 I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
-\includegraphics[width=0.72\linewidth]{${animePage07}}
+\includegraphics[width=0.86\linewidth]{${animeFigure07}}
 \mark[answer=4,points=4,choices=4]{9}
 \choice{9}{1}{A∩B}
 \choice{9}{2}{Ā∩B}
@@ -460,7 +471,7 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 
 \sectiontitle{第6問}
 画像 I から VI について関係式「I < II = III < IV < V << VI」が成り立っているとき, A と B, C と D に当てはまる記号として最も適当なものを選べ。
-\includegraphics[width=0.72\linewidth]{${animePage09}}
+\includegraphics[width=0.86\linewidth]{${animeFigure09}}
 \mark[answer=3,points=5,choices=3]{15}
 \choice{15}{1}{<}
 \choice{15}{2}{=}
@@ -473,7 +484,7 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 \sectiontitle{第7問}
 以下の文章は, あるアニメに関する口コミである。この内容に該当するアニメとして最も適当なものを選べ。
 長ゼリフや会話劇, 妖怪のような存在に苦しめられる少女達, 独特な作画や演出に言及した複数の口コミが示されている。
-\includegraphics[width=0.72\linewidth]{${animePage10}}
+\includegraphics[width=0.86\linewidth]{${animeFigure10}}
 \mark[answer=1,points=10,choices=4]{17}
 \choice{17}{1}{化物語}
 \choice{17}{2}{虚構推理}

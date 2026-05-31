@@ -1237,10 +1237,16 @@ button:disabled {
   padding: 8px;
 }
 
+.environment-nav-panel {
+  border-bottom: 1px solid #d0d7de;
+  padding: 8px;
+}
+
 .environment-editor-panel {
   display: grid;
   gap: 10px;
-  border-bottom: 1px solid #d0d7de;
+  border: 1px solid #d8dee4;
+  border-radius: 8px;
   background: #fbfcfd;
   padding: 10px;
 }
@@ -1272,8 +1278,10 @@ button:disabled {
   resize: vertical;
 }
 
+.environment-nav-panel button,
 .section-nav-list button {
   display: grid;
+  width: 100%;
   gap: 3px;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -1283,21 +1291,26 @@ button:disabled {
   text-align: left;
 }
 
+.environment-nav-panel button:hover,
+.environment-nav-panel button.active,
 .section-nav-list button:hover,
 .section-nav-list button.active {
   border-color: #d0d7de;
   background: #f6f8fa;
 }
 
+.environment-nav-panel button.active,
 .section-nav-list button.active {
   box-shadow: inset 3px 0 0 #0969da;
 }
 
+.environment-nav-panel span,
 .section-nav-list span {
   font-size: 0.9rem;
   font-weight: 800;
 }
 
+.environment-nav-panel small,
 .section-nav-list small {
   color: #57606a;
   font-size: 0.72rem;

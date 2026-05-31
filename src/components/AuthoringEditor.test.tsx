@@ -51,6 +51,13 @@ describe("AuthoringEditor", () => {
     return button;
   }
 
+  function getButtonContainingText(name: string) {
+    const element = screen.getAllByText(name).find((candidate) => candidate.closest("button"));
+    const button = element?.closest("button");
+    expect(button).not.toBeNull();
+    return button as HTMLButtonElement;
+  }
+
   it("edits metadata in the center panel and publishes edits for the selected exam", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
@@ -64,7 +71,9 @@ describe("AuthoringEditor", () => {
     expect(screen.getByText("大問数")).toBeInTheDocument();
     expect(screen.getAllByText("問題数").length).toBeGreaterThan(0);
     expect(screen.getAllByText("配点").length).toBeGreaterThan(0);
+    expect(within(screen.getByLabelText("大問一覧")).queryByLabelText("環境TeX")).not.toBeInTheDocument();
 
+    await user.click(getButtonContainingText("環境設定"));
     const titleInput = screen.getByLabelText("タイトル");
     await user.clear(titleInput);
     await user.type(titleInput, "編集済み漫画映画");
@@ -97,7 +106,8 @@ describe("AuthoringEditor", () => {
     const source = (screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value;
     expect(source).toContain("% === 大問本文: 第1問 ===");
     expect(source).toContain("% --- 解答番号 1: 正解 4 / 配点 10 / 選択肢 4 ---");
-    expect(source).toContain("\\includegraphics[width=0.72\\linewidth]{");
+    expect(source).toContain("\\includegraphics[width=0.86\\linewidth]{");
+    expect(source).toContain("anime-crops/page-01-figures.jpg");
     expect(source).toContain("\\choice{1}{4}{【推しの子】}");
   });
 
@@ -131,6 +141,7 @@ describe("AuthoringEditor", () => {
     primeAuthoringState(source);
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
+    await user.click(getButtonContainingText("環境設定"));
     const [questionCountInput, totalPointsInput] = screen.getAllByRole("spinbutton");
     await user.clear(questionCountInput);
     await user.type(questionCountInput, "2");
@@ -228,11 +239,13 @@ describe("AuthoringEditor", () => {
     primeAuthoringState(source);
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
+    await user.click(getButtonContainingText("環境設定"));
     const uploadInput = screen.getByLabelText("共通画像アップロード");
     const file = new File(["sample"], "figure.png", { type: "image/png" });
     await user.upload(uploadInput, file);
 
     expect(await screen.findByText("アップロード画像")).toBeInTheDocument();
+    await user.click(getButtonContainingText("第1問"));
     await openSectionTex(user);
     expect((screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value).toContain(
       "\\includegraphics{data:image/png;base64,"
@@ -277,7 +290,7 @@ describe("AuthoringEditor", () => {
     );
   });
 
-  it("publishes environment and cover TeX edits from the left panel", async () => {
+  it("publishes environment and cover TeX edits from the environment panel", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
     const source = String.raw`\examtitle{Parsed}
@@ -287,6 +300,8 @@ describe("AuthoringEditor", () => {
     primeAuthoringState(source);
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
 
+    expect(screen.queryByLabelText("環境TeX")).not.toBeInTheDocument();
+    await user.click(getButtonContainingText("環境設定"));
     fireEvent.change(screen.getByLabelText("環境TeX"), {
       target: { value: "\\pagecolor[RGB]{240,241,242}\n\\geometry{top=44pt}" }
     });
@@ -299,6 +314,50 @@ describe("AuthoringEditor", () => {
     expect(onPublish.mock.calls[0][0].pages[0].layout).toMatchObject({
       pageColor: "rgb(240, 241, 242)",
       paddingTop: "44pt"
+    });
+  });
+
+  it("edits global settings through detailed TeX", async () => {
+    const user = userEvent.setup();
+    const onPublish = vi.fn();
+    const source = String.raw`\examtitle{Parsed}
+\sectiontitle{第1問}
+\mark[answer=1,points=4,choices=4]{1}`;
+
+    primeAuthoringState(source);
+    render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
+
+    await user.click(getButtonContainingText("環境設定"));
+    await user.click(getButtonByText("詳細TeX"));
+    fireEvent.change(screen.getByLabelText("TeXコード入力"), {
+      target: {
+        value: String.raw`\examtitle{Detailed}
+\examsubject{詳細科目}
+\examdescription{詳細TeXから更新}
+\questioncount{1}
+\totalpoints{4}
+\durationminutes{45}
+\pagecolor[RGB]{244,245,246}
+\newgeometry{inner=1in,outer=0.8in,top=42pt,bottom=30pt}
+\begin{coverinstructions}
+\item 詳細TeX注意事項
+\end{coverinstructions}`
+      }
+    });
+    await user.click(getButtonByText("投稿"));
+
+    expect(onPublish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: "Detailed",
+        subject: "詳細科目",
+        description: "詳細TeXから更新",
+        durationMinutes: 45,
+        instructions: ["詳細TeX注意事項"]
+      })
+    );
+    expect(onPublish.mock.calls[0][0].pages[0].layout).toMatchObject({
+      pageColor: "rgb(244, 245, 246)",
+      paddingTop: "42pt"
     });
   });
 
@@ -339,10 +398,6 @@ describe("AuthoringEditor", () => {
 
     primeAuthoringState(source);
     render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
-
-    const [questionCountInput] = screen.getAllByRole("spinbutton");
-    await user.clear(questionCountInput);
-    await user.type(questionCountInput, "1");
 
     await user.click(screen.getByLabelText("1 複数回答"));
     await user.click(within(screen.getByLabelText("1 正解番号")).getByText("3"));

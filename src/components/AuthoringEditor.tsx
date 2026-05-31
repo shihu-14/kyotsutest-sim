@@ -45,6 +45,7 @@ interface AuthoringEditorProps {
 type TextMetaKey = "title" | "subject" | "description";
 type NumberMetaKey = "questionCount" | "totalPoints" | "durationMinutes";
 type CenterTab = "form" | "tex";
+type EditorSelection = "environment" | "section";
 
 const textFields: Array<{ key: TextMetaKey; label: string; multiline?: boolean }> = [
   { key: "title", label: "タイトル" },
@@ -70,6 +71,7 @@ const authoringTexPreamble = String.raw`\documentclass[b5paper,12pt]{article}
 \newcommand{\choice}[3]{\par\smallskip\noindent\textcircled{\scriptsize #2}\quad #3}
 \newcommand{\mark}[2][]{\counterbox}`;
 const animeSampleExamId = "anime-onlymark-2026";
+const coverInstructionsBlockPattern = /\\begin\{coverinstructions\}([\s\S]*?)\\end\{coverinstructions\}/;
 
 function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
   return (
@@ -529,6 +531,76 @@ function coverInstructionsFromSource(source: string): string[] {
     : defaultCoverSource.split("\n").map((line) => normalizePreviewText(line.replace(/^\\item\s*/, "")));
 }
 
+function escapeSettingValue(value: string): string {
+  return value.replace(/[{}]/g, "");
+}
+
+function serializeEnvironmentEditorSource(
+  meta: AuthoringMeta,
+  environmentSource: string,
+  coverSource: string
+): string {
+  return [
+    "% === 試験設定 ===",
+    `\\examtitle{${escapeSettingValue(meta.title)}}`,
+    `\\examsubject{${escapeSettingValue(meta.subject)}}`,
+    `\\examdescription{${escapeSettingValue(meta.description)}}`,
+    `\\questioncount{${meta.questionCount}}`,
+    `\\totalpoints{${meta.totalPoints}}`,
+    `\\durationminutes{${meta.durationMinutes}}`,
+    "",
+    "% === preview環境 ===",
+    environmentSource.trim(),
+    "",
+    "% === 表紙注意事項 ===",
+    "\\begin{coverinstructions}",
+    coverSource.trim(),
+    "\\end{coverinstructions}"
+  ].join("\n");
+}
+
+function readBracedCommand(source: string, command: string): string | null {
+  const match = source.match(new RegExp(`\\\\${command}\\{([^}]*)\\}`));
+  return match?.[1] ?? null;
+}
+
+function readPositiveNumberCommand(source: string, command: string, fallback: number): number {
+  const value = Number(readBracedCommand(source, command));
+  return Number.isFinite(value) ? Math.max(0, value) : fallback;
+}
+
+function parseEnvironmentEditorSource(
+  source: string,
+  fallbackMeta: AuthoringMeta,
+  fallbackEnvironmentSource: string,
+  fallbackCoverSource: string
+) {
+  const coverMatch = source.match(coverInstructionsBlockPattern);
+  const nextCoverSource = coverMatch?.[1]?.trim() || fallbackCoverSource;
+  const nextMeta: AuthoringMeta = {
+    title: readBracedCommand(source, "examtitle") ?? fallbackMeta.title,
+    subject: readBracedCommand(source, "examsubject") ?? fallbackMeta.subject,
+    description: readBracedCommand(source, "examdescription") ?? fallbackMeta.description,
+    questionCount: readPositiveNumberCommand(source, "questioncount", fallbackMeta.questionCount),
+    totalPoints: readPositiveNumberCommand(source, "totalpoints", fallbackMeta.totalPoints),
+    durationMinutes: readPositiveNumberCommand(source, "durationminutes", fallbackMeta.durationMinutes)
+  };
+  const nextEnvironmentSource = source
+    .replace(coverInstructionsBlockPattern, "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .filter((line) => !line.startsWith("%"))
+    .filter((line) => !/^\\(?:examtitle|examsubject|examdescription|questioncount|totalpoints|durationminutes)\{/.test(line))
+    .join("\n");
+
+  return {
+    meta: nextMeta,
+    environmentSource: nextEnvironmentSource || fallbackEnvironmentSource,
+    coverSource: nextCoverSource
+  };
+}
+
 function getMarkSections(source: string): string[] {
   const sections: string[] = [];
   let currentSection = "第1問";
@@ -714,7 +786,7 @@ function paragraphBlocks(body: string): ProblemBlock[] {
       const imageMatch = text.match(/^\\includegraphics(?:\[([^\]]*)\])?\{([^}]*)\}$/);
       if (imageMatch) {
         const [_full, options, imageSource] = imageMatch;
-        const caption = options ? `${imageCaption(imageSource)} (${options})` : imageCaption(imageSource);
+        const caption = imageSource.startsWith("data:") ? imageCaption(imageSource) : "";
         return {
           type: "figure",
           caption,
@@ -920,6 +992,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [publishState, setPublishState] = useState<"idle" | "published">("idle");
   const [selectedSectionIndex, setSelectedSectionIndex] = useState(0);
+  const [selectedPanel, setSelectedPanel] = useState<EditorSelection>("section");
   const [centerTab, setCenterTab] = useState<CenterTab>("form");
   const validationErrors = useMemo(() => validateAuthoring(source, meta), [source, meta]);
   const draft = useMemo(() => normalizeSourceDraft(parseAuthoringDraft(source)), [source]);
@@ -927,11 +1000,19 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
     () => buildPublishedExam(meta, source, initialExam, environmentSource, coverSource),
     [coverSource, environmentSource, initialExam, meta, source]
   );
-  const selectedSection =
-    draft.sections[Math.min(selectedSectionIndex, Math.max(0, draft.sections.length - 1))] ?? null;
+  const environmentEditorSource = useMemo(
+    () => serializeEnvironmentEditorSource(meta, environmentSource, coverSource),
+    [coverSource, environmentSource, meta]
+  );
+  const isEnvironmentSelected = selectedPanel === "environment";
+  const selectedSection = isEnvironmentSelected
+    ? null
+    : draft.sections[Math.min(selectedSectionIndex, Math.max(0, draft.sections.length - 1))] ?? null;
   const selectedPage = previewExam.pages[Math.min(selectedSectionIndex, Math.max(0, previewExam.pages.length - 1))] ?? null;
   const selectedSectionSource = selectedSection ? serializeSectionSource(selectedSection) : "";
   const selectedCompileSize = selectedSection ? buildSectionCompileSource(meta, selectedSection, environmentSource).length : 0;
+  const centerTitle = isEnvironmentSelected ? "環境設定" : selectedSection?.title ?? "大問";
+  const texTabLabel = isEnvironmentSelected ? "詳細TeX" : "大問TeX";
   const sectionTotals = useMemo(
     () =>
       draft.sections.map((section) => ({
@@ -1053,6 +1134,13 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
     applySourceDraft(nextDraft);
   };
 
+  const applyEnvironmentEditorSource = (nextSource: string) => {
+    const parsed = parseEnvironmentEditorSource(nextSource, meta, environmentSource, coverSource);
+    setMeta(parsed.meta);
+    setEnvironmentSource(parsed.environmentSource);
+    setCoverSource(parsed.coverSource);
+  };
+
   return (
     <main className="author-layout">
       <header className="author-topbar">
@@ -1092,24 +1180,31 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
       <section className="author-workspace">
         <SectionNavigator
           draft={draft}
-          environmentSource={environmentSource}
-          coverSource={coverSource}
           sectionTotals={sectionTotals}
+          selectedPanel={selectedPanel}
           selectedSectionIndex={selectedSectionIndex}
+          totalMarks={sourceStats.marks}
+          totalPoints={sumDraftPoints(draft)}
           onAddSection={() => {
             applyDraft({ sections: [...draft.sections, createDraftSection(draft.sections.length)] });
             setSelectedSectionIndex(draft.sections.length);
+            setSelectedPanel("section");
           }}
-          onChangeCover={setCoverSource}
-          onChangeEnvironment={setEnvironmentSource}
-          onUploadImage={appendImageToSelectedSection}
-          onSelectSection={setSelectedSectionIndex}
+          onSelectEnvironment={() => {
+            setSelectedPanel("environment");
+            setCenterTab("form");
+          }}
+          onSelectSection={(sectionIndex) => {
+            setSelectedSectionIndex(sectionIndex);
+            setSelectedPanel("section");
+            setCenterTab("form");
+          }}
         />
 
         <section className="section-editor-pane" aria-label="選択中の大問編集">
           <div className="center-pane-heading">
             <div>
-              <h2>{selectedSection?.title ?? "大問"}</h2>
+              <h2>{centerTitle}</h2>
             </div>
             <div className="center-tabs" role="tablist" aria-label="中央編集モード">
               <button
@@ -1128,13 +1223,27 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
                 type="button"
                 onClick={() => setCenterTab("tex")}
               >
-                大問TeX
+                {texTabLabel}
               </button>
             </div>
           </div>
-          {centerTab === "form" && selectedSection ? (
+          {isEnvironmentSelected && centerTab === "form" ? (
+            <EnvironmentSettingsPanel
+              coverSource={coverSource}
+              environmentSource={environmentSource}
+              meta={meta}
+              onChangeCover={setCoverSource}
+              onChangeEnvironment={setEnvironmentSource}
+              onNumberChange={updateNumberMeta}
+              onTextChange={updateTextMeta}
+              onUploadImage={appendImageToSelectedSection}
+            />
+          ) : null}
+          {isEnvironmentSelected && centerTab === "tex" ? (
+            <EnvironmentTexEditor source={environmentEditorSource} onChange={applyEnvironmentEditorSource} />
+          ) : null}
+          {!isEnvironmentSelected && centerTab === "form" && selectedSection ? (
             <div className="center-form-scroll">
-              <BasicSettingsPanel meta={meta} onNumberChange={updateNumberMeta} onTextChange={updateTextMeta} />
               <SectionEditor
                 section={selectedSection}
                 sectionIndex={selectedSectionIndex}
@@ -1146,7 +1255,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
               />
             </div>
           ) : null}
-          {centerTab === "tex" && selectedSection ? (
+          {!isEnvironmentSelected && centerTab === "tex" && selectedSection ? (
             <SectionTexEditor
               compileSize={selectedCompileSize}
               source={selectedSectionSource}
@@ -1159,7 +1268,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
           <section className="inspector-shell" aria-label="大問プレビュー">
             <div className="inspector-heading">
               <div>
-                <h2>{selectedSection?.title ?? "大問"}</h2>
+                <h2>{selectedPage?.title ?? "プレビュー"}</h2>
               </div>
             </div>
             {selectedPage ? (
@@ -1211,38 +1320,42 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
 
 interface SectionNavigatorProps {
   draft: ExamDraft;
-  environmentSource: string;
-  coverSource: string;
   sectionTotals: Array<{ marks: number; points: number }>;
+  selectedPanel: EditorSelection;
   selectedSectionIndex: number;
+  totalMarks: number;
+  totalPoints: number;
   onAddSection: () => void;
-  onChangeCover: (source: string) => void;
-  onChangeEnvironment: (source: string) => void;
-  onUploadImage: (imageSource: string) => void;
+  onSelectEnvironment: () => void;
   onSelectSection: (sectionIndex: number) => void;
 }
 
 function SectionNavigator({
   draft,
-  environmentSource,
-  coverSource,
   sectionTotals,
+  selectedPanel,
   selectedSectionIndex,
+  totalMarks,
+  totalPoints,
   onAddSection,
-  onChangeCover,
-  onChangeEnvironment,
-  onUploadImage,
+  onSelectEnvironment,
   onSelectSection
 }: SectionNavigatorProps) {
   return (
     <aside className="section-nav-pane" aria-label="大問一覧">
-      <AuthorEnvironmentPanel
-        coverSource={coverSource}
-        environmentSource={environmentSource}
-        onChangeCover={onChangeCover}
-        onChangeEnvironment={onChangeEnvironment}
-        onUploadImage={onUploadImage}
-      />
+      <div className="environment-nav-panel">
+        <button
+          aria-current={selectedPanel === "environment" ? "page" : undefined}
+          className={selectedPanel === "environment" ? "active" : ""}
+          type="button"
+          onClick={onSelectEnvironment}
+        >
+          <span>環境設定</span>
+          <small>
+            {totalMarks}問 / {totalPoints}点
+          </small>
+        </button>
+      </div>
       <div className="section-nav-head">
         <div>
           <h2>大問一覧</h2>
@@ -1256,8 +1369,8 @@ function SectionNavigator({
           const totals = sectionTotals[index] ?? { marks: 0, points: 0 };
           return (
             <button
-              aria-current={index === selectedSectionIndex ? "page" : undefined}
-              className={index === selectedSectionIndex ? "active" : ""}
+              aria-current={selectedPanel === "section" && index === selectedSectionIndex ? "page" : undefined}
+              className={selectedPanel === "section" && index === selectedSectionIndex ? "active" : ""}
               key={section.id}
               type="button"
               onClick={() => onSelectSection(index)}
@@ -1274,7 +1387,13 @@ function SectionNavigator({
   );
 }
 
-interface AuthorEnvironmentPanelProps {
+interface BasicSettingsPanelProps {
+  meta: AuthoringMeta;
+  onTextChange: (key: TextMetaKey, value: string) => void;
+  onNumberChange: (key: NumberMetaKey, value: string) => void;
+}
+
+interface EnvironmentSettingsPanelProps extends BasicSettingsPanelProps {
   environmentSource: string;
   coverSource: string;
   onChangeEnvironment: (source: string) => void;
@@ -1282,13 +1401,16 @@ interface AuthorEnvironmentPanelProps {
   onUploadImage: (imageSource: string) => void;
 }
 
-function AuthorEnvironmentPanel({
+function EnvironmentSettingsPanel({
+  meta,
   environmentSource,
   coverSource,
+  onTextChange,
+  onNumberChange,
   onChangeEnvironment,
   onChangeCover,
   onUploadImage
-}: AuthorEnvironmentPanelProps) {
+}: EnvironmentSettingsPanelProps) {
   const imageInputRef = useRef<HTMLInputElement | null>(null);
 
   const uploadImage = (file: File | undefined) => {
@@ -1306,47 +1428,44 @@ function AuthorEnvironmentPanel({
   };
 
   return (
-    <section className="environment-editor-panel" aria-label="環境と表紙">
-      <label>
-        <span>環境TeX</span>
-        <textarea
-          aria-label="環境TeX"
-          rows={5}
-          value={environmentSource}
-          onChange={(event) => onChangeEnvironment(event.currentTarget.value)}
+    <div className="center-form-scroll environment-settings-scroll">
+      <BasicSettingsPanel meta={meta} onNumberChange={onNumberChange} onTextChange={onTextChange} />
+      <section className="environment-editor-panel" aria-label="環境と表紙">
+        <label>
+          <span>環境TeX</span>
+          <textarea
+            aria-label="環境TeX"
+            rows={7}
+            value={environmentSource}
+            onChange={(event) => onChangeEnvironment(event.currentTarget.value)}
+          />
+        </label>
+        <label>
+          <span>表紙注意事項TeX</span>
+          <textarea
+            aria-label="表紙注意事項TeX"
+            rows={8}
+            value={coverSource}
+            onChange={(event) => onChangeCover(event.currentTarget.value)}
+          />
+        </label>
+        <button className="secondary-button compact" type="button" onClick={() => imageInputRef.current?.click()}>
+          画像追加
+        </button>
+        <input
+          accept="image/*"
+          aria-label="共通画像アップロード"
+          className="visually-hidden-file"
+          ref={imageInputRef}
+          type="file"
+          onChange={(event) => {
+            uploadImage(event.currentTarget.files?.[0]);
+            event.currentTarget.value = "";
+          }}
         />
-      </label>
-      <label>
-        <span>表紙注意事項TeX</span>
-        <textarea
-          aria-label="表紙注意事項TeX"
-          rows={6}
-          value={coverSource}
-          onChange={(event) => onChangeCover(event.currentTarget.value)}
-        />
-      </label>
-      <button className="secondary-button compact" type="button" onClick={() => imageInputRef.current?.click()}>
-        画像追加
-      </button>
-      <input
-        accept="image/*"
-        aria-label="共通画像アップロード"
-        className="visually-hidden-file"
-        ref={imageInputRef}
-        type="file"
-        onChange={(event) => {
-          uploadImage(event.currentTarget.files?.[0]);
-          event.currentTarget.value = "";
-        }}
-      />
-    </section>
+      </section>
+    </div>
   );
-}
-
-interface BasicSettingsPanelProps {
-  meta: AuthoringMeta;
-  onTextChange: (key: TextMetaKey, value: string) => void;
-  onNumberChange: (key: NumberMetaKey, value: string) => void;
 }
 
 function BasicSettingsPanel({ meta, onTextChange, onNumberChange }: BasicSettingsPanelProps) {
@@ -1387,6 +1506,37 @@ function BasicSettingsPanel({ meta, onTextChange, onNumberChange }: BasicSetting
         ))}
       </div>
     </section>
+  );
+}
+
+interface EnvironmentTexEditorProps {
+  source: string;
+  onChange: (source: string) => void;
+}
+
+function EnvironmentTexEditor({ source, onChange }: EnvironmentTexEditorProps) {
+  return (
+    <div className="section-tex-editor">
+      <div className="tex-runtime-strip" aria-label="TeX共通設定">
+        <span>試験設定・preview環境・表紙注意事項をまとめて編集</span>
+        <code>{Math.ceil(source.length / 1024)}KB unit</code>
+      </div>
+      <Editor
+        height="calc(100vh - 252px)"
+        defaultLanguage="latex"
+        theme="vs-light"
+        value={source}
+        options={{
+          minimap: { enabled: false },
+          fontSize: 13,
+          lineNumbers: "on",
+          wordWrap: "on",
+          tabSize: 2,
+          automaticLayout: true
+        }}
+        onChange={(nextSource) => onChange(nextSource ?? "")}
+      />
+    </div>
   );
 }
 
