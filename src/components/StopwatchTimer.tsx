@@ -19,7 +19,8 @@ function clampProgress(remainingMs: number, totalMs: number) {
 export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "timer-exam-seal", label }: StopwatchTimerProps) {
   const progress = clampProgress(remainingMs, totalMs);
   const style = {
-    "--timer-progress": `${progress * 100}%`
+    "--timer-progress": `${progress * 100}%`,
+    "--timer-elapsed": `${(1 - progress) * 100}%`
   } as CSSProperties;
 
   return (
