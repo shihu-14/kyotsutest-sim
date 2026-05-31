@@ -76,7 +76,7 @@ describe("AuthoringEditor", () => {
     await user.click(getButtonByText("投稿"));
 
     expect(onPublish).toHaveBeenCalledWith(expect.objectContaining({ id: exam.id, title: "編集済み漫画映画" }));
-    expect(onPublish.mock.calls[0][0].pages[0].pageImageUrl).toBeUndefined();
+    expect(onPublish.mock.calls[0][0].pages[0].pageImageUrl).toBeDefined();
     expect(onPublish.mock.calls[0][0].pages[0].blocks).toEqual(
       expect.arrayContaining([expect.objectContaining({ questionId: "anime-q01", type: "question" })])
     );
@@ -92,9 +92,10 @@ describe("AuthoringEditor", () => {
     expect(screen.getByRole("heading", { name: exam.title })).toBeInTheDocument();
     expect(screen.getByLabelText("大問一覧")).toBeInTheDocument();
     expect(screen.getByLabelText("第1問のプレビュー")).toBeInTheDocument();
-    expect(screen.queryByAltText(/PDF再現ページ/)).not.toBeInTheDocument();
+    expect(screen.getByAltText(/PDF再現ページ/)).toBeInTheDocument();
 
     await openSectionTex(user);
+    expect((screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value).toContain("\\includegraphics{");
     expect((screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value).toContain(
       "\\choice{1}{4}{【推しの子】}"
     );
@@ -151,6 +152,32 @@ describe("AuthoringEditor", () => {
     );
   });
 
+  it("keeps TeX subsection title edits as the source of truth", async () => {
+    const user = userEvent.setup();
+    const onPublish = vi.fn();
+    const source = String.raw`\examtitle{Parsed}
+\sectiontitle{第1問}
+\subsectiontitle{問1}
+\mark[answer=1,points=4,choices=4]{1}`;
+
+    primeAuthoringState(source);
+    render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
+
+    await openSectionTex(user);
+    fireEvent.change(screen.getByLabelText("TeXコード入力"), {
+      target: { value: source.replace("\\subsectiontitle{問1}", "\\subsectiontitle{問A}") }
+    });
+    await user.click(getButtonByText("フォーム"));
+    expect(screen.getAllByText("問A").length).toBeGreaterThan(0);
+    await user.click(getButtonByText("投稿"));
+
+    expect(onPublish).toHaveBeenCalledWith(
+      expect.objectContaining({
+        questions: [expect.objectContaining({ section: "第1問 問A" })]
+      })
+    );
+  });
+
   it("adds subquestions and marks from the structured editor", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
@@ -192,6 +219,27 @@ describe("AuthoringEditor", () => {
           expect.objectContaining({ label: "2", section: "第2問 問1", points: 1 })
         ]
       })
+    );
+  });
+
+  it("uploads an image into the selected section body", async () => {
+    const user = userEvent.setup();
+    const onPublish = vi.fn();
+    const source = String.raw`\examtitle{Parsed}
+\sectiontitle{第1問}
+\mark[answer=1,points=4,choices=4]{1}`;
+
+    primeAuthoringState(source);
+    render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
+
+    const uploadInput = screen.getByLabelText("第1問 画像アップロード");
+    const file = new File(["sample"], "figure.png", { type: "image/png" });
+    await user.upload(uploadInput, file);
+
+    expect(await screen.findByText("アップロード画像")).toBeInTheDocument();
+    await openSectionTex(user);
+    expect((screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value).toContain(
+      "\\includegraphics{data:image/png;base64,"
     );
   });
 

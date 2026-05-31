@@ -665,6 +665,13 @@ button:disabled {
   padding: 14px;
 }
 
+.problem-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
 .problem-figure pre {
   overflow-x: auto;
   margin: 0;
@@ -1143,12 +1150,19 @@ button:disabled {
   background: #ffffff;
 }
 
+.section-editor-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
 .section-nav-pane {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   overflow: hidden;
 }
 
+.center-pane-heading,
 .section-nav-head,
 .section-editor-head,
 .inspector-heading,
@@ -1160,12 +1174,14 @@ button:disabled {
   gap: 10px;
 }
 
+.center-pane-heading,
 .section-nav-head,
 .inspector-heading {
   border-bottom: 1px solid #d0d7de;
   padding: 12px;
 }
 
+.center-pane-heading h2,
 .section-nav-head h2,
 .section-editor-head h2,
 .inspector-heading h2,
@@ -1233,11 +1249,12 @@ button:disabled {
 
 .section-editor-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
 .section-body-field,
-.subsection-editor-head label,
+.subsection-title-chip,
 .structure-mark-row label,
 .structure-choice-contents {
   display: grid;
@@ -1245,7 +1262,7 @@ button:disabled {
 }
 
 .section-body-field span,
-.subsection-editor-head span,
+.subsection-title-chip span,
 .structure-mark-row span,
 .structure-choice-contents span {
   color: #57606a;
@@ -1255,7 +1272,6 @@ button:disabled {
 }
 
 .section-body-field textarea,
-.subsection-editor-head input,
 .structure-mark-row input,
 .structure-choice-contents textarea {
   width: 100%;
@@ -1267,6 +1283,45 @@ button:disabled {
   padding: 8px 10px;
   font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
   font-size: 0.88rem;
+}
+
+.subsection-title-chip strong {
+  color: #1f2328;
+  font-size: 0.98rem;
+  line-height: 1.1;
+}
+
+.center-tabs {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #f6f8fa;
+}
+
+.center-tabs button {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #57606a;
+  padding: 7px 10px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.center-tabs button.active {
+  background: #1f2328;
+  color: #ffffff;
+}
+
+.visually-hidden-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .section-body-field textarea,
@@ -1407,6 +1462,10 @@ button:disabled {
   min-height: 0;
   overflow: auto;
   padding: 12px;
+}
+
+.section-tex-editor {
+  height: 100%;
 }
 
 .published-section-preview .published-preview-page {
