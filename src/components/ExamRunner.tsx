@@ -38,6 +38,7 @@ export function ExamRunner({
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLElement | null>(null);
+  const previousPagePositionRef = useRef<number | null>(null);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
@@ -104,6 +105,10 @@ export function ExamRunner({
   useEffect(() => {
     const nav = pageTabsRef.current;
     const activeTab = nav?.querySelector<HTMLButtonElement>(".active");
+    const currentPosition = showCover ? -1 : pageIndex;
+    const previousPosition = previousPagePositionRef.current;
+    previousPagePositionRef.current = currentPosition;
+
     if (!nav || !activeTab || nav.scrollWidth <= nav.clientWidth) {
       return;
     }
@@ -112,14 +117,28 @@ export function ExamRunner({
     const rightEdge = activeTab.offsetLeft + activeTab.offsetWidth;
     const visibleLeft = nav.scrollLeft;
     const visibleRight = nav.scrollLeft + nav.clientWidth;
+    const maxScrollLeft = Math.max(0, nav.scrollWidth - nav.clientWidth);
+    const scrollTo = (left: number) => {
+      nav.scrollTo({ left: Math.min(maxScrollLeft, Math.max(0, left)), behavior: "smooth" });
+    };
+
+    if (previousPosition !== null && currentPosition > previousPosition) {
+      scrollTo(rightEdge - nav.clientWidth);
+      return;
+    }
+
+    if (previousPosition !== null && currentPosition < previousPosition) {
+      scrollTo(leftEdge);
+      return;
+    }
 
     if (rightEdge > visibleRight) {
-      nav.scrollTo({ left: rightEdge - nav.clientWidth, behavior: "smooth" });
+      scrollTo(rightEdge - nav.clientWidth);
       return;
     }
 
     if (leftEdge < visibleLeft) {
-      nav.scrollTo({ left: leftEdge, behavior: "smooth" });
+      scrollTo(leftEdge);
     }
   }, [currentPageId, exam.pages.length, showCover]);
 

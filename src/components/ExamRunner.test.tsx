@@ -19,6 +19,7 @@ function installPageTabLayoutMocks() {
   });
 
   const mockNavMetrics = (nav: HTMLElement) => {
+    const pageCount = [...nav.querySelectorAll("button:not(.cover-tab)")].length;
     Object.defineProperties(nav, {
       clientWidth: {
         configurable: true,
@@ -31,7 +32,7 @@ function installPageTabLayoutMocks() {
       },
       scrollWidth: {
         configurable: true,
-        value: coverWidth + 15 * pageWidth
+        value: coverWidth + pageCount * pageWidth
       }
     });
 
@@ -235,7 +236,7 @@ describe("ExamRunner", () => {
     const longExam = {
       ...baseExam,
       coverImageUrl: baseExam.coverImageUrl ?? "cover.png",
-      pages: Array.from({ length: 15 }, (_, index) => ({
+      pages: Array.from({ length: 30 }, (_, index) => ({
         ...baseExam.pages[0],
         blocks: [],
         id: `long-page-${index + 1}`,
@@ -288,7 +289,19 @@ describe("ExamRunner", () => {
       await user.click(screen.getByRole("button", { name: "次のページへ" }));
 
       await waitFor(() => expect(screen.getByRole("button", { name: "14" })).toHaveClass("active"));
-      expect(pageTabLayout.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: "smooth" }));
+      expect(pageTabLayout.scrollTo).toHaveBeenLastCalledWith(
+        expect.objectContaining({ behavior: "smooth", left: 72.5 })
+      );
+
+      pageTabLayout.mockNavMetrics(screen.getByLabelText("問題ページ"));
+      pageTabLayout.scrollTo.mockClear();
+
+      await user.click(screen.getByRole("button", { name: "前のページへ" }));
+
+      await waitFor(() => expect(screen.getByRole("button", { name: "13" })).toHaveClass("active"));
+      expect(pageTabLayout.scrollTo).toHaveBeenLastCalledWith(
+        expect.objectContaining({ behavior: "smooth", left: 952.8 })
+      );
     } finally {
       pageTabLayout.restore();
     }
