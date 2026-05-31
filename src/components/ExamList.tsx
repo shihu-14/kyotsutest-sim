@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Exam } from "../types";
 import { ExamDesignPreview } from "./ExamDesignPreview";
+import { TimerDesignPreview } from "./TimerDesignPreview";
 
 interface ExamListProps {
   exams: Exam[];
@@ -11,7 +12,7 @@ interface ExamListProps {
 }
 
 export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: ExamListProps) {
-  const [homeMode, setHomeMode] = useState<"exams" | "designs">("exams");
+  const [homeMode, setHomeMode] = useState<"exams" | "designs" | "timers">("exams");
   const previewExam = exams.find((exam) => exam.pages.some((page) => page.pageImageUrl)) ?? exams[0];
 
   return (
@@ -21,12 +22,26 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
           <h1>共通テスト形式 ウェブ模試</h1>
         </div>
         <div className="home-actions">
+          {homeMode !== "exams" ? (
+            <button className="secondary-button" type="button" onClick={() => setHomeMode("exams")}>
+              試験一覧
+            </button>
+          ) : null}
           <button
+            aria-pressed={homeMode === "designs"}
             className="secondary-button"
             type="button"
-            onClick={() => setHomeMode((current) => (current === "exams" ? "designs" : "exams"))}
+            onClick={() => setHomeMode("designs")}
           >
-            {homeMode === "exams" ? "画面候補" : "試験一覧"}
+            画面候補
+          </button>
+          <button
+            aria-pressed={homeMode === "timers"}
+            className="secondary-button"
+            type="button"
+            onClick={() => setHomeMode("timers")}
+          >
+            時間候補
           </button>
           <button className="secondary-button" type="button" onClick={onOpenEditor}>
             新規作成
@@ -36,6 +51,8 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
 
       {homeMode === "designs" && previewExam ? (
         <ExamDesignPreview exam={previewExam} />
+      ) : homeMode === "timers" && previewExam ? (
+        <TimerDesignPreview exam={previewExam} />
       ) : (
         <section className="exam-grid" aria-label="公開中の試験一覧">
           {exams

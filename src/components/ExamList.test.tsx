@@ -99,4 +99,29 @@ describe("ExamList", () => {
     expect(screen.getByRole("article", { name: "06 Carbon Consoleのプレビュー" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
   });
+
+  it("opens the timer design candidate mode and switches stopwatch candidates", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "時間候補" }));
+
+    expect(screen.getByRole("heading", { name: "制限時間デザイン候補" })).toBeInTheDocument();
+    expect(screen.getAllByRole("tab")).toHaveLength(10);
+    expect(screen.getByRole("article", { name: "01 Classic Amberのプレビュー" })).toBeInTheDocument();
+    expect(screen.getAllByRole("timer", { name: /残り時間/ })).toHaveLength(4);
+
+    await user.click(screen.getByRole("tab", { name: /09 Stadium Alert/ }));
+
+    expect(screen.getByRole("article", { name: "09 Stadium Alertのプレビュー" })).toBeInTheDocument();
+  });
 });

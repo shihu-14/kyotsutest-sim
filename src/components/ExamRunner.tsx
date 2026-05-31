@@ -4,6 +4,7 @@ import { answeredCount } from "../utils/answer";
 import { useCountdown } from "../hooks/useCountdown";
 import { MarkSheet } from "./MarkSheet";
 import { ProblemBooklet } from "./ProblemBooklet";
+import { StopwatchTimer } from "./StopwatchTimer";
 
 interface ExamRunnerProps {
   exam: Exam;
@@ -46,6 +47,7 @@ export function ExamRunner({
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
   const completeCount = answeredCount(exam, answers);
   const bookletStyle = { "--booklet-zoom": String(bookletZoom) } as CSSProperties;
+  const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
   const canGoNext = showCover ? exam.pages.length > 0 : pageIndex < exam.pages.length - 1;
 
@@ -135,9 +137,13 @@ export function ExamRunner({
             </strong>
           </div>
           {!reviewMode ? (
-            <div className={`timer ${countdown.remainingMs <= 60_000 ? "urgent" : ""}`} aria-live="polite">
-              {countdown.formatted}
-            </div>
+            <StopwatchTimer
+              formatted={countdown.formatted}
+              label={`残り時間 ${countdown.formatted}`}
+              remainingMs={countdown.remainingMs}
+              totalMs={totalTimeMs}
+              variant="timer-classic-amber"
+            />
           ) : null}
           {reviewMode ? (
             <button className="secondary-button" type="button" onClick={onExitReview}>
