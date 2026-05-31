@@ -53,6 +53,9 @@ button:disabled {
 }
 
 .exam-mode-background {
+  width: 100%;
+  max-width: none;
+  padding: 14px 24px 18px;
   background: #c77a2d url("../assets/on-table-image.jpg") center / cover no-repeat;
 }
 
@@ -1098,26 +1101,6 @@ button:disabled {
   box-shadow: 0 5px 12px var(--timer-shadow);
 }
 
-.stopwatch-side-button {
-  position: absolute;
-  top: calc(var(--timer-size) * 0.12);
-  width: calc(var(--timer-size) * 0.2);
-  height: calc(var(--timer-size) * 0.13);
-  border-radius: 4px;
-  background: var(--timer-accent);
-  box-shadow: 0 5px 12px var(--timer-shadow);
-}
-
-.stopwatch-side-button.left {
-  left: calc(50% - var(--timer-size) * 0.33);
-  transform: rotate(-38deg);
-}
-
-.stopwatch-side-button.right {
-  right: calc(50% - var(--timer-size) * 0.33);
-  transform: rotate(38deg);
-}
-
 .stopwatch-dial {
   position: relative;
   display: grid;
@@ -1194,13 +1177,13 @@ button:disabled {
 }
 
 .timer-exam-seal {
-  --timer-accent: #d4552d;
-  --timer-track: rgba(212, 85, 45, 0.16);
-  --timer-fill: #ffd7c9;
-  --timer-face: #fff8ef;
-  --timer-text: #5e2418;
-  --timer-muted: rgba(94, 36, 24, 0.6);
-  --timer-shadow: rgba(146, 63, 28, 0.2);
+  --timer-accent: #f07825;
+  --timer-track: rgba(240, 120, 37, 0.16);
+  --timer-fill: #ffe4d2;
+  --timer-face: #fffaf4;
+  --timer-text: #a84312;
+  --timer-muted: rgba(168, 67, 18, 0.58);
+  --timer-shadow: rgba(195, 82, 22, 0.18);
 }
 
 .timer-digital-neon {
@@ -1238,7 +1221,6 @@ button:disabled {
 }
 
 .timer-public-blue .stopwatch-crown,
-.timer-public-blue .stopwatch-side-button,
 .timer-public-blue .stopwatch-dial,
 .timer-public-blue .stopwatch-face {
   border-radius: 0;
@@ -1443,7 +1425,7 @@ button:disabled {
   border-radius: 8px;
   background: transparent;
   box-shadow: inset 0 0 0 1px rgba(96, 45, 13, 0.16);
-  padding: 14px;
+  padding: 8px 14px 14px;
 }
 
 .booklet-side-arrow {
@@ -1513,7 +1495,7 @@ button:disabled {
 .page-tabs {
   display: flex;
   gap: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .page-tabs button {
@@ -1814,7 +1796,7 @@ button:disabled {
 
 .exam-layout .exam-toolbar {
   flex-shrink: 0;
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .mark-sheet {

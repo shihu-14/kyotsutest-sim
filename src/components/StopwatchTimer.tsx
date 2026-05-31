@@ -31,8 +31,6 @@ export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "tim
       style={style}
     >
       <div className="stopwatch-crown" aria-hidden="true" />
-      <div className="stopwatch-side-button left" aria-hidden="true" />
-      <div className="stopwatch-side-button right" aria-hidden="true" />
       <div className="stopwatch-dial">
         <div className="stopwatch-face">
           <strong>{formatted}</strong>
