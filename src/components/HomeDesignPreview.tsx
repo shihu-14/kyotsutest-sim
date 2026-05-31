@@ -1,21 +1,9 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import type { Exam } from "../types";
 
 interface HomeDesignPreviewProps {
   exams: Exam[];
 }
-
-type HomeLayout =
-  | "spotlight"
-  | "grid"
-  | "table"
-  | "kanban"
-  | "calendar"
-  | "rail"
-  | "command"
-  | "analytics"
-  | "shelf"
-  | "mobile";
 
 interface HomeCandidate {
   id: string;
@@ -23,89 +11,78 @@ interface HomeCandidate {
   shortName: string;
   themeClass: string;
   intent: string;
-  layout: HomeLayout;
 }
 
 const homeCandidates: HomeCandidate[] = [
   {
-    id: "spotlight-launch",
-    name: "01 Spotlight Launch",
-    shortName: "Spotlight",
-    themeClass: "home-preview-spotlight-launch",
-    intent: "表紙を大きく出して、右側で開始判断する案",
-    layout: "spotlight"
+    id: "rail-mint",
+    name: "01 Rail Mint",
+    shortName: "Mint",
+    themeClass: "home-preview-rail-mint",
+    intent: "06 Cover Railを基準にした青緑系の案"
   },
   {
-    id: "vercel-grid",
-    name: "02 Vercel Grid",
-    shortName: "Grid",
-    themeClass: "home-preview-vercel-grid",
-    intent: "余白のある3列カードで比較する案",
-    layout: "grid"
+    id: "rail-ink",
+    name: "02 Rail Ink",
+    shortName: "Ink",
+    themeClass: "home-preview-rail-ink",
+    intent: "白地に黒い線を効かせた案"
   },
   {
-    id: "airtable-table",
-    name: "03 Airtable Table",
-    shortName: "Table",
-    themeClass: "home-preview-airtable-table",
-    intent: "試験を表形式で素早く比較する案",
-    layout: "table"
+    id: "rail-sky",
+    name: "03 Rail Sky",
+    shortName: "Sky",
+    themeClass: "home-preview-rail-sky",
+    intent: "淡い青で試験カードを軽く見せる案"
   },
   {
-    id: "trello-board",
-    name: "04 Trello Board",
-    shortName: "Board",
-    themeClass: "home-preview-trello-board",
-    intent: "公開中、準備中、確認中を列で分ける案",
-    layout: "kanban"
+    id: "rail-amber",
+    name: "04 Rail Amber",
+    shortName: "Amber",
+    themeClass: "home-preview-rail-amber",
+    intent: "机上の紙に近い暖色案"
   },
   {
-    id: "calendar-plan",
-    name: "05 Calendar Plan",
-    shortName: "Calendar",
-    themeClass: "home-preview-calendar-plan",
-    intent: "日程と試験を同時に見る案",
-    layout: "calendar"
+    id: "rail-lilac",
+    name: "05 Rail Lilac",
+    shortName: "Lilac",
+    themeClass: "home-preview-rail-lilac",
+    intent: "柔らかい紫で候補画面らしくする案"
   },
   {
-    id: "cover-rail",
-    name: "06 Cover Rail",
-    shortName: "Rail",
-    themeClass: "home-preview-cover-rail",
-    intent: "横長の表紙レールから選ぶ案",
-    layout: "rail"
+    id: "rail-forest",
+    name: "06 Rail Forest",
+    shortName: "Forest",
+    themeClass: "home-preview-rail-forest",
+    intent: "採用方向の青緑を少し濃くした基準案"
   },
   {
-    id: "command-search",
-    name: "07 Command Search",
-    shortName: "Search",
-    themeClass: "home-preview-command-search",
-    intent: "検索とキーボード選択を主軸にする案",
-    layout: "command"
+    id: "rail-coral",
+    name: "07 Rail Coral",
+    shortName: "Coral",
+    themeClass: "home-preview-rail-coral",
+    intent: "開始ボタンを暖色で強調する案"
   },
   {
-    id: "metrics-hub",
-    name: "08 Metrics Hub",
-    shortName: "Metrics",
-    themeClass: "home-preview-metrics-hub",
-    intent: "指標と試験一覧を同時に出す案",
-    layout: "analytics"
+    id: "rail-steel",
+    name: "08 Rail Steel",
+    shortName: "Steel",
+    themeClass: "home-preview-rail-steel",
+    intent: "少し硬い管理画面寄りの案"
   },
   {
-    id: "library-shelf",
-    name: "09 Library Shelf",
-    shortName: "Shelf",
-    themeClass: "home-preview-library-shelf",
-    intent: "資料室の棚のように表紙を分類する案",
-    layout: "shelf"
+    id: "rail-paper",
+    name: "09 Rail Paper",
+    shortName: "Paper",
+    themeClass: "home-preview-rail-paper",
+    intent: "共通テスト紙面に合わせた白紙系の案"
   },
   {
-    id: "mobile-stack",
-    name: "10 Mobile Stack",
-    shortName: "Mobile",
-    themeClass: "home-preview-mobile-stack",
-    intent: "スマホでも同じ優先順位で選べる案",
-    layout: "mobile"
+    id: "rail-wood",
+    name: "10 Rail Wood",
+    shortName: "Wood",
+    themeClass: "home-preview-rail-wood",
+    intent: "木の背景になじむ半透明紙面の案"
   }
 ];
 
@@ -150,7 +127,7 @@ function MiniCard({ exam }: { exam: Exam }) {
   );
 }
 
-function renderHomeLayout(layout: HomeLayout, exams: Exam[]) {
+function renderHomeLayout(exams: Exam[]) {
   const [featured, second = featured, third = second] = exams;
   const cards = [featured, second, third].filter((exam): exam is Exam => Boolean(exam));
 
@@ -158,167 +135,21 @@ function renderHomeLayout(layout: HomeLayout, exams: Exam[]) {
     return <p className="empty-state">公開中の試験がありません。</p>;
   }
 
-  if (layout === "spotlight") {
-    return (
-      <div className="home-layout-spotlight">
-        <Cover exam={featured} />
-        <section>
-          <span>次に開始</span>
-          <h3>{featured.title}</h3>
-          <MetricStrip exam={featured} />
-          <div className="home-stack-list">
-            {cards.slice(1).map((exam, index) => (
-              <MiniCard exam={exam} key={`${exam.id}-stack-${index}`} />
-            ))}
-          </div>
-        </section>
-      </div>
-    );
-  }
-
-  if (layout === "grid") {
-    return (
-      <div className="home-layout-grid">
-        {cards.map((exam, index) => (
-          <MiniCard exam={exam} key={`${exam.id}-grid-${index}`} />
-        ))}
-      </div>
-    );
-  }
-
-  if (layout === "table") {
-    return (
-      <div className="home-layout-table" role="table">
-        <div className="home-table-head" role="row">
-          <span>試験</span>
-          <span>時間</span>
-          <span>設問</span>
-          <span>配点</span>
-        </div>
-        {cards.map((exam, index) => (
-          <div className="home-table-row" key={`${exam.id}-row-${index}`} role="row">
-            <strong>{exam.title}</strong>
-            <span>{exam.durationMinutes}分</span>
-            <span>{exam.questions.length}問</span>
-            <span>{exam.totalPoints}点</span>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (layout === "kanban") {
-    return (
-      <div className="home-layout-kanban">
-        {["公開中", "確認中", "準備中"].map((column, index) => (
-          <section key={column}>
-            <h3>{column}</h3>
-            <MiniCard exam={cards[index % cards.length]} />
-          </section>
-        ))}
-      </div>
-    );
-  }
-
-  if (layout === "calendar") {
-    return (
-      <div className="home-layout-calendar">
-        {["月", "火", "水", "木", "金"].map((day, index) => (
-          <section className={index === 2 ? "active" : ""} key={day}>
-            <strong>{day}</strong>
-            {index === 1 || index === 2 || index === 4 ? <MiniCard exam={cards[index % cards.length]} /> : <span />}
-          </section>
-        ))}
-      </div>
-    );
-  }
-
-  if (layout === "rail") {
-    return (
-      <div className="home-layout-rail">
-        {cards.map((exam, index) => (
-          <article className="home-rail-card" key={`${exam.id}-rail-${index}`}>
-            <Cover exam={exam} />
-            <strong>{exam.title}</strong>
-            <MetricStrip exam={exam} />
-          </article>
-        ))}
-      </div>
-    );
-  }
-
-  if (layout === "command") {
-    return (
-      <div className="home-layout-command">
-        <div className="home-command-box">試験名で検索...</div>
-        <div className="home-command-results">
-          {cards.map((exam, index) => (
-            <article className={index === 0 ? "active" : ""} key={`${exam.id}-command-${index}`}>
-              <strong>{exam.title}</strong>
-              <span>
-                {exam.durationMinutes}分 / {exam.questions.length}問 / {exam.totalPoints}点
-              </span>
-            </article>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (layout === "analytics") {
-    return (
-      <div className="home-layout-analytics">
-        <div className="home-stat-row">
-          <strong>{cards.length}</strong>
-          <strong>{cards.reduce((sum, exam) => sum + exam.questions.length, 0)}</strong>
-          <strong>{cards.reduce((sum, exam) => sum + exam.totalPoints, 0)}</strong>
-        </div>
-        <div className="home-bars">
-          {cards.map((exam, index) => (
-            <span
-              key={`${exam.id}-bar-${index}`}
-              style={{ "--bar-value": `${Math.max(18, exam.durationMinutes)}%` } as CSSProperties}
-            >
-              {exam.title}
-            </span>
-          ))}
-        </div>
-        <MiniCard exam={featured} />
-      </div>
-    );
-  }
-
-  if (layout === "shelf") {
-    return (
-      <div className="home-layout-shelf">
-        <aside>
-          <span>公開中</span>
-          <span>最近</span>
-          <span>高配点</span>
-        </aside>
-        <section>
-          {cards.map((exam, index) => (
-            <MiniCard exam={exam} key={`${exam.id}-shelf-${index}`} />
-          ))}
-        </section>
-      </div>
-    );
-  }
-
   return (
-    <div className="home-layout-mobile">
-      <div className="home-phone-frame">
-        <header>ウェブ模試</header>
-        {cards.map((exam, index) => (
-          <MiniCard exam={exam} key={`${exam.id}-mobile-${index}`} />
-        ))}
-      </div>
+    <div className="home-layout-rail">
+      {cards.map((exam, index) => (
+        <article className="home-rail-card" key={`${exam.id}-rail-${index}`}>
+          <Cover exam={exam} />
+          <strong>{exam.title}</strong>
+          <MetricStrip exam={exam} />
+        </article>
+      ))}
     </div>
   );
 }
 
 export function HomeDesignPreview({ exams }: HomeDesignPreviewProps) {
-  const [activeCandidateId, setActiveCandidateId] = useState(homeCandidates[0].id);
+  const [activeCandidateId, setActiveCandidateId] = useState("rail-forest");
   const activeCandidate =
     homeCandidates.find((candidate) => candidate.id === activeCandidateId) ?? homeCandidates[0];
   const previewExams = exams.slice(0, 3);
@@ -358,7 +189,7 @@ export function HomeDesignPreview({ exams }: HomeDesignPreviewProps) {
           <span>{previewExams.length} exams</span>
         </header>
 
-        <div className={`home-preview ${activeCandidate.themeClass}`}>{renderHomeLayout(activeCandidate.layout, previewExams)}</div>
+        <div className={`home-preview ${activeCandidate.themeClass}`}>{renderHomeLayout(previewExams)}</div>
       </article>
     </section>
   );
