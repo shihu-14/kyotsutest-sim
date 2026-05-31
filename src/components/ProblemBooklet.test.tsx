@@ -25,6 +25,7 @@ describe("ProblemBooklet", () => {
     await user.click(screen.getByRole("button", { name: "1 4" }));
 
     expect(onToggleAnswer).toHaveBeenCalledWith(question, "4");
+    expect(screen.getByRole("button", { name: "1 4" })).toHaveStyle("--mark-y-correction: -200%");
   });
 
   it("renders selected exact-page marks as filled in review state", () => {

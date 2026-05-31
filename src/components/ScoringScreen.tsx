@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Exam, GradeSummary, UserAnswers } from "../types";
 import { gradeExam } from "../utils/answer";
 
@@ -13,6 +13,8 @@ interface ScoringScreenProps {
 export function ScoringScreen({ exam, answers, startComplete = false, onReview, onRestart }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);
   const [visibleCount, setVisibleCount] = useState(() => (startComplete ? summary.gradedQuestions.length : 0));
+  const rowRefs = useRef<Array<HTMLElement | null>>([]);
+  const resultPanelRef = useRef<HTMLElement | null>(null);
   const visibleItems = summary.gradedQuestions.slice(0, visibleCount);
   const currentScore = visibleItems.reduce((sum, item) => sum + item.earnedPoints, 0);
   const isComplete = visibleCount >= summary.gradedQuestions.length;
@@ -28,10 +30,23 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
 
     const timeoutId = window.setTimeout(() => {
       setVisibleCount((count) => count + 1);
-    }, visibleCount === 0 ? 500 : 420);
+    }, visibleCount === 0 ? 420 : 300);
 
     return () => window.clearTimeout(timeoutId);
   }, [summary.gradedQuestions.length, visibleCount]);
+
+  useEffect(() => {
+    if (startComplete || visibleCount === 0) {
+      return undefined;
+    }
+
+    const animationId = window.requestAnimationFrame(() => {
+      const target = isComplete ? resultPanelRef.current : rowRefs.current[visibleCount - 1];
+      target?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    });
+
+    return () => window.cancelAnimationFrame(animationId);
+  }, [isComplete, startComplete, visibleCount]);
 
   return (
     <main className="screen scoring-screen">
@@ -52,7 +67,13 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
         {summary.gradedQuestions.map((item, index) => {
           const isVisible = index < visibleCount;
           return (
-            <article className={`grading-row ${isVisible ? "visible" : ""}`} key={item.question.id}>
+            <article
+              className={`grading-row ${isVisible ? "visible" : ""}`}
+              key={item.question.id}
+              ref={(element) => {
+                rowRefs.current[index] = element;
+              }}
+            >
               <div>
                 <span className="mark-label">{item.question.label}</span>
                 <strong>{item.question.section}</strong>
@@ -85,7 +106,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
       </section>
 
       {isComplete ? (
-        <section className="result-panel" aria-live="polite">
+        <section className="result-panel" aria-live="polite" ref={resultPanelRef}>
           <p>最終得点</p>
           <strong>
             {summary.totalScore}

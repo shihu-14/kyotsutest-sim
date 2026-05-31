@@ -127,11 +127,14 @@ function PageImageMarks({ areas, questionsById, answers, reviewMode, onToggleAns
         const checked = selected.includes(area.value);
         const correct = reviewMode && !checked && question.correct.includes(area.value);
         const option = question.options.find((candidate) => candidate.value === area.value);
+        const widthPercent = area.widthPercent ?? 3.2;
+        const heightPercent = area.heightPercent ?? 2.6;
         const style = {
           "--mark-x": `${area.xPercent}%`,
           "--mark-y": `${area.yPercent}%`,
-          "--mark-width": `${area.widthPercent ?? 3.2}%`,
-          "--mark-height": `${area.heightPercent ?? 2.6}%`
+          "--mark-width": `${widthPercent}%`,
+          "--mark-height": `${heightPercent}%`,
+          "--mark-y-correction": "-200%"
         } as CSSProperties;
 
         return (

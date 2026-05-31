@@ -33,7 +33,8 @@ export function App() {
     }
 
     const nextDeadline = Date.now() + selectedExam.durationMinutes * 60 * 1000;
-    setAnswers(loadAnswers(selectedExam.id));
+    clearAnswers(selectedExam.id);
+    setAnswers({});
     setDeadline(nextDeadline);
     saveDeadline(selectedExam.id, nextDeadline);
     setCurrentPageId(selectedExam.pages[0]?.id ?? "");

@@ -407,9 +407,8 @@ button:disabled {
   min-height: 0;
   overflow: auto;
   border-radius: 8px;
-  background:
-    linear-gradient(rgba(70, 39, 16, 0.12), rgba(70, 39, 16, 0.12)),
-    url("../assets/wood-desk.jpg") center / cover;
+  background: #717982;
+  box-shadow: inset 0 0 0 1px rgba(16, 24, 32, 0.12);
   padding: 14px;
 }
 
@@ -529,7 +528,7 @@ button:disabled {
   border-radius: 50%;
   background: transparent;
   padding: 0;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, calc(-50% + var(--mark-y-correction, 0%)));
   pointer-events: auto;
 }
 
@@ -1046,11 +1045,11 @@ button:disabled {
 .red-pen.cross .cross-stroke {
   stroke-dasharray: 52;
   stroke-dashoffset: 52;
-  animation: draw-stamp 180ms ease-out forwards;
+  animation: draw-stamp 105ms ease-out forwards;
 }
 
 .red-pen.cross .cross-stroke.second {
-  animation-delay: 180ms;
+  animation-delay: 100ms;
 }
 
 .earned-points {
