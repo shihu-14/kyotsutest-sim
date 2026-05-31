@@ -130,6 +130,31 @@ describe("ExamList", () => {
     );
   });
 
+  it("opens the home screen design candidate mode and switches between ten candidates", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "ホーム候補" }));
+
+    expect(screen.getByRole("heading", { name: "ホーム画面デザイン候補" })).toBeInTheDocument();
+    expect(screen.getAllByRole("tab")).toHaveLength(10);
+    expect(screen.getByRole("article", { name: "01 Exam Cardsのプレビュー" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /06 Bento Board/ }));
+
+    expect(screen.getByRole("article", { name: "06 Bento Boardのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
+  });
+
   it("opens the page navigation design candidate mode and switches between ten candidates", async () => {
     const user = userEvent.setup();
 
@@ -147,11 +172,11 @@ describe("ExamList", () => {
 
     expect(screen.getByRole("heading", { name: "ページ遷移UI候補" })).toBeInTheDocument();
     expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "02 Exam Railのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "01 Fine Outlineのプレビュー" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: /09 Orange Rail/ }));
+    await user.click(screen.getByRole("tab", { name: /10 Bold Outline/ }));
 
-    expect(screen.getByRole("article", { name: "09 Orange Railのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "10 Bold Outlineのプレビュー" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
   });
 });

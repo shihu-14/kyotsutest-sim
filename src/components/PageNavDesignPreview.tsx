@@ -15,79 +15,79 @@ interface PageNavCandidate {
 
 const pageNavCandidates: PageNavCandidate[] = [
   {
-    id: "flat-rail",
-    name: "01 Flat Rail",
-    shortName: "Flat",
-    themeClass: "page-nav-flat-rail",
-    intent: "2番を基準にした最も素直な分割レール"
+    id: "fine-outline",
+    name: "01 Fine Outline",
+    shortName: "Fine",
+    themeClass: "page-nav-fine-outline",
+    intent: "10番を基準にした細い白線のアウトライン"
   },
   {
-    id: "exam-rail",
-    name: "02 Exam Rail",
-    shortName: "Exam",
-    themeClass: "page-nav-exam-rail",
-    intent: "実試験へ採用する答案欄寄せの分割レール"
+    id: "glass-outline",
+    name: "02 Glass Outline",
+    shortName: "Glass",
+    themeClass: "page-nav-glass-outline",
+    intent: "透明面と白線を重ねるアウトライン"
   },
   {
-    id: "compact-rail",
-    name: "03 Compact Rail",
+    id: "compact-outline",
+    name: "03 Compact Outline",
     shortName: "Compact",
-    themeClass: "page-nav-compact-rail",
-    intent: "高さを抑えて問題表示を広く残す分割レール"
+    themeClass: "page-nav-compact-outline",
+    intent: "高さを抑えたアウトライン"
   },
   {
-    id: "ticket-rail",
-    name: "04 Ticket Rail",
+    id: "ticket-outline",
+    name: "04 Ticket Outline",
     shortName: "Ticket",
-    themeClass: "page-nav-ticket-rail",
-    intent: "受験票の区切りを思わせる分割レール"
+    themeClass: "page-nav-ticket-outline",
+    intent: "切符形状を線だけで見せるアウトライン"
   },
   {
-    id: "dark-rail",
-    name: "05 Dark Rail",
+    id: "dark-outline",
+    name: "05 Dark Outline",
     shortName: "Dark",
-    themeClass: "page-nav-dark-rail",
-    intent: "暗色バーで現在ページを強く出す分割レール"
+    themeClass: "page-nav-dark-outline",
+    intent: "暗い半透明バーに白線を乗せるアウトライン"
   },
   {
-    id: "paper-rail",
-    name: "06 Paper Rail",
+    id: "paper-outline",
+    name: "06 Paper Outline",
     shortName: "Paper",
-    themeClass: "page-nav-paper-rail",
-    intent: "紙片が連なるように見せる分割レール"
+    themeClass: "page-nav-paper-outline",
+    intent: "紙片の縁取りだけを残すアウトライン"
   },
   {
-    id: "progress-rail",
-    name: "07 Progress Rail",
+    id: "progress-outline",
+    name: "07 Progress Outline",
     shortName: "Progress",
-    themeClass: "page-nav-progress-rail",
-    intent: "左からの進行量を背景で示す分割レール"
+    themeClass: "page-nav-progress-outline",
+    intent: "進行量を薄い線で示すアウトライン"
   },
   {
-    id: "index-rail",
-    name: "08 Index Rail",
+    id: "index-outline",
+    name: "08 Index Outline",
     shortName: "Index",
-    themeClass: "page-nav-index-rail",
-    intent: "見出し付きでページ群を索引化する分割レール"
+    themeClass: "page-nav-index-outline",
+    intent: "PAGE見出しだけ濃くしたアウトライン"
   },
   {
-    id: "orange-rail",
-    name: "09 Orange Rail",
+    id: "orange-outline",
+    name: "09 Orange Outline",
     shortName: "Orange",
-    themeClass: "page-nav-orange-rail",
-    intent: "答案欄のオレンジに寄せた分割レール"
+    themeClass: "page-nav-orange-outline",
+    intent: "答案欄色の線で揃えるアウトライン"
   },
   {
-    id: "outline-rail",
-    name: "10 Outline Rail",
-    shortName: "Outline",
-    themeClass: "page-nav-outline-rail",
-    intent: "線だけで軽く見せる分割レール"
+    id: "bold-outline",
+    name: "10 Bold Outline",
+    shortName: "Bold",
+    themeClass: "page-nav-bold-outline",
+    intent: "少し太めの線で視認性を上げるアウトライン"
   }
 ];
 
 export function PageNavDesignPreview({ exam }: PageNavDesignPreviewProps) {
-  const [activeCandidateId, setActiveCandidateId] = useState(pageNavCandidates[1].id);
+  const [activeCandidateId, setActiveCandidateId] = useState(pageNavCandidates[0].id);
   const activeCandidate =
     pageNavCandidates.find((candidate) => candidate.id === activeCandidateId) ?? pageNavCandidates[0];
   const pageItems = [
