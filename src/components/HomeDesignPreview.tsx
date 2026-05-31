@@ -15,74 +15,74 @@ interface HomeCandidate {
 
 const homeCandidates: HomeCandidate[] = [
   {
-    id: "exam-cards",
-    name: "01 Exam Cards",
-    shortName: "Cards",
-    themeClass: "home-preview-exam-cards",
-    intent: "現在のカード一覧を整理して見せる基準案"
+    id: "command-slate",
+    name: "01 Command Slate",
+    shortName: "Slate",
+    themeClass: "home-preview-command-slate",
+    intent: "3番の運用ダッシュボードを基準にした濃色案"
   },
   {
-    id: "desk-hero",
-    name: "02 Desk Hero",
-    shortName: "Desk",
-    themeClass: "home-preview-desk-hero",
-    intent: "木の机上に試験を置いた導入画面"
+    id: "vercel-grid",
+    name: "02 Vercel Grid",
+    shortName: "Vercel",
+    themeClass: "home-preview-vercel-grid",
+    intent: "余白と細線で試験を管理する白基調案"
   },
   {
-    id: "command-dashboard",
-    name: "03 Command Dashboard",
-    shortName: "Command",
-    themeClass: "home-preview-command-dashboard",
-    intent: "運用画面として密度高く管理する案"
+    id: "linear-board",
+    name: "03 Linear Board",
+    shortName: "Linear",
+    themeClass: "home-preview-linear-board",
+    intent: "一覧性と状態表示を優先する暗色ボード案"
   },
   {
-    id: "cover-gallery",
-    name: "04 Cover Gallery",
-    shortName: "Gallery",
-    themeClass: "home-preview-cover-gallery",
-    intent: "表紙を大きく並べるギャラリー案"
+    id: "github-issues",
+    name: "04 GitHub Issues",
+    shortName: "Issues",
+    themeClass: "home-preview-github-issues",
+    intent: "行動ボタンを抑えて状態確認を前面に出す案"
   },
   {
-    id: "minimal-table",
-    name: "05 Minimal Table",
-    shortName: "Table",
-    themeClass: "home-preview-minimal-table",
-    intent: "余白を削って表形式で選ぶ案"
+    id: "notion-desk",
+    name: "05 Notion Desk",
+    shortName: "Notion",
+    themeClass: "home-preview-notion-desk",
+    intent: "表紙とメモ情報を静かに整理する白背景案"
   },
   {
-    id: "bento-board",
-    name: "06 Bento Board",
-    shortName: "Bento",
-    themeClass: "home-preview-bento-board",
-    intent: "機能単位のタイルで入口を分ける案"
+    id: "stripe-metrics",
+    name: "06 Stripe Metrics",
+    shortName: "Metrics",
+    themeClass: "home-preview-stripe-metrics",
+    intent: "指標とカードを同じ面に置く分析寄り案"
   },
   {
-    id: "kanban-shelves",
-    name: "07 Kanban Shelves",
-    shortName: "Kanban",
-    themeClass: "home-preview-kanban-shelves",
-    intent: "公開中・編集中・分析を列で分ける案"
+    id: "figma-canvas",
+    name: "07 Figma Canvas",
+    shortName: "Canvas",
+    themeClass: "home-preview-figma-canvas",
+    intent: "操作バーと作業面をはっきり分ける案"
   },
   {
-    id: "kiosk-launch",
-    name: "08 Kiosk Launch",
-    shortName: "Kiosk",
-    themeClass: "home-preview-kiosk-launch",
-    intent: "試験開始だけを強く出す端末風の案"
+    id: "school-console",
+    name: "08 School Console",
+    shortName: "School",
+    themeClass: "home-preview-school-console",
+    intent: "教務システムのように選択しやすい案"
   },
   {
-    id: "library-split",
-    name: "09 Library Split",
-    shortName: "Library",
-    themeClass: "home-preview-library-split",
-    intent: "左に分類、右に試験を置く資料室風の案"
+    id: "paper-admin",
+    name: "09 Paper Admin",
+    shortName: "Paper",
+    themeClass: "home-preview-paper-admin",
+    intent: "答案用紙色に合わせた紙面管理案"
   },
   {
-    id: "mobile-stack",
-    name: "10 Mobile Stack",
-    shortName: "Stack",
-    themeClass: "home-preview-mobile-stack",
-    intent: "スマホ幅でもそのまま使える縦積み案"
+    id: "wood-terminal",
+    name: "10 Wood Terminal",
+    shortName: "Wood",
+    themeClass: "home-preview-wood-terminal",
+    intent: "木の背景上に管理端末を置く案"
   }
 ];
 
@@ -143,8 +143,8 @@ export function HomeDesignPreview({ exams }: HomeDesignPreviewProps) {
           <div className="home-sample-content">
             <aside className="home-sample-side">
               <span>公開中</span>
-              <span>編集</span>
-              <span>履歴</span>
+              <span>直近編集</span>
+              <span>分析</span>
             </aside>
             <div className="home-sample-list">
               {previewExams.map((exam, index) => (

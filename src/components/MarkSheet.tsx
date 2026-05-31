@@ -33,15 +33,6 @@ export function MarkSheet({
       <section className="answer-table" aria-label="解答欄">
         <div className="answer-title">解　答　欄</div>
         <div className="answer-grid" role="table">
-          <div className="answer-grid-head answer-number-head" role="columnheader">
-            解答番号
-          </div>
-          <div className="answer-grid-head answer-options-head" role="columnheader">
-            {digitLabels.map((label) => (
-              <span key={label}>{label}</span>
-            ))}
-          </div>
-
           {exam.questions.map((question, index) => {
             const selected = answers[question.id] ?? [];
             const isActive = question.pageId === activePageId;

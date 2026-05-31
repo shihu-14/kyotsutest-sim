@@ -93,8 +93,26 @@ describe("ExamRunner", () => {
     expect(document.querySelector(".booklet-scroll-surface")).toBeInTheDocument();
   });
 
-  it("uses the exact image scroll surface for reproduced exam pages", () => {
+  it("uses the common exact scroll surface for generated and reproduced exam pages", () => {
     const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+
+    const firstRender = render(
+      <ExamRunner
+        answers={{}}
+        currentPageId="p1"
+        deadline={Date.now() + 60_000}
+        exam={sampleExams[0]}
+        onChangePage={vi.fn()}
+        onExpire={vi.fn()}
+        onFinish={vi.fn()}
+        onPause={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(document.querySelector(".booklet-scroll-surface.exact-scroll-surface")).toBeInTheDocument();
+
+    firstRender.unmount();
 
     render(
       <ExamRunner

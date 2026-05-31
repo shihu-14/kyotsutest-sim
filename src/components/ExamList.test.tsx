@@ -147,11 +147,11 @@ describe("ExamList", () => {
 
     expect(screen.getByRole("heading", { name: "ホーム画面デザイン候補" })).toBeInTheDocument();
     expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Exam Cardsのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "01 Command Slateのプレビュー" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: /06 Bento Board/ }));
+    await user.click(screen.getByRole("tab", { name: /06 Stripe Metrics/ }));
 
-    expect(screen.getByRole("article", { name: "06 Bento Boardのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "06 Stripe Metricsのプレビュー" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
   });
 

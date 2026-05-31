@@ -204,11 +204,7 @@ export function ExamRunner({
               onKeyDown={handleBookletKeyDown}
               onWheel={handleBookletWheel}
             >
-              <div
-                className={`booklet-scroll-surface ${
-                  showCover || page.pageImageUrl ? "exact-scroll-surface" : ""
-                }`}
-              >
+              <div className="booklet-scroll-surface exact-scroll-surface">
                 {showCover ? (
                   <article className="booklet-page exact-page cover-page-display" aria-label={`${exam.title}の表紙`}>
                     <div className="exact-page-frame cover-page-frame">
