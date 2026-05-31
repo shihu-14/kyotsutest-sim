@@ -467,13 +467,22 @@ button:disabled {
 }
 
 .booklet-page {
+  --booklet-page-color: rgb(252, 252, 252);
+  --booklet-line-height: 1.72;
+  --booklet-padding-top: clamp(28px, 5vw, 58px);
+  --booklet-padding-right: clamp(26px, 5vw, 58px);
+  --booklet-padding-bottom: clamp(34px, 5vw, 62px);
+  --booklet-padding-left: clamp(26px, 5vw, 58px);
   min-height: 0;
   height: 100%;
   overflow: auto;
-  padding: clamp(24px, 5vw, 58px);
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.86)),
-    repeating-linear-gradient(0deg, transparent 0, transparent 31px, rgba(70, 55, 35, 0.08) 32px);
+  padding: var(--booklet-padding-top) var(--booklet-padding-right) var(--booklet-padding-bottom)
+    var(--booklet-padding-left);
+  background: var(--booklet-page-color);
+  color: #111;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  font-size: 0.98rem;
+  line-height: var(--booklet-line-height);
 }
 
 .booklet-page.exact-page {
@@ -545,27 +554,38 @@ button:disabled {
 }
 
 .page-number {
-  margin-bottom: 12px;
-  color: #6d665b;
-  font-family: Inter, system-ui, sans-serif;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-bottom: 14px;
+  color: #111;
+  font-family: "Times New Roman", serif;
+  font-size: 0.78rem;
   text-align: center;
 }
 
 .booklet-page h2 {
-  border-bottom: 2px solid #263433;
-  margin: 0 0 16px;
-  padding-bottom: 8px;
-  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  display: inline-block;
+  border: 0;
+  margin: 0 0 0.7em;
+  padding: 0;
+  color: #111;
+  font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 900;
 }
 
 .booklet-page h3 {
-  margin: 16px 0 10px;
-  font-size: 1.1rem;
+  margin: 1.4em 0 0.45em;
+  color: #111;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 1rem;
+  font-weight: 900;
 }
 
 .booklet-page p {
-  margin: 0.55em 0;
-  color: #24302f;
+  margin: 0.35em 0;
+  color: #111;
   font-size: 0.98rem;
 }
 
@@ -576,9 +596,18 @@ button:disabled {
 }
 
 .question-block {
-  border-top: 1px solid #ddd1bd;
-  margin-top: 14px;
-  padding-top: 12px;
+  border-top: 0;
+  margin-top: 0.8em;
+  padding-top: 0;
+}
+
+.question-block h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  margin: 0.4em 0 0.65em;
+  font-size: 0.98rem;
+  font-weight: 500;
 }
 
 .mark-label,
@@ -586,34 +615,42 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
-  border: 2px solid #273534;
-  margin-right: 8px;
-  background: white;
-  color: #273534;
+  min-width: 2.3em;
+  height: 1.35em;
+  border: 2px solid #111;
+  margin-right: 0.4em;
+  background: var(--booklet-page-color);
+  color: #111;
+  font-family: "Times New Roman", serif;
   font-weight: 900;
   line-height: 1;
 }
 
 .choice-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 8px;
-  margin-top: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0;
+  border: 1.4px solid #111;
+  margin: 0.65em 0 0.9em;
 }
 
 .choice-button {
   display: grid;
-  grid-template-columns: 34px 1fr;
+  grid-template-columns: 1.9em 1fr;
   align-items: center;
-  gap: 10px;
-  border: 1px solid #b8ad99;
-  border-radius: 8px;
-  background: #fffdf7;
-  color: #263433;
-  padding: 8px;
+  gap: 0.45em;
+  border: 0;
+  border-right: 1px solid #111;
+  border-radius: 0;
+  background: var(--booklet-page-color);
+  color: #111;
+  padding: 0.42em 0.55em;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
   text-align: left;
+}
+
+.choice-button:last-child {
+  border-right: 0;
 }
 
 .choice-button.selected {
@@ -651,18 +688,19 @@ button:disabled {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: 2px solid currentColor;
+  width: 1.35em;
+  height: 1.35em;
+  border: 1.5px solid currentColor;
   border-radius: 50%;
   font-family: Inter, system-ui, sans-serif;
   font-weight: 900;
 }
 
 .problem-figure {
-  border: 1px dashed #9c8f7b;
-  margin: 20px 0;
-  padding: 14px;
+  border: 0;
+  margin: 1em 0;
+  padding: 0;
+  text-align: center;
 }
 
 .problem-figure img {
@@ -680,9 +718,9 @@ button:disabled {
 }
 
 .problem-figure figcaption {
-  margin-top: 10px;
-  color: #60584f;
-  font-size: 0.88rem;
+  margin-top: 0.35em;
+  color: #333;
+  font-size: 0.75rem;
 }
 
 .booklet-note,

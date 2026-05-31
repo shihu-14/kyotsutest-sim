@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import type { AnswerValue, ExamPage, PageMarkArea, QuestionSlot, UserAnswers } from "../types";
-import { renderMathSegments, mathToHtml } from "../utils/latex";
+import { normalizePreviewText, renderMathSegments, mathToHtml } from "../utils/latex";
 
 interface ProblemBookletProps {
   page: ExamPage;
@@ -36,8 +36,17 @@ export function ProblemBooklet({
     );
   }
 
+  const pageStyle = {
+    "--booklet-page-color": page.layout?.pageColor,
+    "--booklet-line-height": page.layout?.lineHeight,
+    "--booklet-padding-top": page.layout?.paddingTop,
+    "--booklet-padding-right": page.layout?.paddingRight,
+    "--booklet-padding-bottom": page.layout?.paddingBottom,
+    "--booklet-padding-left": page.layout?.paddingLeft
+  } as CSSProperties;
+
   return (
-    <article className="booklet-page" aria-label={`${page.title}の問題冊子`}>
+    <article className="booklet-page" aria-label={`${page.title}の問題冊子`} style={pageStyle}>
       <div className="page-number">-{page.pageNumber}-</div>
       {page.blocks.map((block, index) => {
         if (block.type === "heading") {
@@ -46,7 +55,7 @@ export function ProblemBooklet({
         }
 
         if (block.type === "paragraph") {
-          return <p key={`${block.type}-${index}`}>{renderMathSegments(block.text)}</p>;
+          return <p key={`${block.type}-${index}`}>{renderMathSegments(normalizePreviewText(block.text))}</p>;
         }
 
         if (block.type === "formula") {
@@ -60,11 +69,12 @@ export function ProblemBooklet({
         }
 
         if (block.type === "figure") {
+          const imageStyle = block.imageStyle ? (block.imageStyle as CSSProperties) : undefined;
           return (
             <figure className="problem-figure" key={`${block.type}-${index}`}>
-              {block.imageUrl ? <img src={block.imageUrl} alt={block.alt} /> : null}
+              {block.imageUrl ? <img src={block.imageUrl} alt={block.alt} style={imageStyle} /> : null}
               {block.tikz ? <pre>{block.tikz}</pre> : null}
-              <figcaption>{block.caption}</figcaption>
+              {block.caption ? <figcaption>{block.caption}</figcaption> : null}
             </figure>
           );
         }
@@ -72,7 +82,7 @@ export function ProblemBooklet({
         if (block.type === "note") {
           return (
             <aside className="booklet-note" key={`${block.type}-${index}`}>
-              {renderMathSegments(block.text)}
+              {renderMathSegments(normalizePreviewText(block.text))}
             </aside>
           );
         }
@@ -159,7 +169,7 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
     <section className="question-block" aria-labelledby={`${question.id}-title`}>
       <h3 id={`${question.id}-title`}>
         <span className="mark-label">{question.label}</span>
-        {renderMathSegments(question.prompt)}
+        {renderMathSegments(normalizePreviewText(question.prompt))}
       </h3>
       <div className="choice-list" role={question.multi ? "group" : "radiogroup"} aria-label={`${question.label}の選択肢`}>
         {question.options.map((option) => {
@@ -184,7 +194,7 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
               onClick={() => onToggleAnswer(question, option.value)}
             >
               <span className="choice-index">{option.label}</span>
-              <span>{renderMathSegments(option.content)}</span>
+              <span>{renderMathSegments(normalizePreviewText(option.content))}</span>
             </button>
           );
         })}
@@ -192,7 +202,7 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
       {reviewMode && isWrong ? (
         <p className="explanation">
           <strong>解説</strong>
-          {renderMathSegments(question.explanation)}
+          {renderMathSegments(normalizePreviewText(question.explanation))}
         </p>
       ) : null}
     </section>

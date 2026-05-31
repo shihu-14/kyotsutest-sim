@@ -25,6 +25,8 @@ export type ProblemBlock =
       caption: string;
       alt: string;
       imageUrl?: string;
+      imageOptions?: string;
+      imageStyle?: Record<string, string>;
       tikz?: string;
     }
   | {
@@ -64,6 +66,14 @@ export interface ExamPage {
   id: string;
   pageNumber: number;
   title: string;
+  layout?: {
+    pageColor?: string;
+    lineHeight?: number;
+    paddingTop?: string;
+    paddingRight?: string;
+    paddingBottom?: string;
+    paddingLeft?: string;
+  };
   pageImageUrl?: string;
   pageImageAlt?: string;
   markAreas?: PageMarkArea[];

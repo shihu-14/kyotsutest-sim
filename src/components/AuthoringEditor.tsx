@@ -131,6 +131,108 @@ function positiveChoiceCount(count: number): number {
   return Number.isFinite(count) && count > 0 ? Math.floor(count) : 1;
 }
 
+function splitTexOptions(input: string): string[] {
+  const parts: string[] = [];
+  let current = "";
+  let depth = 0;
+
+  input.split("").forEach((char) => {
+    if (char === "{") {
+      depth += 1;
+    }
+    if (char === "}") {
+      depth = Math.max(0, depth - 1);
+    }
+    if (char === "," && depth === 0) {
+      parts.push(current.trim());
+      current = "";
+      return;
+    }
+    current += char;
+  });
+
+  if (current.trim()) {
+    parts.push(current.trim());
+  }
+
+  return parts;
+}
+
+function texOptionsToMap(input: string): Map<string, string> {
+  return splitTexOptions(input).reduce((options, part) => {
+    const [rawKey, ...rawValue] = part.split("=");
+    const key = rawKey.trim();
+    if (!key) {
+      return options;
+    }
+    options.set(key, rawValue.length ? rawValue.join("=").trim() : "true");
+    return options;
+  }, new Map<string, string>());
+}
+
+function texLengthToCss(value: string): string | undefined {
+  const compact = value.trim().replace(/\s+/g, "");
+  if (!compact) {
+    return undefined;
+  }
+
+  const textWidthMatch = compact.match(/^([0-9.]+)?\\(?:textwidth|linewidth|hsize|paperwidth)$/);
+  if (textWidthMatch) {
+    const ratio = Number(textWidthMatch[1] ?? 1);
+    return `${Number.isFinite(ratio) ? ratio * 100 : 100}%`;
+  }
+
+  const lengthMatch = compact.match(/^([0-9.]+)(pt|px|em|rem|cm|mm|in|%)$/);
+  if (lengthMatch) {
+    return `${lengthMatch[1]}${lengthMatch[2]}`;
+  }
+
+  if (compact === "\\textwidth" || compact === "\\linewidth" || compact === "\\hsize" || compact === "\\paperwidth") {
+    return "100%";
+  }
+
+  return undefined;
+}
+
+function cssColorFromTex(value: string, colors: Map<string, string>): string | undefined {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  if (trimmed.startsWith("#") || trimmed.startsWith("rgb") || trimmed.startsWith("hsl")) {
+    return trimmed;
+  }
+
+  const rgb = trimmed.match(/^RGB\((\d+),(\d+),(\d+)\)$/);
+  if (rgb) {
+    return `rgb(${rgb[1]}, ${rgb[2]}, ${rgb[3]})`;
+  }
+
+  return colors.get(trimmed) ?? trimmed;
+}
+
+function texColorMap(body: string): Map<string, string> {
+  const colors = new Map<string, string>([
+    ["beige", "rgb(252, 252, 252)"],
+    ["white", "#ffffff"],
+    ["black", "#000000"]
+  ]);
+
+  body.split("\n").forEach((line) => {
+    const match = line.trim().match(/^\\definecolor\{([^}]*)\}\{RGB\}\{([^}]*)\}$/);
+    if (!match) {
+      return;
+    }
+    const values = match[2].split(",").map((value) => Number(value.trim()));
+    if (values.length === 3 && values.every((value) => Number.isFinite(value))) {
+      colors.set(match[1], `rgb(${values[0]}, ${values[1]}, ${values[2]})`);
+    }
+  });
+
+  return colors;
+}
+
 function normalizeFormDraft(draft: ExamDraft): ExamDraft {
   let nextMarkNumber = 1;
 
@@ -199,10 +301,20 @@ function markComment(mark: DraftMark): string {
   return `% --- 解答番号 ${mark.label}: 正解 ${answer} / 配点 ${Math.max(0, mark.points)} / 選択肢 ${positiveChoiceCount(mark.choices)} ---`;
 }
 
+function layoutCommentLines(): string[] {
+  return [
+    "% --- preview設定: 必要なら次の行を有効化して調整 ---",
+    "% \\pagecolor{beige}",
+    "% \\linespread{1.5}",
+    "% \\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}"
+  ];
+}
+
 function serializeSectionSource(section: DraftSection): string {
   const lines = [`\\sectiontitle{${section.title}}`];
 
   lines.push(bodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
+  lines.push(...layoutCommentLines());
   if (section.body.trim()) {
     lines.push(...section.body.trim().split("\n"));
   }
@@ -422,6 +534,100 @@ function createDefaultQuestion(index: number, totalPoints: number, questionCount
   };
 }
 
+function isLayoutCommand(line: string): boolean {
+  return (
+    /^\\(?:pagecolor|linespread|geometry|newgeometry|definecolor|setmainfont|setmainjfont|setsansjfont)\b/.test(line) ||
+    /^\\(?:usepackage|graphicspath|captionsetup|pagestyle|fancyhf|fancyfoot)\b/.test(line)
+  );
+}
+
+function imageStyleFromOptions(rawOptions: string | undefined): Record<string, string> | undefined {
+  if (!rawOptions) {
+    return undefined;
+  }
+
+  const options = texOptionsToMap(rawOptions);
+  const style: Record<string, string> = {};
+  const width = options.get("width");
+  const height = options.get("height");
+  const maxWidth = options.get("max width");
+  const maxHeight = options.get("max height");
+  const scale = Number(options.get("scale"));
+  const trim = options.get("trim");
+
+  const cssWidth = width ? texLengthToCss(width) : undefined;
+  const cssHeight = height ? texLengthToCss(height) : undefined;
+  const cssMaxWidth = maxWidth ? texLengthToCss(maxWidth) : undefined;
+  const cssMaxHeight = maxHeight ? texLengthToCss(maxHeight) : undefined;
+
+  if (cssWidth) {
+    style.width = cssWidth;
+  }
+  if (cssHeight) {
+    style.height = cssHeight;
+  }
+  if (cssMaxWidth) {
+    style.maxWidth = cssMaxWidth;
+  }
+  if (cssMaxHeight) {
+    style.maxHeight = cssMaxHeight;
+  }
+  if (Number.isFinite(scale) && scale > 0) {
+    if (!style.width) {
+      style.width = `${scale * 100}%`;
+    } else {
+      style.transform = `scale(${scale})`;
+      style.transformOrigin = "top center";
+    }
+  }
+  if (options.has("keepaspectratio")) {
+    style.height = style.height ?? "auto";
+    style.objectFit = "contain";
+  }
+  if (trim && options.has("clip")) {
+    const [left, bottom, right, top] = trim.split(/\s+/).map((value) => texLengthToCss(value) ?? "0");
+    style.clipPath = `inset(${top ?? "0"} ${right ?? "0"} ${bottom ?? "0"} ${left ?? "0"})`;
+  }
+
+  return Object.keys(style).length ? style : undefined;
+}
+
+function layoutFromSection(section: DraftSection) {
+  const body = [section.body, ...section.subsections.map((subsection) => subsection.body)].join("\n");
+  const colors = texColorMap(body);
+  const layout: NonNullable<ExamPage["layout"]> = {};
+
+  body.split("\n").forEach((rawLine) => {
+    const line = rawLine.trim();
+    const pageColor = line.match(/^\\pagecolor(?:\[(RGB)\])?\{([^}]*)\}$/);
+    if (pageColor) {
+      const value = pageColor[1] === "RGB" ? `RGB(${pageColor[2]})` : pageColor[2];
+      layout.pageColor = cssColorFromTex(value, colors);
+      return;
+    }
+
+    const lineSpread = line.match(/^\\linespread\{([^}]*)\}$/);
+    if (lineSpread) {
+      const value = Number(lineSpread[1]);
+      if (Number.isFinite(value) && value > 0) {
+        layout.lineHeight = value * 1.15;
+      }
+      return;
+    }
+
+    const geometry = line.match(/^\\(?:newgeometry|geometry)\{([^}]*)\}$/);
+    if (geometry) {
+      const options = texOptionsToMap(geometry[1]);
+      layout.paddingTop = texLengthToCss(options.get("top") ?? "") ?? layout.paddingTop;
+      layout.paddingBottom = texLengthToCss(options.get("bottom") ?? "") ?? layout.paddingBottom;
+      layout.paddingLeft = texLengthToCss(options.get("inner") ?? options.get("left") ?? "") ?? layout.paddingLeft;
+      layout.paddingRight = texLengthToCss(options.get("outer") ?? options.get("right") ?? "") ?? layout.paddingRight;
+    }
+  });
+
+  return Object.keys(layout).length ? layout : undefined;
+}
+
 function paragraphBlocks(body: string): ProblemBlock[] {
   const imageCaption = (imageSource: string) => {
     if (imageSource.startsWith("data:")) {
@@ -435,16 +641,27 @@ function paragraphBlocks(body: string): ProblemBlock[] {
     .split(/\n+/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean)
-    .map<ProblemBlock>((text) => {
+    .map<ProblemBlock | null>((text) => {
       if (text.startsWith("$$") && text.endsWith("$$")) {
         return { type: "formula", latex: text.slice(2, -2) };
+      }
+
+      if (isLayoutCommand(text)) {
+        return null;
       }
 
       const imageMatch = text.match(/^\\includegraphics(?:\[([^\]]*)\])?\{([^}]*)\}$/);
       if (imageMatch) {
         const [_full, options, imageSource] = imageMatch;
         const caption = options ? `${imageCaption(imageSource)} (${options})` : imageCaption(imageSource);
-        return { type: "figure", caption, alt: caption, imageUrl: imageSource };
+        return {
+          type: "figure",
+          caption,
+          alt: caption,
+          imageUrl: imageSource,
+          imageOptions: options,
+          imageStyle: imageStyleFromOptions(options)
+        };
       }
 
       if (text.includes("\\begin{tikzpicture}") || text.includes("\\end{tikzpicture}")) {
@@ -456,7 +673,8 @@ function paragraphBlocks(body: string): ProblemBlock[] {
       }
 
       return { type: "paragraph", text };
-    });
+    })
+    .filter((block): block is ProblemBlock => block !== null);
 }
 
 function buildSectionPageBlocks(section: DraftSection, questions: QuestionSlot[], questionIndex: { value: number }) {
@@ -534,6 +752,7 @@ function buildDraftPages(
       pageImageUrl: shouldUseExactPage ? initialPage?.pageImageUrl : undefined,
       pageImageAlt: shouldUseExactPage ? initialPage?.pageImageAlt : undefined,
       markAreas: shouldUseExactPage ? initialPage?.markAreas : undefined,
+      layout: shouldUseExactPage ? undefined : layoutFromSection(section),
       blocks: buildSectionPageBlocks(section, questions, questionIndex)
     };
   });

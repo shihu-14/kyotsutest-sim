@@ -105,6 +105,15 @@ function markComment(mark: DraftMark): string {
   return `% --- 解答番号 ${mark.label}: 正解 ${answer} / 配点 ${Math.max(0, mark.points)} / 選択肢 ${positiveChoiceCount(mark.choices)} ---`;
 }
 
+function layoutCommentLines(): string[] {
+  return [
+    "% --- preview設定: 必要なら次の行を有効化して調整 ---",
+    "% \\pagecolor{beige}",
+    "% \\linespread{1.5}",
+    "% \\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}"
+  ];
+}
+
 function createSection(index: number, title = `第${index + 1}問`): DraftSection {
   return {
     id: `section-${index + 1}`,
@@ -149,16 +158,36 @@ function appendBody(target: DraftSection | DraftSubsection, line: string): void 
   target.body = target.body ? `${target.body}\n${line}` : line;
 }
 
+function isPreviewLayoutLine(line: string): boolean {
+  return /^\\(?:pagecolor|linespread|geometry|newgeometry|definecolor)\b/.test(line);
+}
+
+function isIgnoredPreambleLine(line: string): boolean {
+  return /^\\(?:usepackage|usetikzlibrary|graphicspath|captionsetup|pagestyle|fancyhf|fancyfoot|fancypagestyle|renewcommand|newcommand|def|setcounter|newcounter|setmainfont|setmainjfont|setsansjfont|setul|linespread|pagecolor|definecolor|geometry|newgeometry)\b/.test(
+    line
+  );
+}
+
 export function parseAuthoringDraft(source: string): ExamDraft {
   const sections: DraftSection[] = [];
   let currentSection: DraftSection | null = null;
   let currentSubsection: DraftSubsection | null = null;
+  const globalLayoutLines: string[] = [];
+  let inCommentBlock = false;
   let markIndex = 0;
+
+  const applyGlobalLayout = (section: DraftSection) => {
+    if (!globalLayoutLines.length) {
+      return;
+    }
+    globalLayoutLines.forEach((line) => appendBody(section, line));
+  };
 
   const ensureSection = () => {
     if (!currentSection) {
       currentSection = createSection(sections.length);
       sections.push(currentSection);
+      applyGlobalLayout(currentSection);
     }
 
     return currentSection;
@@ -166,7 +195,16 @@ export function parseAuthoringDraft(source: string): ExamDraft {
 
   source.split("\n").forEach((rawLine) => {
     const line = rawLine.trim();
+    if (line.startsWith("\\begin{comment}")) {
+      inCommentBlock = true;
+      return;
+    }
+    if (line.startsWith("\\end{comment}")) {
+      inCommentBlock = false;
+      return;
+    }
     if (
+      inCommentBlock ||
       !line ||
       line.startsWith("%") ||
       line.startsWith("\\documentclass") ||
@@ -176,10 +214,28 @@ export function parseAuthoringDraft(source: string): ExamDraft {
       return;
     }
 
+    if (!currentSection && isPreviewLayoutLine(line)) {
+      globalLayoutLines.push(line);
+      return;
+    }
+
+    if (!currentSection && isIgnoredPreambleLine(line)) {
+      return;
+    }
+
     const titleMatch = line.match(/^\\sectiontitle\{([^}]*)\}$/);
     if (titleMatch) {
       currentSection = createSection(sections.length, titleMatch[1]);
       sections.push(currentSection);
+      applyGlobalLayout(currentSection);
+      currentSubsection = null;
+      return;
+    }
+
+    if (line.startsWith("\\nextmondai")) {
+      currentSection = createSection(sections.length);
+      sections.push(currentSection);
+      applyGlobalLayout(currentSection);
       currentSubsection = null;
       return;
     }
@@ -242,6 +298,7 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
   draft.sections.forEach((section) => {
     lines.push("", `\\sectiontitle{${section.title}}`);
     lines.push(bodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
+    lines.push(...layoutCommentLines());
     if (section.body.trim()) {
       lines.push(...section.body.trim().split("\n"));
     }

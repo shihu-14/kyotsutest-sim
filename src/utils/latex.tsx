@@ -77,6 +77,23 @@ export function renderMathSegments(text: string): ReactNode[] {
   return segments;
 }
 
+export function normalizePreviewText(text: string): string {
+  const circledDigits = ["", "①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨"];
+
+  return text
+    .replace(/\\haiten\{([^}]*)\}/g, "（配点 $1）")
+    .replace(/\\counterbox(?:\[[^\]]*\])?/g, "□")
+    .replace(/\\egg\{([^}]*)\}/g, (_full, value: string) => circledDigits[Number(value)] ?? value)
+    .replace(/\\(?:textbf|textsf|text|large|small|Large)\{([^}]*)\}/g, "$1")
+    .replace(/\\(?:noindent|raggedright|centering)\b/g, "")
+    .replace(/\\(?:hspace|vspace)\*?\{[^}]*\}/g, "")
+    .replace(/\\textasciitilde/g, "〜")
+    .replace(/\\(?:quad|qquad|,|;|:|!)/g, " ")
+    .replace(/~/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -101,6 +118,10 @@ function parseAttributes(input: string | undefined): Record<string, string> {
     attrs[key] = rawValue.join("=").trim();
     return attrs;
   }, {});
+}
+
+function isPreviewSettingCommand(line: string): boolean {
+  return /^\\(?:pagecolor|linespread|geometry|newgeometry|definecolor|setmainfont|setmainjfont|setsansjfont)\b/.test(line);
 }
 
 function renderInlineLatexHtml(text: string): string {
@@ -240,10 +261,15 @@ export function parseAuthoringLatex(source: string): ParsedAuthoringDocument {
         return `<h3>${escapeHtml(subsectionLine[1])}</h3>`;
       }
 
-      const graphicsLine = line.match(/^\\includegraphics(?:\[[^\]]*\])?\{([^}]*)\}$/);
+      if (isPreviewSettingCommand(line)) {
+        return "";
+      }
+
+      const graphicsLine = line.match(/^\\includegraphics(?:\[([^\]]*)\])?\{([^}]*)\}$/);
       if (graphicsLine) {
-        const src = escapeHtml(graphicsLine[1]);
-        return `<figure><img src="${src}" alt="uploaded figure" /><figcaption>${src}</figcaption></figure>`;
+        const options = graphicsLine[1] ? ` (${escapeHtml(graphicsLine[1])})` : "";
+        const src = escapeHtml(graphicsLine[2]);
+        return `<figure><img src="${src}" alt="uploaded figure" /><figcaption>${src}${options}</figcaption></figure>`;
       }
 
       if (line.includes("\\begin{tikzpicture}") || line.includes("\\end{tikzpicture}")) {

@@ -248,6 +248,44 @@ describe("AuthoringEditor", () => {
     );
   });
 
+  it("applies TeX preview layout and includegraphics options", async () => {
+    const user = userEvent.setup();
+    const onPublish = vi.fn();
+    const source = String.raw`\examtitle{Parsed}
+\pagecolor[RGB]{240,241,242}
+\linespread{1.4}
+\geometry{inner=1in,outer=0.7in,top=40pt,bottom=30pt}
+\sectiontitle{第1問}
+\includegraphics[width=12.8em,trim=0cm 1cm 2cm 3cm,clip]{data:image/png;base64,abc}
+\mark[answer=1,points=4,choices=4]{1}`;
+
+    primeAuthoringState(source);
+    render(<AuthoringEditor onBack={vi.fn()} onPublish={onPublish} />);
+
+    await user.click(getButtonByText("投稿"));
+
+    const page = onPublish.mock.calls[0][0].pages[0];
+    expect(page.layout).toMatchObject({
+      pageColor: "rgb(240, 241, 242)",
+      paddingTop: "40pt",
+      paddingRight: "0.7in",
+      paddingBottom: "30pt",
+      paddingLeft: "1in"
+    });
+    expect(page.blocks).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          imageOptions: "width=12.8em,trim=0cm 1cm 2cm 3cm,clip",
+          imageStyle: expect.objectContaining({
+            clipPath: "inset(3cm 2cm 1cm 0cm)",
+            width: "12.8em"
+          }),
+          type: "figure"
+        })
+      ])
+    );
+  });
+
   it("edits answer mark settings and publishes multiple answers", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();

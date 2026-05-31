@@ -55,4 +55,25 @@ describe("authoring draft utilities", () => {
     expect(source).toContain("\\choice{1}{1}{A}");
     expect(source).toContain("\\choice{1}{2}{B}");
   });
+
+  it("keeps preview layout commands from pasted TeX preambles", () => {
+    const draft = parseAuthoringDraft(String.raw`\documentclass[b5paper,12pt]{article}
+\usepackage{graphicx}
+\definecolor{beige}{RGB}{252,252,252}
+\pagecolor{beige}
+\linespread{1.5}
+\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}
+\begin{document}
+\nextmondai
+本文C
+\mark[answer=1,points=4,choices=4]{1}
+\end{document}`);
+
+    expect(draft.sections).toHaveLength(1);
+    expect(draft.sections[0].title).toBe("第1問");
+    expect(draft.sections[0].body).toContain("\\pagecolor{beige}");
+    expect(draft.sections[0].body).toContain("\\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}");
+    expect(draft.sections[0].body).toContain("本文C");
+    expect(draft.sections[0].body).not.toContain("\\usepackage");
+  });
 });
