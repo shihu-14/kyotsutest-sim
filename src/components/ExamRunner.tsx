@@ -37,6 +37,7 @@ export function ExamRunner({
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
+  const pageTabsRef = useRef<HTMLElement | null>(null);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
@@ -121,6 +122,16 @@ export function ExamRunner({
     }
   };
 
+  const handlePageTabsWheel = (event: WheelEvent<HTMLElement>) => {
+    const nav = pageTabsRef.current;
+    if (!nav || nav.scrollWidth <= nav.clientWidth || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+      return;
+    }
+
+    event.preventDefault();
+    nav.scrollLeft += event.deltaY;
+  };
+
   return (
     <main className="exam-layout exam-mode-background">
       <header className="exam-toolbar" aria-label="試験操作">
@@ -153,7 +164,7 @@ export function ExamRunner({
 
       <section className="exam-body">
         <div className="booklet-shell">
-          <nav className="page-tabs" aria-label="問題ページ">
+          <nav className="page-tabs" aria-label="問題ページ" ref={pageTabsRef} onWheel={handlePageTabsWheel}>
             {exam.coverImageUrl ? (
               <button
                 className={showCover ? "active cover-tab" : "cover-tab"}

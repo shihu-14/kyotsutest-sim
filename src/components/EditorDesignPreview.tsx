@@ -5,12 +5,25 @@ interface EditorDesignPreviewProps {
   exam: Exam;
 }
 
+type EditorLayout =
+  | "overleaf"
+  | "workbench"
+  | "codepen"
+  | "stackblitz"
+  | "blocks"
+  | "properties"
+  | "spreadsheet"
+  | "writer"
+  | "kanban"
+  | "review";
+
 interface EditorCandidate {
   id: string;
   name: string;
   shortName: string;
   themeClass: string;
   intent: string;
+  layout: EditorLayout;
 }
 
 const editorCandidates: EditorCandidate[] = [
@@ -19,80 +32,273 @@ const editorCandidates: EditorCandidate[] = [
     name: "01 Overleaf Split",
     shortName: "Overleaf",
     themeClass: "editor-preview-overleaf-split",
-    intent: "TeX編集とプレビューを左右で固定する案"
+    intent: "TeX編集とPDFプレビューを左右で固定する案",
+    layout: "overleaf"
   },
   {
     id: "vscode-workbench",
     name: "02 VS Code Workbench",
     shortName: "Workbench",
     themeClass: "editor-preview-vscode-workbench",
-    intent: "ファイルツリー、タブ、本文、検証をまとめる案"
+    intent: "ファイル、タブ、コード、問題ログを統合する案",
+    layout: "workbench"
   },
   {
     id: "codepen-panels",
     name: "03 CodePen Panels",
     shortName: "Panels",
     themeClass: "editor-preview-codepen-panels",
-    intent: "入力、設定、プレビューを独立パネルで並べる案"
+    intent: "大問TeX、解答設定、環境TeX、プレビューを四分割する案",
+    layout: "codepen"
   },
   {
     id: "stackblitz-ide",
     name: "04 StackBlitz IDE",
     shortName: "IDE",
     themeClass: "editor-preview-stackblitz-ide",
-    intent: "左ナビと中央エディタを強く分ける案"
+    intent: "左のツリーと中央作業領域、右の実行プレビューを分ける案",
+    layout: "stackblitz"
   },
   {
     id: "notion-blocks",
     name: "05 Notion Blocks",
     shortName: "Blocks",
     themeClass: "editor-preview-notion-blocks",
-    intent: "大問、本文、解答設定をブロックとして扱う案"
+    intent: "大問や解答番号をブロックとして積み上げる案",
+    layout: "blocks"
   },
   {
     id: "figma-properties",
     name: "06 Figma Properties",
     shortName: "Props",
     themeClass: "editor-preview-figma-properties",
-    intent: "中央キャンバスと右プロパティで調整する案"
+    intent: "中央キャンバスと右プロパティで編集する案",
+    layout: "properties"
   },
   {
     id: "spreadsheet-grid",
     name: "07 Spreadsheet Grid",
     shortName: "Grid",
     themeClass: "editor-preview-spreadsheet-grid",
-    intent: "設問設定を表で一括編集する案"
+    intent: "設問、正解、配点を表で一括管理する案",
+    layout: "spreadsheet"
   },
   {
     id: "writer-focus",
     name: "08 Writer Focus",
     shortName: "Writer",
     themeClass: "editor-preview-writer-focus",
-    intent: "本文入力を主役にして周辺UIを抑える案"
+    intent: "本文入力を主役にしてTeXを補助表示にする案",
+    layout: "writer"
   },
   {
     id: "kanban-author",
     name: "09 Kanban Author",
     shortName: "Kanban",
     themeClass: "editor-preview-kanban-author",
-    intent: "大問ごとの作業状態を列で見せる案"
+    intent: "大問単位の進行状態をボードで管理する案",
+    layout: "kanban"
   },
   {
     id: "review-studio",
     name: "10 Review Studio",
     shortName: "Review",
     themeClass: "editor-preview-review-studio",
-    intent: "TeX差分、プレビュー、検証ログを同時に見る案"
+    intent: "差分、プレビュー、検証ログをレビュー向けに並べる案",
+    layout: "review"
   }
 ];
 
 const sections = ["環境設定", "大問1", "大問2", "大問3"];
+const codeLines = [`% === 大問本文: 第1問 ===`, "\\section{第1問}", "式が表すアニメの名称として最も適当なものを選べ。", "", "% --- 解答番号 1 ---", "\\mark[answer=4,points=10,choices=4]{1}"];
+
+function CodePane({ title = "大問TeX" }: { title?: string }) {
+  return (
+    <section className="editor-code-pane">
+      <header>{title}</header>
+      <pre>{codeLines.join("\n")}</pre>
+    </section>
+  );
+}
+
+function PaperPane() {
+  return (
+    <section className="editor-paper-pane">
+      <strong>第 1 問</strong>
+      <p />
+      <p />
+      <div />
+    </section>
+  );
+}
+
+function Inspector({ exam }: { exam: Exam }) {
+  return (
+    <aside className="editor-inspector-pane">
+      <div>
+        <span>設問数</span>
+        <strong>{exam.questions.length}</strong>
+      </div>
+      <div>
+        <span>制限時間</span>
+        <strong>{exam.durationMinutes}分</strong>
+      </div>
+      <div>
+        <span>配点</span>
+        <strong>{exam.totalPoints}点</strong>
+      </div>
+    </aside>
+  );
+}
+
+function SectionNav() {
+  return (
+    <aside className="editor-section-nav">
+      {sections.map((section, index) => (
+        <button className={index === 1 ? "active" : ""} key={section} type="button">
+          {section}
+        </button>
+      ))}
+    </aside>
+  );
+}
+
+function renderEditorLayout(layout: EditorLayout, exam: Exam) {
+  if (layout === "overleaf") {
+    return (
+      <div className="editor-layout-overleaf">
+        <SectionNav />
+        <CodePane />
+        <PaperPane />
+      </div>
+    );
+  }
+
+  if (layout === "workbench") {
+    return (
+      <div className="editor-layout-workbench">
+        <SectionNav />
+        <main>
+          <div className="editor-tab-row">
+            <span>section-1.tex</span>
+            <span>answers.json</span>
+          </div>
+          <CodePane title="section-1.tex" />
+          <div className="editor-terminal">問題数 OK / 解答番号 OK / 画像参照 OK</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (layout === "codepen") {
+    return (
+      <div className="editor-layout-codepen">
+        <CodePane title="大問TeX" />
+        <CodePane title="解答設定" />
+        <CodePane title="環境TeX" />
+        <PaperPane />
+      </div>
+    );
+  }
+
+  if (layout === "stackblitz") {
+    return (
+      <div className="editor-layout-stackblitz">
+        <SectionNav />
+        <CodePane />
+        <PaperPane />
+        <div className="editor-terminal">Compiled in 112ms</div>
+      </div>
+    );
+  }
+
+  if (layout === "blocks") {
+    return (
+      <div className="editor-layout-blocks">
+        <article>
+          <h3>第1問</h3>
+          <div className="editor-block">本文ブロック</div>
+          <div className="editor-block">解答番号 1 / 正解 4 / 10点</div>
+          <div className="editor-block">画像ブロック</div>
+        </article>
+        <Inspector exam={exam} />
+      </div>
+    );
+  }
+
+  if (layout === "properties") {
+    return (
+      <div className="editor-layout-properties">
+        <SectionNav />
+        <PaperPane />
+        <Inspector exam={exam} />
+      </div>
+    );
+  }
+
+  if (layout === "spreadsheet") {
+    return (
+      <div className="editor-layout-spreadsheet">
+        <div className="editor-sheet-grid">
+          <span>解答番号</span>
+          <span>正解</span>
+          <span>配点</span>
+          <span>選択肢</span>
+          {["1", "2", "3", "4"].map((row) => (
+            <div className="editor-sheet-row" key={row}>
+              <strong>{row}</strong>
+              <span>4</span>
+              <span>10</span>
+              <span>4</span>
+            </div>
+          ))}
+        </div>
+        <PaperPane />
+      </div>
+    );
+  }
+
+  if (layout === "writer") {
+    return (
+      <div className="editor-layout-writer">
+        <SectionNav />
+        <article>
+          <h3>第1問</h3>
+          <p>式が表すアニメの名称として最も適当なものを選べ。</p>
+          <p className="editor-inline-mark">解答番号 1 / 正解 4 / 配点 10</p>
+        </article>
+      </div>
+    );
+  }
+
+  if (layout === "kanban") {
+    return (
+      <div className="editor-layout-kanban">
+        {["下書き", "TeX確認", "Preview確認", "公開準備"].map((column, index) => (
+          <section key={column}>
+            <h3>{column}</h3>
+            <div>大問{Math.min(index + 1, 3)}</div>
+            <div>解答設定</div>
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="editor-layout-review">
+      <CodePane title="変更前" />
+      <CodePane title="変更後" />
+      <PaperPane />
+      <div className="editor-terminal">差分 3件 / 警告 0件 / 公開可能</div>
+    </div>
+  );
+}
 
 export function EditorDesignPreview({ exam }: EditorDesignPreviewProps) {
   const [activeCandidateId, setActiveCandidateId] = useState(editorCandidates[0].id);
   const activeCandidate =
     editorCandidates.find((candidate) => candidate.id === activeCandidateId) ?? editorCandidates[0];
-  const firstQuestion = exam.questions[0];
 
   return (
     <section className="exam-design-mode editor-design-mode" aria-label="編集画面デザイン候補">
@@ -138,53 +344,7 @@ export function EditorDesignPreview({ exam }: EditorDesignPreviewProps) {
               <button type="button">公開</button>
             </nav>
           </header>
-
-          <div className="editor-preview-body">
-            <aside className="editor-preview-nav">
-              {sections.map((section, index) => (
-                <button className={index === 1 ? "active" : ""} key={section} type="button">
-                  {section}
-                </button>
-              ))}
-            </aside>
-
-            <section className="editor-preview-code" aria-label="TeX編集サンプル">
-              <div className="editor-preview-tabs">
-                <span>大問TeX</span>
-                <span>解答設定</span>
-              </div>
-              <pre>{`% === 大問本文: 第1問 ===
-\\section{第1問}
-${firstQuestion?.prompt ?? "本文を入力"}
-
-% --- 解答番号 ${firstQuestion?.label ?? "1"} ---
-\\mark[answer=${firstQuestion?.correct[0] ?? "1"},points=${firstQuestion?.points ?? 5},choices=${
-                firstQuestion?.options.length ?? 4
-              }]{${firstQuestion?.label ?? "1"}}`}</pre>
-            </section>
-
-            <section className="editor-preview-inspector" aria-label="設定サンプル">
-              <div>
-                <span>設問数</span>
-                <strong>{exam.questions.length}</strong>
-              </div>
-              <div>
-                <span>制限時間</span>
-                <strong>{exam.durationMinutes}分</strong>
-              </div>
-              <div>
-                <span>配点</span>
-                <strong>{exam.totalPoints}点</strong>
-              </div>
-            </section>
-
-            <section className="editor-preview-paper" aria-label="プレビューサンプル">
-              <strong>第 1 問</strong>
-              <p />
-              <p />
-              <div />
-            </section>
-          </div>
+          {renderEditorLayout(activeCandidate.layout, exam)}
         </div>
       </article>
     </section>

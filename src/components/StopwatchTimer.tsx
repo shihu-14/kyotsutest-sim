@@ -20,7 +20,9 @@ export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "tim
   const progress = clampProgress(remainingMs, totalMs);
   const style = {
     "--timer-progress": `${progress * 100}%`,
-    "--timer-elapsed": `${(1 - progress) * 100}%`
+    "--timer-elapsed": `${(1 - progress) * 100}%`,
+    "--timer-progress-angle": `${progress * 360}deg`,
+    "--timer-elapsed-angle": `${(1 - progress) * 360}deg`
   } as CSSProperties;
 
   return (

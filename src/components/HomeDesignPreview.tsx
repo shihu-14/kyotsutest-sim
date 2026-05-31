@@ -1,9 +1,21 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import type { Exam } from "../types";
 
 interface HomeDesignPreviewProps {
   exams: Exam[];
 }
+
+type HomeLayout =
+  | "spotlight"
+  | "grid"
+  | "table"
+  | "kanban"
+  | "calendar"
+  | "rail"
+  | "command"
+  | "analytics"
+  | "shelf"
+  | "mobile";
 
 interface HomeCandidate {
   id: string;
@@ -11,80 +23,299 @@ interface HomeCandidate {
   shortName: string;
   themeClass: string;
   intent: string;
+  layout: HomeLayout;
 }
 
 const homeCandidates: HomeCandidate[] = [
   {
-    id: "light-command",
-    name: "01 Light Command",
-    shortName: "Command",
-    themeClass: "home-preview-light-command",
-    intent: "管理画面の密度を保った明るい基準案"
+    id: "spotlight-launch",
+    name: "01 Spotlight Launch",
+    shortName: "Spotlight",
+    themeClass: "home-preview-spotlight-launch",
+    intent: "表紙を大きく出して、右側で開始判断する案",
+    layout: "spotlight"
   },
   {
-    id: "vercel-cards",
-    name: "02 Vercel Cards",
-    shortName: "Vercel",
-    themeClass: "home-preview-vercel-cards",
-    intent: "余白と細い枠で表紙を見せる白基調案"
+    id: "vercel-grid",
+    name: "02 Vercel Grid",
+    shortName: "Grid",
+    themeClass: "home-preview-vercel-grid",
+    intent: "余白のある3列カードで比較する案",
+    layout: "grid"
   },
   {
-    id: "linear-light",
-    name: "03 Linear Light",
-    shortName: "Linear",
-    themeClass: "home-preview-linear-light",
-    intent: "一覧性と状態表示を明るく整理する案"
+    id: "airtable-table",
+    name: "03 Airtable Table",
+    shortName: "Table",
+    themeClass: "home-preview-airtable-table",
+    intent: "試験を表形式で素早く比較する案",
+    layout: "table"
   },
   {
-    id: "github-light",
-    name: "04 GitHub Light",
-    shortName: "Issues",
-    themeClass: "home-preview-github-light",
-    intent: "行動ボタンを抑えて情報を読みやすくする案"
+    id: "trello-board",
+    name: "04 Trello Board",
+    shortName: "Board",
+    themeClass: "home-preview-trello-board",
+    intent: "公開中、準備中、確認中を列で分ける案",
+    layout: "kanban"
   },
   {
-    id: "notion-desk",
-    name: "05 Notion Desk",
-    shortName: "Notion",
-    themeClass: "home-preview-notion-desk",
-    intent: "表紙とメモ情報を静かに整理する白背景案"
+    id: "calendar-plan",
+    name: "05 Calendar Plan",
+    shortName: "Calendar",
+    themeClass: "home-preview-calendar-plan",
+    intent: "日程と試験を同時に見る案",
+    layout: "calendar"
   },
   {
-    id: "stripe-metrics",
-    name: "06 Stripe Metrics",
+    id: "cover-rail",
+    name: "06 Cover Rail",
+    shortName: "Rail",
+    themeClass: "home-preview-cover-rail",
+    intent: "横長の表紙レールから選ぶ案",
+    layout: "rail"
+  },
+  {
+    id: "command-search",
+    name: "07 Command Search",
+    shortName: "Search",
+    themeClass: "home-preview-command-search",
+    intent: "検索とキーボード選択を主軸にする案",
+    layout: "command"
+  },
+  {
+    id: "metrics-hub",
+    name: "08 Metrics Hub",
     shortName: "Metrics",
-    themeClass: "home-preview-stripe-metrics",
-    intent: "指標とカードを同じ面に置く分析寄り案"
+    themeClass: "home-preview-metrics-hub",
+    intent: "指標と試験一覧を同時に出す案",
+    layout: "analytics"
   },
   {
-    id: "figma-light",
-    name: "07 Figma Light",
-    shortName: "Canvas",
-    themeClass: "home-preview-figma-light",
-    intent: "操作バーと作業面を明るい面で分ける案"
+    id: "library-shelf",
+    name: "09 Library Shelf",
+    shortName: "Shelf",
+    themeClass: "home-preview-library-shelf",
+    intent: "資料室の棚のように表紙を分類する案",
+    layout: "shelf"
   },
   {
-    id: "school-console",
-    name: "08 School Console",
-    shortName: "School",
-    themeClass: "home-preview-school-console",
-    intent: "教務システムのように選択しやすい案"
-  },
-  {
-    id: "paper-admin",
-    name: "09 Paper Admin",
-    shortName: "Paper",
-    themeClass: "home-preview-paper-admin",
-    intent: "答案用紙色に合わせた紙面管理案"
-  },
-  {
-    id: "wood-paper",
-    name: "10 Wood Paper",
-    shortName: "Wood",
-    themeClass: "home-preview-wood-paper",
-    intent: "木の背景上に白い試験カードを置く案"
+    id: "mobile-stack",
+    name: "10 Mobile Stack",
+    shortName: "Mobile",
+    themeClass: "home-preview-mobile-stack",
+    intent: "スマホでも同じ優先順位で選べる案",
+    layout: "mobile"
   }
 ];
+
+function metricItems(exam: Exam) {
+  return [
+    { label: "時間", value: `${exam.durationMinutes}分` },
+    { label: "設問", value: `${exam.questions.length}問` },
+    { label: "配点", value: `${exam.totalPoints}点` }
+  ];
+}
+
+function MetricStrip({ exam }: { exam: Exam }) {
+  return (
+    <dl className="home-metric-strip">
+      {metricItems(exam).map((item) => (
+        <div key={item.label}>
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function Cover({ exam }: { exam: Exam }) {
+  return (
+    <div className="home-cover-preview">
+      {exam.coverImageUrl ? <img src={exam.coverImageUrl} alt="" /> : <div className="cover-placeholder" />}
+    </div>
+  );
+}
+
+function MiniCard({ exam }: { exam: Exam }) {
+  return (
+    <article className="home-mini-card">
+      <Cover exam={exam} />
+      <div>
+        <strong>{exam.title}</strong>
+        <MetricStrip exam={exam} />
+      </div>
+    </article>
+  );
+}
+
+function renderHomeLayout(layout: HomeLayout, exams: Exam[]) {
+  const [featured, second = featured, third = second] = exams;
+  const cards = [featured, second, third].filter((exam): exam is Exam => Boolean(exam));
+
+  if (!featured) {
+    return <p className="empty-state">公開中の試験がありません。</p>;
+  }
+
+  if (layout === "spotlight") {
+    return (
+      <div className="home-layout-spotlight">
+        <Cover exam={featured} />
+        <section>
+          <span>次に開始</span>
+          <h3>{featured.title}</h3>
+          <MetricStrip exam={featured} />
+          <div className="home-stack-list">
+            {cards.slice(1).map((exam, index) => (
+              <MiniCard exam={exam} key={`${exam.id}-stack-${index}`} />
+            ))}
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (layout === "grid") {
+    return (
+      <div className="home-layout-grid">
+        {cards.map((exam, index) => (
+          <MiniCard exam={exam} key={`${exam.id}-grid-${index}`} />
+        ))}
+      </div>
+    );
+  }
+
+  if (layout === "table") {
+    return (
+      <div className="home-layout-table" role="table">
+        <div className="home-table-head" role="row">
+          <span>試験</span>
+          <span>時間</span>
+          <span>設問</span>
+          <span>配点</span>
+        </div>
+        {cards.map((exam, index) => (
+          <div className="home-table-row" key={`${exam.id}-row-${index}`} role="row">
+            <strong>{exam.title}</strong>
+            <span>{exam.durationMinutes}分</span>
+            <span>{exam.questions.length}問</span>
+            <span>{exam.totalPoints}点</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (layout === "kanban") {
+    return (
+      <div className="home-layout-kanban">
+        {["公開中", "確認中", "準備中"].map((column, index) => (
+          <section key={column}>
+            <h3>{column}</h3>
+            <MiniCard exam={cards[index % cards.length]} />
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  if (layout === "calendar") {
+    return (
+      <div className="home-layout-calendar">
+        {["月", "火", "水", "木", "金"].map((day, index) => (
+          <section className={index === 2 ? "active" : ""} key={day}>
+            <strong>{day}</strong>
+            {index === 1 || index === 2 || index === 4 ? <MiniCard exam={cards[index % cards.length]} /> : <span />}
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  if (layout === "rail") {
+    return (
+      <div className="home-layout-rail">
+        {cards.map((exam, index) => (
+          <article className="home-rail-card" key={`${exam.id}-rail-${index}`}>
+            <Cover exam={exam} />
+            <strong>{exam.title}</strong>
+            <MetricStrip exam={exam} />
+          </article>
+        ))}
+      </div>
+    );
+  }
+
+  if (layout === "command") {
+    return (
+      <div className="home-layout-command">
+        <div className="home-command-box">試験名で検索...</div>
+        <div className="home-command-results">
+          {cards.map((exam, index) => (
+            <article className={index === 0 ? "active" : ""} key={`${exam.id}-command-${index}`}>
+              <strong>{exam.title}</strong>
+              <span>
+                {exam.durationMinutes}分 / {exam.questions.length}問 / {exam.totalPoints}点
+              </span>
+            </article>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (layout === "analytics") {
+    return (
+      <div className="home-layout-analytics">
+        <div className="home-stat-row">
+          <strong>{cards.length}</strong>
+          <strong>{cards.reduce((sum, exam) => sum + exam.questions.length, 0)}</strong>
+          <strong>{cards.reduce((sum, exam) => sum + exam.totalPoints, 0)}</strong>
+        </div>
+        <div className="home-bars">
+          {cards.map((exam, index) => (
+            <span
+              key={`${exam.id}-bar-${index}`}
+              style={{ "--bar-value": `${Math.max(18, exam.durationMinutes)}%` } as CSSProperties}
+            >
+              {exam.title}
+            </span>
+          ))}
+        </div>
+        <MiniCard exam={featured} />
+      </div>
+    );
+  }
+
+  if (layout === "shelf") {
+    return (
+      <div className="home-layout-shelf">
+        <aside>
+          <span>公開中</span>
+          <span>最近</span>
+          <span>高配点</span>
+        </aside>
+        <section>
+          {cards.map((exam, index) => (
+            <MiniCard exam={exam} key={`${exam.id}-shelf-${index}`} />
+          ))}
+        </section>
+      </div>
+    );
+  }
+
+  return (
+    <div className="home-layout-mobile">
+      <div className="home-phone-frame">
+        <header>ウェブ模試</header>
+        {cards.map((exam, index) => (
+          <MiniCard exam={exam} key={`${exam.id}-mobile-${index}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function HomeDesignPreview({ exams }: HomeDesignPreviewProps) {
   const [activeCandidateId, setActiveCandidateId] = useState(homeCandidates[0].id);
@@ -127,41 +358,7 @@ export function HomeDesignPreview({ exams }: HomeDesignPreviewProps) {
           <span>{previewExams.length} exams</span>
         </header>
 
-        <div className={`home-preview ${activeCandidate.themeClass}`}>
-          <header className="home-sample-header">
-            <div>
-              <small>共通テスト形式</small>
-              <strong>ウェブ模試</strong>
-            </div>
-            <nav aria-label="ホーム操作サンプル">
-              <button type="button">画面候補</button>
-              <button type="button">時間候補</button>
-              <button type="button">新規作成</button>
-            </nav>
-          </header>
-
-          <div className="home-sample-content">
-            <aside className="home-sample-side">
-              <span>公開中</span>
-              <span>直近編集</span>
-              <span>分析</span>
-            </aside>
-            <div className="home-sample-list">
-              {previewExams.map((exam, index) => (
-                <article className="home-sample-card" key={exam.id}>
-                  <div className="home-sample-cover">
-                    {exam.coverImageUrl ? <img src={exam.coverImageUrl} alt="" /> : null}
-                  </div>
-                  <div>
-                    <strong>{exam.title}</strong>
-                    <p>{exam.durationMinutes}分 / {exam.questions.length}問 / {exam.totalPoints}点</p>
-                  </div>
-                  <button type="button">{index === 0 ? "開始" : "選択"}</button>
-                </article>
-              ))}
-            </div>
-          </div>
-        </div>
+        <div className={`home-preview ${activeCandidate.themeClass}`}>{renderHomeLayout(activeCandidate.layout, previewExams)}</div>
       </article>
     </section>
   );
