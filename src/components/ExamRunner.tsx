@@ -122,7 +122,7 @@ export function ExamRunner({
   };
 
   return (
-    <main className="exam-layout">
+    <main className="exam-layout exam-mode-background">
       <header className="exam-toolbar">
         <div>
           <h1>{exam.title}</h1>

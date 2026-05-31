@@ -52,6 +52,10 @@ button:disabled {
   overflow: hidden;
 }
 
+.exam-mode-background {
+  background: #c77a2d url("../assets/on-table-image.jpg") center / cover no-repeat;
+}
+
 .screen-narrow {
   width: min(1180px, 100%);
 }
@@ -1088,7 +1092,7 @@ button:disabled {
   height: 100%;
   overflow: auto;
   border-radius: 8px;
-  background: #c77a2d url("../assets/on-table-image.jpg") center / cover no-repeat;
+  background: transparent;
   box-shadow: inset 0 0 0 1px rgba(96, 45, 13, 0.16);
   padding: 14px;
 }
