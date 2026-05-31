@@ -1,8 +1,68 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { useState } from "react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../data/sampleExam";
 import { ExamRunner } from "./ExamRunner";
+
+function installPageTabLayoutMocks() {
+  const scrollToDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollTo");
+  const coverWidth = 46 * 1.8;
+  const pageWidth = 50 * 1.45;
+  const scrollTo = vi.fn(function scrollToPageTab(this: HTMLElement, options: ScrollToOptions) {
+    this.scrollLeft = options.left ?? 0;
+  });
+
+  Object.defineProperty(HTMLElement.prototype, "scrollTo", {
+    configurable: true,
+    value: scrollTo
+  });
+
+  const mockNavMetrics = (nav: HTMLElement) => {
+    Object.defineProperties(nav, {
+      clientWidth: {
+        configurable: true,
+        value: coverWidth + 13 * pageWidth
+      },
+      scrollLeft: {
+        configurable: true,
+        value: 0,
+        writable: true
+      },
+      scrollWidth: {
+        configurable: true,
+        value: coverWidth + 15 * pageWidth
+      }
+    });
+
+    nav.querySelectorAll("button").forEach((button) => {
+      const pageNumber = Number(button.textContent?.trim());
+      Object.defineProperties(button, {
+        offsetLeft: {
+          configurable: true,
+          value: Number.isFinite(pageNumber) && pageNumber > 0 ? coverWidth + (pageNumber - 1) * pageWidth : 0
+        },
+        offsetWidth: {
+          configurable: true,
+          value: button.classList.contains("cover-tab") ? coverWidth : pageWidth
+        }
+      });
+    });
+  };
+
+  return {
+    mockNavMetrics,
+    restore: () => {
+      if (scrollToDescriptor) {
+        Object.defineProperty(HTMLElement.prototype, "scrollTo", scrollToDescriptor);
+        return;
+      }
+
+      delete (HTMLElement.prototype as unknown as Record<string, unknown>).scrollTo;
+    },
+    scrollTo
+  };
+}
 
 describe("ExamRunner", () => {
   it("asks for confirmation before finishing an active exam", async () => {
@@ -166,5 +226,71 @@ describe("ExamRunner", () => {
     await user.click(screen.getByRole("button", { name: "前のページへ" }));
 
     expect(screen.getByRole("article", { name: "漫画映画の表紙" })).toBeInTheDocument();
+  });
+
+  it("fits short page tabs and smoothly follows overflow page changes", async () => {
+    const user = userEvent.setup();
+    const pageTabLayout = installPageTabLayoutMocks();
+    const baseExam = sampleExams[0];
+    const longExam = {
+      ...baseExam,
+      coverImageUrl: baseExam.coverImageUrl ?? "cover.png",
+      pages: Array.from({ length: 15 }, (_, index) => ({
+        ...baseExam.pages[0],
+        blocks: [],
+        id: `long-page-${index + 1}`,
+        pageNumber: index + 1,
+        title: `Page ${index + 1}`
+      })),
+      questions: []
+    };
+
+    function ControlledRunner() {
+      const [currentPageId, setCurrentPageId] = useState("long-page-13");
+
+      return (
+        <ExamRunner
+          answers={{}}
+          currentPageId={currentPageId}
+          deadline={Date.now() + 60_000}
+          exam={longExam}
+          onChangePage={setCurrentPageId}
+          onExpire={vi.fn()}
+          onFinish={vi.fn()}
+          onPause={vi.fn()}
+          onToggleAnswer={vi.fn()}
+        />
+      );
+    }
+
+    try {
+      const shortRender = render(
+        <ExamRunner
+          answers={{}}
+          currentPageId={baseExam.pages[0].id}
+          deadline={Date.now() + 60_000}
+          exam={baseExam}
+          onChangePage={vi.fn()}
+          onExpire={vi.fn()}
+          onFinish={vi.fn()}
+          onPause={vi.fn()}
+          onToggleAnswer={vi.fn()}
+        />
+      );
+
+      expect(screen.getByLabelText("問題ページ")).toHaveStyle("--visible-page-tabs: 3");
+
+      shortRender.unmount();
+      render(<ControlledRunner />);
+
+      pageTabLayout.mockNavMetrics(screen.getByLabelText("問題ページ"));
+
+      await user.click(screen.getByRole("button", { name: "次のページへ" }));
+
+      await waitFor(() => expect(screen.getByRole("button", { name: "14" })).toHaveClass("active"));
+      expect(pageTabLayout.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ behavior: "smooth" }));
+    } finally {
+      pageTabLayout.restore();
+    }
   });
 });

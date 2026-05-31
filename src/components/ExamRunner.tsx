@@ -46,6 +46,10 @@ export function ExamRunner({
   const pageIndex = exam.pages.findIndex((candidate) => candidate.id === page.id);
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
   const bookletStyle = { "--booklet-zoom": String(bookletZoom) } as CSSProperties;
+  const pageTabsStyle = {
+    "--visible-page-tabs": String(Math.min(exam.pages.length, 13)),
+    "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
+  } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
   const canGoNext = showCover ? exam.pages.length > 0 : pageIndex < exam.pages.length - 1;
@@ -96,6 +100,28 @@ export function ExamRunner({
     stage.addEventListener("wheel", preventPageZoom, { passive: false });
     return () => stage.removeEventListener("wheel", preventPageZoom);
   }, []);
+
+  useEffect(() => {
+    const nav = pageTabsRef.current;
+    const activeTab = nav?.querySelector<HTMLButtonElement>(".active");
+    if (!nav || !activeTab || nav.scrollWidth <= nav.clientWidth) {
+      return;
+    }
+
+    const leftEdge = activeTab.offsetLeft;
+    const rightEdge = activeTab.offsetLeft + activeTab.offsetWidth;
+    const visibleLeft = nav.scrollLeft;
+    const visibleRight = nav.scrollLeft + nav.clientWidth;
+
+    if (rightEdge > visibleRight) {
+      nav.scrollTo({ left: rightEdge - nav.clientWidth, behavior: "smooth" });
+      return;
+    }
+
+    if (leftEdge < visibleLeft) {
+      nav.scrollTo({ left: leftEdge, behavior: "smooth" });
+    }
+  }, [currentPageId, exam.pages.length, showCover]);
 
   const handleBookletWheel = (event: WheelEvent<HTMLDivElement>) => {
     if (!event.ctrlKey && !event.metaKey) {
@@ -164,7 +190,13 @@ export function ExamRunner({
 
       <section className="exam-body">
         <div className="booklet-shell">
-          <nav className="page-tabs" aria-label="問題ページ" ref={pageTabsRef} onWheel={handlePageTabsWheel}>
+          <nav
+            className="page-tabs"
+            aria-label="問題ページ"
+            ref={pageTabsRef}
+            style={pageTabsStyle}
+            onWheel={handlePageTabsWheel}
+          >
             {exam.coverImageUrl ? (
               <button
                 className={showCover ? "active cover-tab" : "cover-tab"}

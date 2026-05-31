@@ -837,7 +837,8 @@ button:disabled {
 }
 
 .exam-tile {
-  min-height: 620px;
+  height: 430px;
+  min-height: 0;
   overflow: hidden;
   padding: 0;
   background: #fffdf8;
@@ -847,7 +848,7 @@ button:disabled {
 .exam-card-main {
   position: relative;
   display: grid;
-  grid-template-rows: minmax(520px, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 0;
   height: 100%;
   min-height: 100%;
@@ -864,12 +865,12 @@ button:disabled {
   flex-direction: column;
   justify-content: space-between;
   gap: 12px;
-  border: 1px solid rgba(216, 202, 180, 0.84);
-  margin: 14px;
-  background: rgba(255, 253, 248, 0.94);
-  box-shadow: 0 16px 36px rgba(52, 41, 22, 0.14);
-  padding: 14px;
-  backdrop-filter: blur(8px);
+  border: 0;
+  margin: 0;
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0) 0%, rgba(255, 253, 248, 0.9) 28%, #fffdf8 100%);
+  box-shadow: none;
+  padding: 58px 16px 16px;
+  backdrop-filter: blur(5px);
 }
 
 .exam-title-row {
@@ -939,9 +940,8 @@ button:disabled {
 
 .exam-cover-thumb {
   grid-area: 1 / 1;
-  display: flex;
-  align-items: start;
-  justify-content: center;
+  display: grid;
+  place-items: start center;
   min-height: 0;
   height: 100%;
   overflow: hidden;
@@ -950,14 +950,15 @@ button:disabled {
   background:
     radial-gradient(circle at 50% 20%, rgba(240, 120, 37, 0.12), transparent 34%),
     linear-gradient(180deg, #fffaf1, #eee2cd);
-  padding: 18px 18px 196px;
+  padding: 12px 18px 122px;
 }
 
 .exam-cover-thumb img,
 .cover-placeholder {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+  width: min(72%, 250px);
+  height: calc(100% + 24px);
+  object-fit: cover;
+  object-position: top center;
   filter: drop-shadow(0 18px 22px rgba(52, 41, 22, 0.18));
 }
 
@@ -1187,8 +1188,8 @@ button:disabled {
   border-radius: 50%;
   background: conic-gradient(
     from var(--timer-css-crown-angle),
-    var(--timer-fill) 0deg var(--timer-progress-angle),
-    var(--timer-face) var(--timer-progress-angle) 360deg
+    var(--timer-face) 0deg var(--timer-elapsed-angle),
+    var(--timer-fill) var(--timer-elapsed-angle) 360deg
   );
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--timer-accent) 24%, transparent);
   text-align: center;
@@ -3133,9 +3134,11 @@ button:disabled {
 .page-tabs {
   --page-tab-width: calc(50px * 1.45);
   --cover-tab-width: calc(46px * 1.8);
+  --visible-page-tabs: 13;
+  --has-cover-tab: 1;
   display: flex;
   gap: 0;
-  width: min(100%, calc(var(--cover-tab-width) + (13 * var(--page-tab-width))));
+  width: min(100%, calc((var(--has-cover-tab) * var(--cover-tab-width)) + (var(--visible-page-tabs) * var(--page-tab-width))));
   overflow-x: auto;
   overflow-y: hidden;
   border: 1px solid rgba(255, 255, 255, 0.72);
@@ -3143,6 +3146,7 @@ button:disabled {
   margin-bottom: 6px;
   background: transparent;
   overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
   scrollbar-width: none;
 }
 
@@ -5427,11 +5431,11 @@ button:disabled {
   }
 
   .exam-tile {
-    min-height: 560px;
+    height: 390px;
   }
 
   .exam-card-main {
-    grid-template-rows: minmax(520px, 1fr);
+    grid-template-rows: minmax(0, 1fr);
   }
 
   .design-candidate-tabs {
