@@ -4,6 +4,7 @@ import { EditorDesignPreview } from "./EditorDesignPreview";
 import { ExamDesignPreview } from "./ExamDesignPreview";
 import { HomeDesignPreview } from "./HomeDesignPreview";
 import { PageNavDesignPreview } from "./PageNavDesignPreview";
+import { ScoringDesignPreview } from "./ScoringDesignPreview";
 import { TimerDesignPreview } from "./TimerDesignPreview";
 
 interface ExamListProps {
@@ -15,9 +16,9 @@ interface ExamListProps {
 }
 
 export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: ExamListProps) {
-  const [homeMode, setHomeMode] = useState<"exams" | "designs" | "timers" | "pageNavs" | "homes" | "editors">(
-    "exams"
-  );
+  const [homeMode, setHomeMode] = useState<
+    "exams" | "designs" | "timers" | "pageNavs" | "homes" | "editors" | "scorings"
+  >("exams");
   const previewExam = exams.find((exam) => exam.pages.some((page) => page.pageImageUrl)) ?? exams[0];
 
   return (
@@ -65,6 +66,14 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
             ページ候補
           </button>
           <button
+            aria-pressed={homeMode === "scorings"}
+            className="secondary-button"
+            type="button"
+            onClick={() => setHomeMode("scorings")}
+          >
+            採点候補
+          </button>
+          <button
             aria-pressed={homeMode === "editors"}
             className="secondary-button"
             type="button"
@@ -86,6 +95,8 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
         <TimerDesignPreview exam={previewExam} />
       ) : homeMode === "pageNavs" && previewExam ? (
         <PageNavDesignPreview exam={previewExam} />
+      ) : homeMode === "scorings" && previewExam ? (
+        <ScoringDesignPreview exam={previewExam} />
       ) : homeMode === "editors" && previewExam ? (
         <EditorDesignPreview exam={previewExam} />
       ) : (

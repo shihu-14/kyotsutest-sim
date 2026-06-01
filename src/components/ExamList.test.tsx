@@ -206,4 +206,29 @@ describe("ExamList", () => {
     expect(screen.getByRole("article", { name: "10 Bold Outlineのプレビュー" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
   });
+
+  it("opens the scoring design candidate mode and switches between ten candidates", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole("button", { name: "採点候補" }));
+
+    expect(screen.getByRole("heading", { name: "採点画面デザイン候補" })).toBeInTheDocument();
+    expect(screen.getAllByRole("tab")).toHaveLength(10);
+    expect(screen.getByRole("article", { name: "01 Ledger Dashboardのプレビュー" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: /08 Scoreboard/ }));
+
+    expect(screen.getByRole("article", { name: "08 Scoreboardのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
+  });
 });
