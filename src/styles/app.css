@@ -3693,6 +3693,11 @@ button:disabled {
 }
 
 .bubble {
+  --answer-mark-ink: #222;
+  --answer-review-red-ink: #9f1f17;
+
+  position: relative;
+  isolation: isolate;
   width: 18px;
   height: 24px;
   border: 1.5px solid #f0a06f;
@@ -3706,19 +3711,39 @@ button:disabled {
 }
 
 .bubble.filled {
-  border-color: #222;
-  background: #222;
-  color: #222;
+  border-color: var(--answer-mark-ink);
+  background: var(--answer-mark-ink);
+  color: var(--answer-mark-ink);
 }
 
 .bubble.unavailable {
   opacity: 0.38;
 }
 
+.mark-sheet.review-mode .bubble:disabled:not(.unavailable) {
+  opacity: 1;
+}
+
 .bubble.review-correct {
-  border-color: #c73228;
-  background: #c73228;
-  color: #c73228;
+  border-color: var(--answer-review-red-ink);
+  background: var(--answer-review-red-ink);
+  color: var(--answer-review-red-ink);
+}
+
+.bubble.filled.review-correct {
+  border-color: var(--answer-mark-ink);
+  background: var(--answer-mark-ink);
+  color: var(--answer-mark-ink);
+}
+
+.bubble.filled.review-correct::before {
+  position: absolute;
+  z-index: -1;
+  inset: -1.5px;
+  border-radius: 50%;
+  background: var(--answer-review-red-ink);
+  content: "";
+  transform: translate(2px, -2px);
 }
 
 .scoring-screen {

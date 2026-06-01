@@ -29,7 +29,10 @@ export function MarkSheet({
   onToggleAnswer
 }: MarkSheetProps) {
   return (
-    <aside className="mark-sheet" aria-label="デジタルマークシート">
+    <aside
+      className={["mark-sheet", reviewMode ? "review-mode" : ""].filter(Boolean).join(" ")}
+      aria-label="デジタルマークシート"
+    >
       <section className="answer-table" aria-label="解答欄">
         <div className="answer-title">解　答　欄</div>
         <div className="answer-grid" role="table">
@@ -73,7 +76,7 @@ export function MarkSheet({
                             "bubble",
                             checked ? "filled" : "",
                             option ? "" : "unavailable",
-                            isCorrectChoice && !checked ? "review-correct" : ""
+                            isCorrectChoice ? "review-correct" : ""
                           ]
                             .filter(Boolean)
                             .join(" ")}

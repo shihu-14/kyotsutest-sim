@@ -100,4 +100,22 @@ describe("MarkSheet", () => {
     expect(screen.getByRole("button", { name: "ア 0" })).not.toHaveClass("review-wrong");
     expect(screen.getByRole("button", { name: "ア 1" })).toHaveClass("review-correct");
   });
+
+  it("keeps a correct review mark black while adding the red correction layer", () => {
+    render(
+      <MarkSheet
+        activePageId="p1"
+        answers={{ q1: ["-3"] }}
+        exam={sampleExams[0]}
+        reviewMode
+        onJumpToPage={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(screen.getByLabelText("デジタルマークシート")).toHaveClass("review-mode");
+    expect(screen.getByRole("button", { name: "ア 1" })).toHaveClass("filled");
+    expect(screen.getByRole("button", { name: "ア 1" })).toHaveClass("review-correct");
+    expect(screen.getByRole("button", { name: "ア 1" })).toHaveAttribute("aria-pressed", "true");
+  });
 });
