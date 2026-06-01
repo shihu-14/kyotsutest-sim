@@ -3694,7 +3694,7 @@ button:disabled {
 
 .bubble {
   --answer-mark-ink: #222;
-  --answer-review-red-ink: #9f1f17;
+  --answer-review-red-ink: #c73228;
 
   position: relative;
   isolation: isolate;
@@ -3710,10 +3710,27 @@ button:disabled {
   line-height: 1;
 }
 
+.bubble::before,
+.bubble::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+}
+
 .bubble.filled {
   border-color: var(--answer-mark-ink);
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.bubble.filled::after {
+  z-index: 1;
   background: var(--answer-mark-ink);
-  color: var(--answer-mark-ink);
+  opacity: 1;
 }
 
 .bubble.unavailable {
@@ -3726,23 +3743,26 @@ button:disabled {
 
 .bubble.review-correct {
   border-color: var(--answer-review-red-ink);
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.bubble.review-correct::before {
+  z-index: 0;
   background: var(--answer-review-red-ink);
-  color: var(--answer-review-red-ink);
+  opacity: 1;
 }
 
 .bubble.filled.review-correct {
   border-color: var(--answer-mark-ink);
-  background: var(--answer-mark-ink);
-  color: var(--answer-mark-ink);
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .bubble.filled.review-correct::before {
-  position: absolute;
-  z-index: -1;
   inset: -1.5px;
-  border-radius: 50%;
-  background: var(--answer-review-red-ink);
-  content: "";
   transform: translate(2px, -2px);
 }
 
