@@ -3241,10 +3241,6 @@ button:disabled {
   border-radius: 0;
 }
 
-.cover-page-frame .exact-page-image {
-  object-fit: contain;
-}
-
 .page-image-mark-layer {
   position: absolute;
   inset: 0;
