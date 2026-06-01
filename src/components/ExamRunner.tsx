@@ -38,6 +38,7 @@ export function ExamRunner({
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
+  const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
   const previousPagePositionRef = useRef<number | null>(null);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
@@ -66,6 +67,7 @@ export function ExamRunner({
     }
 
     const previousPage = exam.pages[Math.max(0, pageIndex - 1)];
+    pageNavigationSourceRef.current = "arrow";
     onChangePage(previousPage.id);
   };
 
@@ -77,6 +79,7 @@ export function ExamRunner({
     }
 
     const nextPage = exam.pages[Math.min(exam.pages.length - 1, pageIndex + 1)];
+    pageNavigationSourceRef.current = "arrow";
     onChangePage(nextPage.id);
   };
 
@@ -107,6 +110,8 @@ export function ExamRunner({
     const activeTab = nav?.querySelector<HTMLButtonElement>(".active");
     const currentPosition = showCover ? -1 : pageIndex;
     const previousPosition = previousPagePositionRef.current;
+    const navigationSource = pageNavigationSourceRef.current;
+    pageNavigationSourceRef.current = null;
     previousPagePositionRef.current = currentPosition;
 
     if (!nav || !activeTab || nav.scrollWidth <= nav.clientWidth) {
@@ -122,12 +127,12 @@ export function ExamRunner({
       nav.scrollTo({ left: Math.min(maxScrollLeft, Math.max(0, left)), behavior: "smooth" });
     };
 
-    if (previousPosition !== null && currentPosition > previousPosition) {
+    if (navigationSource === "arrow" && previousPosition !== null && currentPosition > previousPosition) {
       scrollTo(rightEdge - nav.clientWidth);
       return;
     }
 
-    if (previousPosition !== null && currentPosition < previousPosition) {
+    if (navigationSource === "arrow" && previousPosition !== null && currentPosition < previousPosition) {
       scrollTo(leftEdge);
       return;
     }
@@ -226,6 +231,7 @@ export function ExamRunner({
                   key={item.id}
                   type="button"
                   onClick={() => {
+                    pageNavigationSourceRef.current = "tab";
                     setShowCover(false);
                     onChangePage(item.id);
                   }}

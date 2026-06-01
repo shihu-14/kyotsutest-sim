@@ -301,6 +301,14 @@ describe("ExamRunner", () => {
       expect(pageTabLayout.scrollTo).toHaveBeenLastCalledWith(
         expect.objectContaining({ behavior: "smooth", left: 870 })
       );
+
+      pageTabLayout.mockNavMetrics(document.querySelector(".page-tab-scroll")!);
+      pageTabLayout.scrollTo.mockClear();
+
+      await user.click(screen.getByRole("button", { name: "11" }));
+
+      await waitFor(() => expect(screen.getByRole("button", { name: "11" })).toHaveClass("active"));
+      expect(pageTabLayout.scrollTo).not.toHaveBeenCalled();
     } finally {
       pageTabLayout.restore();
     }
