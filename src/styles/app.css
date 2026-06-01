@@ -3610,9 +3610,14 @@ button:disabled {
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
   color: #e27939;
   font-size: 0.72rem;
+}
+
+.answer-grid::-webkit-scrollbar {
+  display: none;
 }
 
 .answer-grid-head,
