@@ -20,6 +20,8 @@ describe("ScoringScreen", () => {
     expect(screen.queryByText("現在の合計点")).not.toBeInTheDocument();
     expect(screen.getByLabelText("採点結果")).toHaveClass("scoring-layout");
     expect(screen.getByLabelText("採点項目")).toHaveClass("scoring-board");
+    expect(screen.queryByText("採点済み")).not.toBeInTheDocument();
+    expect(screen.queryByText("正答")).not.toBeInTheDocument();
   });
 
   it("can reopen directly in the completed scoring state", () => {
@@ -28,6 +30,10 @@ describe("ScoringScreen", () => {
     );
 
     expect(screen.getByText("最終得点")).toBeInTheDocument();
+    expect(screen.getAllByText("解答 -")).toHaveLength(sampleExams[0].questions.length);
+    expect(screen.getByRole("button", { name: "復習する" }).closest(".result-actions")).toHaveClass(
+      "scoring-result-actions"
+    );
     expect(screen.getAllByLabelText("不正解")).toHaveLength(sampleExams[0].questions.length);
     expect(screen.getAllByLabelText("不正解")[0].querySelector(".cross-stroke.first")).not.toBeNull();
     expect(screen.getAllByLabelText("不正解")[0].querySelector(".cross-stroke.second")).not.toBeNull();

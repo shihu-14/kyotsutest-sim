@@ -18,7 +18,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
   const isComplete = visibleCount >= summary.gradedQuestions.length;
   const visibleQuestions = summary.gradedQuestions.slice(0, visibleCount);
   const visibleScore = visibleQuestions.reduce((sum, item) => sum + item.earnedPoints, 0);
-  const visibleCorrectCount = visibleQuestions.filter((item) => item.isCorrect).length;
 
   useEffect(() => {
     setVisibleCount(startComplete ? summary.gradedQuestions.length : 0);
@@ -66,22 +65,8 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
               <small>/{summary.totalPoints}</small>
             </strong>
           </div>
-          <dl className="scoring-result-stats">
-            <div>
-              <dt>採点済み</dt>
-              <dd>
-                {visibleCount}/{summary.gradedQuestions.length}
-              </dd>
-            </div>
-            <div>
-              <dt>正答</dt>
-              <dd>
-                {visibleCorrectCount}/{summary.gradedQuestions.length}
-              </dd>
-            </div>
-          </dl>
           {isComplete ? (
-            <div className="result-actions">
+            <div className="result-actions scoring-result-actions">
               <button className="primary-button" type="button" onClick={onReview}>
                 復習する
               </button>
@@ -109,7 +94,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
                   <p>{item.question.prompt.replaceAll("$", "")}</p>
                 </div>
                 <div className="grading-answer">
-                  <span>解答 {item.userAnswer.length ? item.userAnswer.join(", ") : "未解答"}</span>
+                  <span>解答 {item.userAnswer.length ? item.userAnswer.join(", ") : "-"}</span>
                   <span>正解 {item.correctAnswer.join(", ")}</span>
                 </div>
                 {isVisible ? (
