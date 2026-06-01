@@ -3063,7 +3063,7 @@ button:disabled {
   border-radius: 8px;
   background: transparent;
   box-shadow: none;
-  padding: 8px 14px 14px;
+  padding: 22px 14px 0;
   scrollbar-width: none;
 }
 
