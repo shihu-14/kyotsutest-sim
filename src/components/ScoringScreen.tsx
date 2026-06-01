@@ -16,6 +16,9 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
   const rowRefs = useRef<Array<HTMLElement | null>>([]);
   const resultPanelRef = useRef<HTMLElement | null>(null);
   const isComplete = visibleCount >= summary.gradedQuestions.length;
+  const visibleQuestions = summary.gradedQuestions.slice(0, visibleCount);
+  const visibleScore = visibleQuestions.reduce((sum, item) => sum + item.earnedPoints, 0);
+  const visibleCorrectCount = visibleQuestions.filter((item) => item.isCorrect).length;
 
   useEffect(() => {
     setVisibleCount(startComplete ? summary.gradedQuestions.length : 0);
@@ -54,65 +57,83 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
         </div>
       </header>
 
-      <section className="scoring-board" aria-label="採点結果">
-        {summary.gradedQuestions.map((item, index) => {
-          const isVisible = index < visibleCount;
-          return (
-            <article
-              className={`grading-row ${isVisible ? "visible" : ""}`}
-              key={item.question.id}
-              ref={(element) => {
-                rowRefs.current[index] = element;
-              }}
-            >
-              <div>
-                <span className="mark-label">{item.question.label}</span>
-                <strong>{item.question.section}</strong>
-                <p>{item.question.prompt.replaceAll("$", "")}</p>
-              </div>
-              <div className="grading-answer">
-                <span>解答 {item.userAnswer.length ? item.userAnswer.join(", ") : "未解答"}</span>
-                <span>正解 {item.correctAnswer.join(", ")}</span>
-              </div>
-              {isVisible ? (
-                <svg
-                  aria-label={item.isCorrect ? "正解" : "不正解"}
-                  className={`red-pen ${item.isCorrect ? "circle" : "cross"}`}
-                  viewBox="0 0 80 80"
-                >
-                  {item.isCorrect ? (
-                    <circle cx="40" cy="40" r="25" />
-                  ) : (
-                    <>
-                      <line className="cross-stroke first" x1="22" x2="58" y1="22" y2="58" />
-                      <line className="cross-stroke second" x1="58" x2="22" y1="22" y2="58" />
-                    </>
-                  )}
-                </svg>
-              ) : null}
-              <strong className="earned-points">{isVisible ? `${item.earnedPoints}点` : ""}</strong>
-            </article>
-          );
-        })}
-      </section>
-
-      {isComplete ? (
-        <section className="result-panel" aria-live="polite" ref={resultPanelRef}>
-          <p>最終得点</p>
-          <strong>
-            {summary.totalScore}
-            <small>/{summary.totalPoints}</small>
-          </strong>
-          <div className="result-actions">
-            <button className="primary-button" type="button" onClick={onReview}>
-              復習する
-            </button>
-            <button className="secondary-button" type="button" onClick={onRestart}>
-              一覧へ戻る
-            </button>
+      <section className="scoring-layout" aria-label="採点結果">
+        <section className="result-panel scoring-result-panel" aria-live="polite" ref={resultPanelRef}>
+          <div>
+            <p>{isComplete ? "最終得点" : "採点中"}</p>
+            <strong>
+              {isComplete ? summary.totalScore : visibleScore}
+              <small>/{summary.totalPoints}</small>
+            </strong>
           </div>
+          <dl className="scoring-result-stats">
+            <div>
+              <dt>採点済み</dt>
+              <dd>
+                {visibleCount}/{summary.gradedQuestions.length}
+              </dd>
+            </div>
+            <div>
+              <dt>正答</dt>
+              <dd>
+                {visibleCorrectCount}/{summary.gradedQuestions.length}
+              </dd>
+            </div>
+          </dl>
+          {isComplete ? (
+            <div className="result-actions">
+              <button className="primary-button" type="button" onClick={onReview}>
+                復習する
+              </button>
+              <button className="secondary-button" type="button" onClick={onRestart}>
+                一覧へ戻る
+              </button>
+            </div>
+          ) : null}
         </section>
-      ) : null}
+
+        <section className="scoring-board" aria-label="採点項目">
+          {summary.gradedQuestions.map((item, index) => {
+            const isVisible = index < visibleCount;
+            return (
+              <article
+                className={`grading-row ${isVisible ? "visible" : ""}`}
+                key={item.question.id}
+                ref={(element) => {
+                  rowRefs.current[index] = element;
+                }}
+              >
+                <div>
+                  <span className="mark-label">{item.question.label}</span>
+                  <strong>{item.question.section}</strong>
+                  <p>{item.question.prompt.replaceAll("$", "")}</p>
+                </div>
+                <div className="grading-answer">
+                  <span>解答 {item.userAnswer.length ? item.userAnswer.join(", ") : "未解答"}</span>
+                  <span>正解 {item.correctAnswer.join(", ")}</span>
+                </div>
+                {isVisible ? (
+                  <svg
+                    aria-label={item.isCorrect ? "正解" : "不正解"}
+                    className={`red-pen ${item.isCorrect ? "circle" : "cross"}`}
+                    viewBox="0 0 80 80"
+                  >
+                    {item.isCorrect ? (
+                      <circle cx="40" cy="40" r="25" />
+                    ) : (
+                      <>
+                        <line className="cross-stroke first" x1="22" x2="58" y1="22" y2="58" />
+                        <line className="cross-stroke second" x1="58" x2="22" y1="22" y2="58" />
+                      </>
+                    )}
+                  </svg>
+                ) : null}
+                <strong className="earned-points">{isVisible ? `${item.earnedPoints}点` : ""}</strong>
+              </article>
+            );
+          })}
+        </section>
+      </section>
     </main>
   );
 }

@@ -3767,8 +3767,12 @@ button:disabled {
 }
 
 .scoring-screen {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100vh;
   width: 100%;
   max-width: none;
+  overflow: hidden;
   background: #c77a2d url("../assets/on-table-image.jpg") center / cover no-repeat;
 }
 
@@ -3800,19 +3804,31 @@ button:disabled {
   font-size: 0.5em;
 }
 
+.scoring-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 10px;
+  min-height: 0;
+}
+
 .scoring-board {
   display: grid;
+  align-content: start;
   gap: 10px;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: 18px;
+  scrollbar-gutter: stable;
 }
 
 .grading-row {
   position: relative;
   display: grid;
-  grid-template-columns: 1fr 180px 90px 70px;
+  grid-template-columns: minmax(0, 1fr) 160px 74px 60px;
   gap: 12px;
   align-items: center;
-  min-height: 86px;
+  min-height: 78px;
   border-bottom: 1px solid #ded2bd;
   opacity: 0.42;
 }
@@ -3877,6 +3893,15 @@ button:disabled {
   text-align: center;
 }
 
+.scoring-result-panel {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+  min-height: 0;
+  margin: 0;
+  text-align: left;
+}
+
 .result-panel p {
   margin: 0;
   color: #6d4a20;
@@ -3892,9 +3917,37 @@ button:disabled {
   line-height: 1.05;
 }
 
+.scoring-result-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.scoring-result-stats div {
+  border: 1px solid #ded2bd;
+  background: rgba(255, 250, 241, 0.72);
+  padding: 10px;
+}
+
+.scoring-result-stats dt {
+  color: #6d4a20;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.scoring-result-stats dd {
+  margin: 3px 0 0;
+  color: #273534;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 950;
+}
+
 .result-actions {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
   margin-top: 18px;
 }
@@ -5859,6 +5912,20 @@ button:disabled {
   .exam-mode-background .mark-sheet {
     height: 100%;
     margin-top: 0;
+  }
+
+  .scoring-screen {
+    height: auto;
+    overflow: visible;
+  }
+
+  .scoring-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scoring-board {
+    max-height: none;
+    overflow: visible;
   }
 
   .home-actions {

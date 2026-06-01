@@ -18,6 +18,8 @@ describe("ScoringScreen", () => {
     expect(screen.getByRole("heading", { name: "採点" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "自動採点" })).not.toBeInTheDocument();
     expect(screen.queryByText("現在の合計点")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("採点結果")).toHaveClass("scoring-layout");
+    expect(screen.getByLabelText("採点項目")).toHaveClass("scoring-board");
   });
 
   it("can reopen directly in the completed scoring state", () => {
