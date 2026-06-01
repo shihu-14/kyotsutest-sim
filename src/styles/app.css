@@ -3881,6 +3881,12 @@ button:disabled {
   animation-delay: 100ms;
 }
 
+.scoring-static .red-pen.circle circle,
+.scoring-static .red-pen.cross .cross-stroke {
+  animation: none;
+  stroke-dashoffset: 0;
+}
+
 .earned-points {
   color: #a94337;
   font-family: Inter, system-ui, sans-serif;
@@ -3928,6 +3934,12 @@ button:disabled {
   opacity: 0;
   transform: translateY(10px);
   animation: reveal-result-actions 520ms ease-out 240ms forwards;
+}
+
+.scoring-static .scoring-result-actions {
+  opacity: 1;
+  transform: none;
+  animation: none;
 }
 
 .scoring-design-mode {

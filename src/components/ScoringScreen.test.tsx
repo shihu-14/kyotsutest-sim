@@ -29,9 +29,10 @@ describe("ScoringScreen", () => {
       <ScoringScreen answers={{}} exam={sampleExams[0]} startComplete onRestart={vi.fn()} onReview={vi.fn()} />
     );
 
+    expect(screen.getByRole("main")).toHaveClass("scoring-static");
     expect(screen.getByText("最終得点")).toBeInTheDocument();
     expect(screen.getAllByText("解答 -")).toHaveLength(sampleExams[0].questions.length);
-    expect(screen.getByRole("button", { name: "復習する" }).closest(".result-actions")).toHaveClass(
+    expect(screen.getByRole("button", { name: "復習する" }).closest(".result-actions")).not.toHaveClass(
       "scoring-result-actions"
     );
     expect(screen.getAllByLabelText("不正解")).toHaveLength(sampleExams[0].questions.length);

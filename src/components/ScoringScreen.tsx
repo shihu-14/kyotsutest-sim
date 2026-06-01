@@ -48,8 +48,12 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
     return () => window.cancelAnimationFrame(animationId);
   }, [isComplete, startComplete, visibleCount]);
 
+  const screenClassName = ["screen", "scoring-screen", startComplete ? "scoring-static" : ""]
+    .filter(Boolean)
+    .join(" ");
+
   return (
-    <main className="screen scoring-screen">
+    <main className={screenClassName}>
       <header className="screen-heading">
         <div>
           <h1>採点</h1>
@@ -66,7 +70,11 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
             </strong>
           </div>
           {isComplete ? (
-            <div className="result-actions scoring-result-actions">
+            <div
+              className={["result-actions", startComplete ? "" : "scoring-result-actions"]
+                .filter(Boolean)
+                .join(" ")}
+            >
               <button className="primary-button" type="button" onClick={onReview}>
                 復習する
               </button>
