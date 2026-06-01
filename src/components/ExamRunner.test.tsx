@@ -151,6 +151,12 @@ describe("ExamRunner", () => {
     fireEvent.wheel(stage, { ctrlKey: true, deltaY: -80 });
 
     expect(stage).toHaveStyle({ "--booklet-zoom": "1.08" });
+    fireEvent.wheel(stage, { ctrlKey: true, deltaY: 80 });
+
+    expect(stage).toHaveStyle({ "--booklet-zoom": "1" });
+    fireEvent.wheel(stage, { ctrlKey: true, deltaY: 80 });
+
+    expect(stage).toHaveStyle({ "--booklet-zoom": "1" });
     expect(document.querySelector(".booklet-scroll-surface")).toBeInTheDocument();
   });
 

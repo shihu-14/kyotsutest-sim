@@ -84,7 +84,7 @@ export function ExamRunner({
   };
 
   const updateBookletZoom = (value: number) => {
-    setBookletZoom(Math.min(1.6, Math.max(0.75, value)));
+    setBookletZoom(Math.min(1.6, Math.max(1, value)));
   };
 
   useEffect(() => {
