@@ -3139,18 +3139,28 @@ button:disabled {
   display: flex;
   gap: 0;
   width: min(100%, calc((var(--has-cover-tab) * var(--cover-tab-width)) + (var(--visible-page-tabs) * var(--page-tab-width))));
-  overflow-x: auto;
-  overflow-y: hidden;
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 6px;
   margin-bottom: 6px;
   background: transparent;
+  scrollbar-width: none;
+}
+
+.page-tab-scroll {
+  display: flex;
+  flex: 0 1 calc(var(--visible-page-tabs) * var(--page-tab-width));
+  width: calc(var(--visible-page-tabs) * var(--page-tab-width));
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
   scrollbar-width: none;
 }
 
-.page-tabs::-webkit-scrollbar {
+.page-tabs::-webkit-scrollbar,
+.page-tab-scroll::-webkit-scrollbar {
   display: none;
 }
 
@@ -3174,9 +3184,6 @@ button:disabled {
 }
 
 .page-tabs .cover-tab {
-  position: sticky;
-  left: 0;
-  z-index: 2;
   flex: 0 0 var(--cover-tab-width);
   width: var(--cover-tab-width);
   min-width: var(--cover-tab-width);

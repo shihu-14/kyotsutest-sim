@@ -37,7 +37,7 @@ export function ExamRunner({
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showPauseConfirm, setShowPauseConfirm] = useState(false);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
-  const pageTabsRef = useRef<HTMLElement | null>(null);
+  const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const previousPagePositionRef = useRef<number | null>(null);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
@@ -209,13 +209,7 @@ export function ExamRunner({
 
       <section className="exam-body">
         <div className="booklet-shell">
-          <nav
-            className="page-tabs"
-            aria-label="問題ページ"
-            ref={pageTabsRef}
-            style={pageTabsStyle}
-            onWheel={handlePageTabsWheel}
-          >
+          <nav className="page-tabs" aria-label="問題ページ" style={pageTabsStyle}>
             {exam.coverImageUrl ? (
               <button
                 className={showCover ? "active cover-tab" : "cover-tab"}
@@ -225,19 +219,21 @@ export function ExamRunner({
                 表紙
               </button>
             ) : null}
-            {exam.pages.map((item) => (
-              <button
-                className={!showCover && item.id === page.id ? "active" : ""}
-                key={item.id}
-                type="button"
-                onClick={() => {
-                  setShowCover(false);
-                  onChangePage(item.id);
-                }}
-              >
-                {item.pageNumber}
-              </button>
-            ))}
+            <div className="page-tab-scroll" ref={pageTabsRef} onWheel={handlePageTabsWheel}>
+              {exam.pages.map((item) => (
+                <button
+                  className={!showCover && item.id === page.id ? "active" : ""}
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setShowCover(false);
+                    onChangePage(item.id);
+                  }}
+                >
+                  {item.pageNumber}
+                </button>
+              ))}
+            </div>
           </nav>
           <div className="booklet-stage-shell">
             {canGoPrevious ? (

@@ -7,7 +7,6 @@ import { ExamRunner } from "./ExamRunner";
 
 function installPageTabLayoutMocks() {
   const scrollToDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "scrollTo");
-  const coverWidth = 46 * 1.8;
   const pageWidth = 50 * 1.45;
   const scrollTo = vi.fn(function scrollToPageTab(this: HTMLElement, options: ScrollToOptions) {
     this.scrollLeft = options.left ?? 0;
@@ -19,11 +18,11 @@ function installPageTabLayoutMocks() {
   });
 
   const mockNavMetrics = (nav: HTMLElement) => {
-    const pageCount = [...nav.querySelectorAll("button:not(.cover-tab)")].length;
+    const pageCount = [...nav.querySelectorAll("button")].length;
     Object.defineProperties(nav, {
       clientWidth: {
         configurable: true,
-        value: coverWidth + 13 * pageWidth
+        value: 13 * pageWidth
       },
       scrollLeft: {
         configurable: true,
@@ -32,7 +31,7 @@ function installPageTabLayoutMocks() {
       },
       scrollWidth: {
         configurable: true,
-        value: coverWidth + pageCount * pageWidth
+        value: pageCount * pageWidth
       }
     });
 
@@ -41,11 +40,11 @@ function installPageTabLayoutMocks() {
       Object.defineProperties(button, {
         offsetLeft: {
           configurable: true,
-          value: Number.isFinite(pageNumber) && pageNumber > 0 ? coverWidth + (pageNumber - 1) * pageWidth : 0
+          value: Number.isFinite(pageNumber) && pageNumber > 0 ? (pageNumber - 1) * pageWidth : 0
         },
         offsetWidth: {
           configurable: true,
-          value: button.classList.contains("cover-tab") ? coverWidth : pageWidth
+          value: pageWidth
         }
       });
     });
@@ -284,7 +283,7 @@ describe("ExamRunner", () => {
       shortRender.unmount();
       render(<ControlledRunner />);
 
-      pageTabLayout.mockNavMetrics(screen.getByLabelText("問題ページ"));
+      pageTabLayout.mockNavMetrics(document.querySelector(".page-tab-scroll")!);
 
       await user.click(screen.getByRole("button", { name: "次のページへ" }));
 
@@ -293,14 +292,14 @@ describe("ExamRunner", () => {
         expect.objectContaining({ behavior: "smooth", left: 72.5 })
       );
 
-      pageTabLayout.mockNavMetrics(screen.getByLabelText("問題ページ"));
+      pageTabLayout.mockNavMetrics(document.querySelector(".page-tab-scroll")!);
       pageTabLayout.scrollTo.mockClear();
 
       await user.click(screen.getByRole("button", { name: "前のページへ" }));
 
       await waitFor(() => expect(screen.getByRole("button", { name: "13" })).toHaveClass("active"));
       expect(pageTabLayout.scrollTo).toHaveBeenLastCalledWith(
-        expect.objectContaining({ behavior: "smooth", left: 952.8 })
+        expect.objectContaining({ behavior: "smooth", left: 870 })
       );
     } finally {
       pageTabLayout.restore();
