@@ -3742,6 +3742,10 @@ button:disabled {
   opacity: 0.38;
 }
 
+.mark-sheet .bubble:disabled {
+  cursor: default;
+}
+
 .mark-sheet.review-mode .bubble:disabled:not(.unavailable) {
   opacity: 1;
 }
