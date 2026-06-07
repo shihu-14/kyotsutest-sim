@@ -128,7 +128,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
         <section className="scoring-final-result visible" aria-label="採点結果" aria-live="polite">
           <div className="scoring-final-content">
             <p>最終得点</p>
-            <strong>
+            <strong className="scoring-score-value">
               {summary.totalScore}
               <small>/{summary.totalPoints}</small>
             </strong>

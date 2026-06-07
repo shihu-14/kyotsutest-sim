@@ -3463,7 +3463,7 @@ button:disabled {
   top: 50%;
   left: 50%;
   z-index: 3;
-  transform: translate(-50%, -50%) rotate(-8deg);
+  transform: translate(-50%, -50%);
 }
 
 .page-image-grade-stamp {
@@ -3471,9 +3471,9 @@ button:disabled {
   top: var(--mark-y);
   left: var(--mark-x);
   z-index: 4;
-  width: 5.8%;
+  width: 4.4%;
   aspect-ratio: 1;
-  transform: translate(-130%, -190%) rotate(-8deg);
+  transform: translate(-50%, -50%);
   pointer-events: none;
 }
 
@@ -3912,10 +3912,9 @@ button:disabled {
 
 .scoring-booklet-shell {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
   gap: 10px;
-  width: min(920px, calc(100vw - 72px));
-  height: calc(100vh - 72px);
+  width: min(920px, calc(100vw - 72px), calc((100vh - 118px) * 0.7037));
   min-height: 0;
 }
 
@@ -3934,12 +3933,14 @@ button:disabled {
 
 .scoring-page-turn {
   display: grid;
+  width: 100%;
+  aspect-ratio: 1247 / 1772;
   min-height: 0;
-  height: 100%;
   animation: scoring-page-turn 420ms ease-out both;
 }
 
 .scoring-page-turn .booklet-page {
+  width: 100%;
   height: 100%;
   min-height: 0;
 }
@@ -3981,6 +3982,12 @@ button:disabled {
   font-family: Inter, system-ui, sans-serif;
   font-size: clamp(4rem, 10vw, 7.8rem);
   line-height: 1.02;
+}
+
+.scoring-score-value {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: reveal-result-actions 520ms ease-out 1000ms forwards;
 }
 
 .score-counter {
@@ -4140,9 +4147,10 @@ button:disabled {
 .scoring-result-actions {
   opacity: 0;
   transform: translateY(10px);
-  animation: reveal-result-actions 520ms ease-out 240ms forwards;
+  animation: reveal-result-actions 520ms ease-out 2000ms forwards;
 }
 
+.scoring-static .scoring-score-value,
 .scoring-static .scoring-result-actions {
   opacity: 1;
   transform: none;
