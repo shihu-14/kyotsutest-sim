@@ -3871,7 +3871,7 @@ button:disabled {
 
 .bubble.filled.review-correct::before {
   inset: -1.5px;
-  transform: translate(2px, -2px);
+  transform: translate(3px, -3px);
 }
 
 .bubble.filled.review-correct::after {
