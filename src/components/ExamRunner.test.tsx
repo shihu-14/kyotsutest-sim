@@ -103,7 +103,7 @@ describe("ExamRunner", () => {
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
 
-  it("customizes the finish action gradient from the debug controls", () => {
+  it("customizes the finish action color from the debug controls", () => {
     render(
       <ExamRunner
         answers={{}}
@@ -118,18 +118,13 @@ describe("ExamRunner", () => {
     );
 
     const finishButton = document.querySelector<HTMLButtonElement>(".finish-button")!;
-    const startInput = document.querySelector<HTMLInputElement>(
-      'input[aria-label="試験終了グラデーション開始色"]'
-    )!;
-    const angleInput = document.querySelector<HTMLInputElement>('input[aria-label="試験終了グラデーション角度"]')!;
+    const colorInput = document.querySelector<HTMLInputElement>('input[aria-label="試験終了ボタン色"]')!;
 
-    expect(finishButton.style.getPropertyValue("--finish-gradient-start")).toBe("#ff8a3c");
+    expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#e85f3a");
 
-    fireEvent.change(startInput, { target: { value: "#123456" } });
-    fireEvent.change(angleInput, { target: { value: "220" } });
+    fireEvent.change(colorInput, { target: { value: "#123456" } });
 
-    expect(finishButton.style.getPropertyValue("--finish-gradient-angle")).toBe("220deg");
-    expect(finishButton.style.getPropertyValue("--finish-gradient-start")).toBe("#123456");
+    expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#123456");
   });
 
   it("zooms only from the problem display area when using a modified wheel", () => {

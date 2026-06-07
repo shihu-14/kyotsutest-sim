@@ -18,13 +18,7 @@ interface ExamRunnerProps {
   onExpire: () => void;
 }
 
-const defaultFinishGradient = {
-  angle: 135,
-  start: "#ff8a3c",
-  middle: "#e85f3a",
-  end: "#a94337",
-  middleStop: 52
-};
+const defaultFinishColor = "#e85f3a";
 
 export function ExamRunner({
   exam,
@@ -41,7 +35,7 @@ export function ExamRunner({
   const [bookletZoom, setBookletZoom] = useState(1);
   const [showCover, setShowCover] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
-  const [finishGradient, setFinishGradient] = useState(defaultFinishGradient);
+  const [finishColor, setFinishColor] = useState(defaultFinishColor);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
@@ -58,13 +52,9 @@ export function ExamRunner({
     "--visible-page-tabs": String(Math.min(exam.pages.length, 13)),
     "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
   } as CSSProperties;
-  const finishGradientStyle = {
-    "--finish-gradient-angle": `${finishGradient.angle}deg`,
-    "--finish-gradient-start": finishGradient.start,
-    "--finish-gradient-middle": finishGradient.middle,
-    "--finish-gradient-end": finishGradient.end,
-    "--finish-gradient-middle-stop": `${finishGradient.middleStop}%`,
-    background: `linear-gradient(${finishGradient.angle}deg, ${finishGradient.start} 0%, ${finishGradient.middle} ${finishGradient.middleStop}%, ${finishGradient.end} 100%)`
+  const finishColorStyle = {
+    "--finish-color": finishColor,
+    backgroundColor: finishColor
   } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
@@ -99,10 +89,6 @@ export function ExamRunner({
 
   const updateBookletZoom = (value: number) => {
     setBookletZoom(Math.min(1.6, Math.max(1, value)));
-  };
-
-  const updateFinishGradient = (updates: Partial<typeof defaultFinishGradient>) => {
-    setFinishGradient((current) => ({ ...current, ...updates }));
   };
 
   useEffect(() => {
@@ -223,60 +209,20 @@ export function ExamRunner({
                 <summary>終了色</summary>
                 <div className="finish-color-debug-grid">
                   <label>
-                    <span>開始</span>
+                    <span>色</span>
                     <input
-                      aria-label="試験終了グラデーション開始色"
+                      aria-label="試験終了ボタン色"
                       type="color"
-                      value={finishGradient.start}
-                      onChange={(event) => updateFinishGradient({ start: event.currentTarget.value })}
+                      value={finishColor}
+                      onChange={(event) => setFinishColor(event.currentTarget.value)}
                     />
                   </label>
-                  <label>
-                    <span>中央</span>
-                    <input
-                      aria-label="試験終了グラデーション中央色"
-                      type="color"
-                      value={finishGradient.middle}
-                      onChange={(event) => updateFinishGradient({ middle: event.currentTarget.value })}
-                    />
-                  </label>
-                  <label>
-                    <span>終了</span>
-                    <input
-                      aria-label="試験終了グラデーション終了色"
-                      type="color"
-                      value={finishGradient.end}
-                      onChange={(event) => updateFinishGradient({ end: event.currentTarget.value })}
-                    />
-                  </label>
-                  <label className="finish-color-debug-wide">
-                    <span>角度 {finishGradient.angle}deg</span>
-                    <input
-                      aria-label="試験終了グラデーション角度"
-                      max="360"
-                      min="0"
-                      type="range"
-                      value={finishGradient.angle}
-                      onChange={(event) => updateFinishGradient({ angle: Number(event.currentTarget.value) })}
-                    />
-                  </label>
-                  <label className="finish-color-debug-wide">
-                    <span>中央位置 {finishGradient.middleStop}%</span>
-                    <input
-                      aria-label="試験終了グラデーション中央位置"
-                      max="100"
-                      min="0"
-                      type="range"
-                      value={finishGradient.middleStop}
-                      onChange={(event) => updateFinishGradient({ middleStop: Number(event.currentTarget.value) })}
-                    />
-                  </label>
-                  <div className="finish-gradient-preview" style={finishGradientStyle} aria-hidden="true" />
+                  <div className="finish-color-preview" style={finishColorStyle} aria-hidden="true" />
                 </div>
               </details>
               <button
                 className="danger-button finish-button"
-                style={finishGradientStyle}
+                style={finishColorStyle}
                 type="button"
                 onClick={() => setShowFinishConfirm(true)}
               >
@@ -385,7 +331,7 @@ export function ExamRunner({
               </button>
               <button
                 className="danger-button finish-button"
-                style={finishGradientStyle}
+                style={finishColorStyle}
                 type="button"
                 onClick={() => {
                   setShowFinishConfirm(false);

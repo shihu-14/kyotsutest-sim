@@ -129,7 +129,7 @@ button:disabled {
 }
 
 .finish-button {
-  background: linear-gradient(135deg, #ff8a3c 0%, #e85f3a 52%, #a94337 100%);
+  background: var(--finish-color, #e85f3a);
   color: #ffffff;
   box-shadow: 0 10px 20px rgba(116, 36, 25, 0.22);
 }
@@ -1123,7 +1123,7 @@ button:disabled {
 
 .finish-color-debug-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 74px minmax(0, 1fr);
   gap: 9px;
   border-top: 1px solid rgba(39, 53, 52, 0.16);
   padding: 10px;
@@ -1146,21 +1146,11 @@ button:disabled {
   padding: 2px;
 }
 
-.finish-color-debug input[type="range"] {
-  width: 100%;
-  accent-color: #d95532;
-}
-
-.finish-color-debug-wide,
-.finish-gradient-preview {
-  grid-column: 1 / -1;
-}
-
-.finish-gradient-preview {
+.finish-color-preview {
   height: 20px;
   border: 1px solid rgba(39, 53, 52, 0.24);
   border-radius: 4px;
-  background: linear-gradient(135deg, #ff8a3c 0%, #e85f3a 52%, #a94337 100%);
+  background: var(--finish-color, #e85f3a);
 }
 
 .timer {
