@@ -3436,6 +3436,52 @@ button:disabled {
   line-height: 1;
 }
 
+.question-grade-anchor {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.question-grade-anchor .mark-label {
+  margin-right: 0;
+}
+
+.grade-stamp {
+  width: 44px;
+  height: 44px;
+  stroke: #c73228;
+  stroke-width: 7;
+  fill: transparent;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.question-grade-anchor .grade-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  transform: translate(-50%, -50%) rotate(-8deg);
+}
+
+.page-image-grade-stamp {
+  position: absolute;
+  top: var(--mark-y);
+  left: var(--mark-x);
+  z-index: 4;
+  width: 5.8%;
+  aspect-ratio: 1;
+  transform: translate(-130%, -190%) rotate(-8deg);
+  pointer-events: none;
+}
+
+.page-image-grade-stamp .grade-stamp {
+  width: 100%;
+  height: 100%;
+}
+
 .choice-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -3829,13 +3875,112 @@ button:disabled {
 }
 
 .scoring-screen {
+  position: relative;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  place-items: center;
   height: 100vh;
   width: 100%;
   max-width: none;
   overflow: hidden;
   background: #c77a2d url("../assets/on-table-image.jpg") center / cover no-repeat;
+}
+
+.scoring-heading {
+  position: absolute;
+  top: 18px;
+  left: 24px;
+  z-index: 3;
+  margin: 0;
+  color: rgba(39, 53, 52, 0.72);
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.scoring-booklet-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 36px 28px 26px;
+  animation: scoring-booklet-in 360ms ease-out both;
+}
+
+.scoring-booklet-scene.fade-out {
+  animation: scoring-booklet-out 520ms ease-in forwards;
+}
+
+.scoring-booklet-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 10px;
+  width: min(920px, calc(100vw - 72px));
+  height: calc(100vh - 72px);
+  min-height: 0;
+}
+
+.scoring-progress-note {
+  justify-self: center;
+  min-width: 92px;
+  border: 1px solid rgba(39, 53, 52, 0.28);
+  background: rgba(255, 250, 241, 0.86);
+  color: #273534;
+  padding: 6px 12px;
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.scoring-page-turn {
+  display: grid;
+  min-height: 0;
+  height: 100%;
+  animation: scoring-page-turn 420ms ease-out both;
+}
+
+.scoring-page-turn .booklet-page {
+  height: 100%;
+  min-height: 0;
+}
+
+.scoring-page-turn .booklet-page:not(.exact-page) {
+  overflow: auto;
+}
+
+.scoring-final-result {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 28px;
+}
+
+.scoring-final-result.visible {
+  animation: scoring-result-in 640ms ease-out both;
+}
+
+.scoring-final-content {
+  border: 1px solid rgba(39, 53, 52, 0.24);
+  background: rgba(255, 253, 247, 0.92);
+  padding: clamp(28px, 5vw, 52px);
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(43, 30, 15, 0.24);
+}
+
+.scoring-final-content p {
+  margin: 0;
+  color: #6d4a20;
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-weight: 900;
+}
+
+.scoring-final-content strong {
+  display: block;
+  color: #1f6f5b;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: clamp(4rem, 10vw, 7.8rem);
+  line-height: 1.02;
 }
 
 .score-counter {
@@ -5934,6 +6079,49 @@ button:disabled {
 @keyframes draw-stamp {
   to {
     stroke-dashoffset: 0;
+  }
+}
+
+@keyframes scoring-booklet-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes scoring-booklet-out {
+  to {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.97);
+  }
+}
+
+@keyframes scoring-page-turn {
+  from {
+    opacity: 0;
+    transform: translateX(24px) rotateY(-10deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes scoring-result-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 

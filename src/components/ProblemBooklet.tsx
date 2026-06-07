@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
-import type { AnswerValue, ExamPage, PageMarkArea, QuestionSlot, UserAnswers } from "../types";
+import type { AnswerValue, ExamPage, GradedQuestion, PageMarkArea, QuestionSlot, UserAnswers } from "../types";
 import { normalizePreviewText, renderMathSegments, mathToHtml } from "../utils/latex";
 
 interface ProblemBookletProps {
   page: ExamPage;
   questionsById: Map<string, QuestionSlot>;
   answers: UserAnswers;
+  gradeStates?: Map<string, GradedQuestion>;
   reviewMode?: boolean;
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
 }
@@ -14,6 +15,7 @@ export function ProblemBooklet({
   page,
   questionsById,
   answers,
+  gradeStates,
   reviewMode = false,
   onToggleAnswer
 }: ProblemBookletProps) {
@@ -26,6 +28,7 @@ export function ProblemBooklet({
             <PageImageMarks
               areas={page.markAreas}
               answers={answers}
+              gradeStates={gradeStates}
               questionsById={questionsById}
               reviewMode={reviewMode}
               onToggleAnswer={onToggleAnswer}
@@ -95,6 +98,8 @@ export function ProblemBooklet({
         return (
           <QuestionBlock
             answers={answers[question.id] ?? []}
+            gradeStatesActive={Boolean(gradeStates)}
+            gradeState={gradeStates?.get(question.id)}
             key={question.id}
             question={question}
             reviewMode={reviewMode}
@@ -110,11 +115,20 @@ interface PageImageMarksProps {
   areas: PageMarkArea[];
   questionsById: Map<string, QuestionSlot>;
   answers: UserAnswers;
+  gradeStates?: Map<string, GradedQuestion>;
   reviewMode: boolean;
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
 }
 
-function PageImageMarks({ areas, questionsById, answers, reviewMode, onToggleAnswer }: PageImageMarksProps) {
+function PageImageMarks({ areas, questionsById, answers, gradeStates, reviewMode, onToggleAnswer }: PageImageMarksProps) {
+  const gradeAnchors = areas.filter((area, index) => {
+    if (!gradeStates?.has(area.questionId)) {
+      return false;
+    }
+
+    return areas.findIndex((candidate) => candidate.questionId === area.questionId) === index;
+  });
+
   return (
     <div className="page-image-mark-layer" aria-label="問題ページ上のマーク領域">
       {areas.map((area) => {
@@ -125,7 +139,12 @@ function PageImageMarks({ areas, questionsById, answers, reviewMode, onToggleAns
 
         const selected = answers[question.id] ?? [];
         const checked = selected.includes(area.value);
-        const correct = reviewMode && !checked && question.correct.includes(area.value);
+        const gradeState = gradeStates?.get(question.id);
+        const correct =
+          reviewMode &&
+          !checked &&
+          question.correct.includes(area.value) &&
+          (!gradeStates || (gradeState ? !gradeState.isCorrect : false));
         const option = question.options.find((candidate) => candidate.value === area.value);
         const widthPercent = area.widthPercent ?? 3.2;
         const heightPercent = area.heightPercent ?? 2.6;
@@ -152,6 +171,23 @@ function PageImageMarks({ areas, questionsById, answers, reviewMode, onToggleAns
           />
         );
       })}
+      {gradeAnchors.map((area) => {
+        const gradeState = gradeStates?.get(area.questionId);
+        if (!gradeState) {
+          return null;
+        }
+
+        const style = {
+          "--mark-x": `${area.xPercent}%`,
+          "--mark-y": `${area.yPercent}%`
+        } as CSSProperties;
+
+        return (
+          <div className="page-image-grade-stamp" key={`${area.questionId}-grade`} style={style}>
+            <GradeStamp isCorrect={gradeState.isCorrect} />
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -159,11 +195,13 @@ function PageImageMarks({ areas, questionsById, answers, reviewMode, onToggleAns
 interface QuestionBlockProps {
   question: QuestionSlot;
   answers: AnswerValue[];
+  gradeStatesActive: boolean;
+  gradeState?: GradedQuestion;
   reviewMode: boolean;
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
 }
 
-function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: QuestionBlockProps) {
+function QuestionBlock({ question, answers, gradeStatesActive, gradeState, reviewMode, onToggleAnswer }: QuestionBlockProps) {
   const isCorrect =
     question.correct.length === answers.length && question.correct.every((value) => answers.includes(value));
   const isWrong = reviewMode && !isCorrect;
@@ -171,18 +209,30 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
   return (
     <section className="question-block" aria-labelledby={`${question.id}-title`}>
       <h3 id={`${question.id}-title`}>
-        <span className="mark-label">{question.label}</span>
+        <span className="question-grade-anchor">
+          <span className="mark-label">{question.label}</span>
+          {gradeState ? <GradeStamp isCorrect={gradeState.isCorrect} /> : null}
+        </span>
         {renderMathSegments(normalizePreviewText(question.prompt))}
       </h3>
       <div className="choice-list" role={question.multi ? "group" : "radiogroup"} aria-label={`${question.label}の選択肢`}>
         {question.options.map((option) => {
           const selected = answers.includes(option.value);
           const isCorrectChoice = question.correct.includes(option.value);
+          const showCorrectChoice =
+            reviewMode &&
+            isCorrectChoice &&
+            (!gradeStatesActive || (gradeState ? !selected && !gradeState.isCorrect : false));
+          const showWrongChoice =
+            reviewMode &&
+            selected &&
+            !isCorrectChoice &&
+            (!gradeStatesActive || (gradeState ? !gradeState.isCorrect : false));
           const classNames = [
             "choice-button",
             selected ? "selected" : "",
-            reviewMode && isCorrectChoice ? "correct-choice" : "",
-            reviewMode && selected && !isCorrectChoice ? "wrong-choice" : ""
+            showCorrectChoice ? "correct-choice" : "",
+            showWrongChoice ? "wrong-choice" : ""
           ]
             .filter(Boolean)
             .join(" ");
@@ -209,5 +259,24 @@ function QuestionBlock({ question, answers, reviewMode, onToggleAnswer }: Questi
         </p>
       ) : null}
     </section>
+  );
+}
+
+function GradeStamp({ isCorrect }: { isCorrect: boolean }) {
+  return (
+    <svg
+      aria-label={isCorrect ? "正解" : "不正解"}
+      className={`grade-stamp red-pen ${isCorrect ? "circle" : "cross"}`}
+      viewBox="0 0 80 80"
+    >
+      {isCorrect ? (
+        <circle cx="40" cy="40" r="25" />
+      ) : (
+        <>
+          <line className="cross-stroke first" x1="22" x2="58" y1="22" y2="58" />
+          <line className="cross-stroke second" x1="58" x2="22" y1="22" y2="58" />
+        </>
+      )}
+    </svg>
   );
 }

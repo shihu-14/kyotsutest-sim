@@ -3,23 +3,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../data/sampleExam";
 import { ScoringScreen } from "./ScoringScreen";
 
-const originalScrollIntoView = window.HTMLElement.prototype.scrollIntoView;
-
 describe("ScoringScreen", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
-    window.HTMLElement.prototype.scrollIntoView = originalScrollIntoView;
   });
 
-  it("uses the scoring title without the automatic scoring label", () => {
+  it("starts scoring on the booklet instead of the old scoring list", () => {
     render(<ScoringScreen answers={{}} exam={sampleExams[0]} onRestart={vi.fn()} onReview={vi.fn()} />);
 
     expect(screen.getByRole("heading", { name: "採点" })).toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "自動採点" })).not.toBeInTheDocument();
     expect(screen.queryByText("現在の合計点")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("採点結果")).toHaveClass("scoring-layout");
-    expect(screen.getByLabelText("採点項目")).toHaveClass("scoring-board");
+    expect(screen.getByLabelText("問題用紙への採点")).toHaveClass("scoring-booklet-scene");
+    expect(screen.queryByLabelText("採点項目")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("採点結果")).not.toBeInTheDocument();
     expect(screen.queryByText("採点済み")).not.toBeInTheDocument();
     expect(screen.queryByText("正答")).not.toBeInTheDocument();
   });
@@ -31,32 +29,32 @@ describe("ScoringScreen", () => {
 
     expect(screen.getByRole("main")).toHaveClass("scoring-static");
     expect(screen.getByText("最終得点")).toBeInTheDocument();
-    expect(screen.getAllByText("解答 -")).toHaveLength(sampleExams[0].questions.length);
+    expect(screen.getByLabelText("採点結果")).toHaveClass("scoring-final-result");
+    expect(screen.queryByLabelText("問題用紙への採点")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "復習する" }).closest(".result-actions")).not.toHaveClass(
       "scoring-result-actions"
     );
-    expect(screen.getAllByLabelText("不正解")).toHaveLength(sampleExams[0].questions.length);
-    expect(screen.getAllByLabelText("不正解")[0].querySelector(".cross-stroke.first")).not.toBeNull();
-    expect(screen.getAllByLabelText("不正解")[0].querySelector(".cross-stroke.second")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "メニューに戻る" })).toBeInTheDocument();
   });
 
-  it("scrolls to each newly revealed scoring row", () => {
+  it("delays from the cover and then stamps answers on the problem booklet", () => {
     vi.useFakeTimers();
-    const scrollIntoView = vi.fn();
-    const requestAnimationFrame = vi.spyOn(window, "requestAnimationFrame").mockImplementation((callback) => {
-      callback(0);
-      return 1;
-    });
-    vi.spyOn(window, "cancelAnimationFrame").mockImplementation(() => undefined);
-    window.HTMLElement.prototype.scrollIntoView = scrollIntoView;
 
     render(<ScoringScreen answers={{}} exam={sampleExams[0]} onRestart={vi.fn()} onReview={vi.fn()} />);
+
+    expect(screen.getByText("表紙")).toBeInTheDocument();
+    expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(screen.getByText("1ページ")).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(420);
     });
 
-    expect(requestAnimationFrame).toHaveBeenCalled();
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "center" });
+    expect(screen.getAllByLabelText("不正解")[0].querySelector(".cross-stroke.first")).not.toBeNull();
   });
 });

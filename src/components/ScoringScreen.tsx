@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Exam, GradeSummary, UserAnswers } from "../types";
 import { gradeExam } from "../utils/answer";
+import { ProblemBooklet } from "./ProblemBooklet";
 
 interface ScoringScreenProps {
   exam: Exam;
@@ -10,43 +11,79 @@ interface ScoringScreenProps {
   onRestart: () => void;
 }
 
+const coverPageIndex = -1;
+const coverDelayMs = 1000;
+const revealDelayMs = 420;
+const pageTurnDelayMs = 760;
+const resultDelayMs = 620;
+
 export function ScoringScreen({ exam, answers, startComplete = false, onReview, onRestart }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);
+  const questionsById = useMemo(
+    () => new Map(exam.questions.map((question) => [question.id, question])),
+    [exam.questions]
+  );
+  const firstPageIndex = exam.coverImageUrl ? coverPageIndex : 0;
   const [visibleCount, setVisibleCount] = useState(() => (startComplete ? summary.gradedQuestions.length : 0));
-  const rowRefs = useRef<Array<HTMLElement | null>>([]);
-  const resultPanelRef = useRef<HTMLElement | null>(null);
-  const isComplete = visibleCount >= summary.gradedQuestions.length;
-  const visibleQuestions = summary.gradedQuestions.slice(0, visibleCount);
-  const visibleScore = visibleQuestions.reduce((sum, item) => sum + item.earnedPoints, 0);
+  const [currentPageIndex, setCurrentPageIndex] = useState(() => (startComplete ? exam.pages.length : firstPageIndex));
+  const [showResult, setShowResult] = useState(startComplete);
+  const visibleQuestions = useMemo(
+    () => summary.gradedQuestions.slice(0, visibleCount),
+    [summary.gradedQuestions, visibleCount]
+  );
+  const gradeStates = useMemo(
+    () => new Map(visibleQuestions.map((item) => [item.question.id, item])),
+    [visibleQuestions]
+  );
+  const displayPageIndex =
+    currentPageIndex >= 0 ? Math.min(currentPageIndex, Math.max(0, exam.pages.length - 1)) : currentPageIndex;
+  const displayPage = displayPageIndex >= 0 ? exam.pages[displayPageIndex] : undefined;
+  const showCover = currentPageIndex === coverPageIndex && Boolean(exam.coverImageUrl);
+  const isBookletComplete = currentPageIndex >= exam.pages.length;
 
   useEffect(() => {
     setVisibleCount(startComplete ? summary.gradedQuestions.length : 0);
-  }, [summary, startComplete]);
+    setCurrentPageIndex(startComplete ? exam.pages.length : firstPageIndex);
+    setShowResult(startComplete);
+  }, [exam.pages.length, firstPageIndex, startComplete, summary.gradedQuestions.length]);
 
   useEffect(() => {
-    if (visibleCount >= summary.gradedQuestions.length) {
+    if (startComplete || showResult) {
       return undefined;
     }
+
+    const currentPage = currentPageIndex >= 0 ? exam.pages[currentPageIndex] : undefined;
+    const nextQuestion = summary.gradedQuestions[visibleCount];
+    const delay =
+      currentPageIndex === coverPageIndex
+        ? coverDelayMs
+        : currentPageIndex >= exam.pages.length
+          ? resultDelayMs
+          : nextQuestion?.question.pageId === currentPage?.id
+            ? revealDelayMs
+            : pageTurnDelayMs;
 
     const timeoutId = window.setTimeout(() => {
-      setVisibleCount((count) => count + 1);
-    }, visibleCount === 0 ? 420 : 300);
+      if (currentPageIndex === coverPageIndex) {
+        setCurrentPageIndex(0);
+        return;
+      }
+
+      if (currentPageIndex >= exam.pages.length) {
+        setShowResult(true);
+        return;
+      }
+
+      if (nextQuestion && nextQuestion.question.pageId === currentPage?.id) {
+        setVisibleCount((count) => Math.min(summary.gradedQuestions.length, count + 1));
+        return;
+      }
+
+      setCurrentPageIndex((index) => index + 1);
+    }, delay);
 
     return () => window.clearTimeout(timeoutId);
-  }, [summary.gradedQuestions.length, visibleCount]);
-
-  useEffect(() => {
-    if (startComplete || visibleCount === 0) {
-      return undefined;
-    }
-
-    const animationId = window.requestAnimationFrame(() => {
-      const target = isComplete ? resultPanelRef.current : rowRefs.current[visibleCount - 1];
-      target?.scrollIntoView?.({ behavior: "smooth", block: "center" });
-    });
-
-    return () => window.cancelAnimationFrame(animationId);
-  }, [isComplete, startComplete, visibleCount]);
+  }, [currentPageIndex, exam.pages, showResult, startComplete, summary.gradedQuestions, visibleCount]);
 
   const screenClassName = ["screen", "scoring-screen", startComplete ? "scoring-static" : ""]
     .filter(Boolean)
@@ -54,79 +91,58 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
 
   return (
     <main className={screenClassName}>
-      <header className="screen-heading">
-        <div>
-          <h1>採点</h1>
-        </div>
-      </header>
+      <h1 className="scoring-heading">採点</h1>
 
-      <section className="scoring-layout" aria-label="採点結果">
-        <section className="result-panel scoring-result-panel" aria-live="polite" ref={resultPanelRef}>
-          <div>
-            <p>{isComplete ? "最終得点" : "採点中"}</p>
+      {!showResult ? (
+        <section
+          className={`scoring-booklet-scene ${isBookletComplete ? "fade-out" : ""}`}
+          aria-label="問題用紙への採点"
+        >
+          <div className="scoring-booklet-shell">
+            <div className="scoring-progress-note" aria-live="polite">
+              {showCover ? "表紙" : displayPage ? `${displayPage.pageNumber}ページ` : "採点完了"}
+            </div>
+            <div className="scoring-page-turn" key={showCover ? "cover" : displayPage?.id ?? "done"}>
+              {showCover ? (
+                <article className="booklet-page exact-page cover-page-display" aria-label={`${exam.title}の表紙`}>
+                  <div className="exact-page-frame cover-page-frame">
+                    <img className="exact-page-image" src={exam.coverImageUrl} alt={`${exam.title}の表紙`} />
+                  </div>
+                </article>
+              ) : displayPage ? (
+                <ProblemBooklet
+                  answers={answers}
+                  gradeStates={gradeStates}
+                  page={displayPage}
+                  questionsById={questionsById}
+                  reviewMode={gradeStates.size > 0}
+                  onToggleAnswer={() => undefined}
+                />
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      {showResult ? (
+        <section className="scoring-final-result visible" aria-label="採点結果" aria-live="polite">
+          <div className="scoring-final-content">
+            <p>最終得点</p>
             <strong>
-              {isComplete ? summary.totalScore : visibleScore}
+              {summary.totalScore}
               <small>/{summary.totalPoints}</small>
             </strong>
-          </div>
-          {isComplete ? (
-            <div
-              className={["result-actions", startComplete ? "" : "scoring-result-actions"]
-                .filter(Boolean)
-                .join(" ")}
-            >
+            <div className={["result-actions", startComplete ? "" : "scoring-result-actions"].filter(Boolean).join(" ")}>
               <button className="primary-button" type="button" onClick={onReview}>
                 復習する
               </button>
               <button className="secondary-button" type="button" onClick={onRestart}>
-                一覧へ戻る
+                メニューに戻る
               </button>
             </div>
-          ) : null}
+          </div>
         </section>
-
-        <section className="scoring-board" aria-label="採点項目">
-          {summary.gradedQuestions.map((item, index) => {
-            const isVisible = index < visibleCount;
-            return (
-              <article
-                className={`grading-row ${isVisible ? "visible" : ""}`}
-                key={item.question.id}
-                ref={(element) => {
-                  rowRefs.current[index] = element;
-                }}
-              >
-                <div>
-                  <span className="mark-label">{item.question.label}</span>
-                  <strong>{item.question.section}</strong>
-                  <p>{item.question.prompt.replaceAll("$", "")}</p>
-                </div>
-                <div className="grading-answer">
-                  <span>解答 {item.userAnswer.length ? item.userAnswer.join(", ") : "-"}</span>
-                  <span>正解 {item.correctAnswer.join(", ")}</span>
-                </div>
-                {isVisible ? (
-                  <svg
-                    aria-label={item.isCorrect ? "正解" : "不正解"}
-                    className={`red-pen ${item.isCorrect ? "circle" : "cross"}`}
-                    viewBox="0 0 80 80"
-                  >
-                    {item.isCorrect ? (
-                      <circle cx="40" cy="40" r="25" />
-                    ) : (
-                      <>
-                        <line className="cross-stroke first" x1="22" x2="58" y1="22" y2="58" />
-                        <line className="cross-stroke second" x1="58" x2="22" y1="22" y2="58" />
-                      </>
-                    )}
-                  </svg>
-                ) : null}
-                <strong className="earned-points">{isVisible ? `${item.earnedPoints}点` : ""}</strong>
-              </article>
-            );
-          })}
-        </section>
-      </section>
+      ) : null}
     </main>
   );
 }
