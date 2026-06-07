@@ -68,7 +68,6 @@ describe("ExamRunner", () => {
   it("asks for confirmation before finishing an active exam", async () => {
     const user = userEvent.setup();
     const onFinish = vi.fn();
-    const onPause = vi.fn();
 
     render(
       <ExamRunner
@@ -79,7 +78,6 @@ describe("ExamRunner", () => {
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={onFinish}
-        onPause={onPause}
         onToggleAnswer={vi.fn()}
       />
     );
@@ -89,6 +87,7 @@ describe("ExamRunner", () => {
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveTextContent(/^\d{2}:\d{2}$/);
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveClass("timer-color-stadium-alert");
     expect(screen.queryByText("解答済み")).not.toBeInTheDocument();
+    expect(screen.queryByText("中断")).not.toBeInTheDocument();
 
     await user.click(screen.getByText("試験終了"));
 
@@ -102,13 +101,9 @@ describe("ExamRunner", () => {
     await user.click(screen.getByText("採点へ進む"));
 
     expect(onFinish).toHaveBeenCalledTimes(1);
-    expect(onPause).not.toHaveBeenCalled();
   });
 
-  it("asks for confirmation before pausing an active exam", async () => {
-    const user = userEvent.setup();
-    const onPause = vi.fn();
-
+  it("customizes the finish action gradient from the debug controls", () => {
     render(
       <ExamRunner
         answers={{}}
@@ -118,18 +113,23 @@ describe("ExamRunner", () => {
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
-        onPause={onPause}
         onToggleAnswer={vi.fn()}
       />
     );
 
-    await user.click(screen.getByText("中断"));
+    const finishButton = document.querySelector<HTMLButtonElement>(".finish-button")!;
+    const startInput = document.querySelector<HTMLInputElement>(
+      'input[aria-label="試験終了グラデーション開始色"]'
+    )!;
+    const angleInput = document.querySelector<HTMLInputElement>('input[aria-label="試験終了グラデーション角度"]')!;
 
-    expect(screen.getByText("試験を中断しますか")).toBeInTheDocument();
+    expect(finishButton.style.getPropertyValue("--finish-gradient-start")).toBe("#ff8a3c");
 
-    await user.click(screen.getByText("中断する"));
+    fireEvent.change(startInput, { target: { value: "#123456" } });
+    fireEvent.change(angleInput, { target: { value: "220" } });
 
-    expect(onPause).toHaveBeenCalledTimes(1);
+    expect(finishButton.style.getPropertyValue("--finish-gradient-angle")).toBe("220deg");
+    expect(finishButton.style.getPropertyValue("--finish-gradient-start")).toBe("#123456");
   });
 
   it("zooms only from the problem display area when using a modified wheel", () => {
@@ -142,7 +142,6 @@ describe("ExamRunner", () => {
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
-        onPause={vi.fn()}
         onToggleAnswer={vi.fn()}
       />
     );
@@ -172,7 +171,6 @@ describe("ExamRunner", () => {
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
-        onPause={vi.fn()}
         onToggleAnswer={vi.fn()}
       />
     );
@@ -190,7 +188,6 @@ describe("ExamRunner", () => {
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
-        onPause={vi.fn()}
         onToggleAnswer={vi.fn()}
       />
     );
@@ -213,7 +210,6 @@ describe("ExamRunner", () => {
         onChangePage={onChangePage}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
-        onPause={vi.fn()}
         onToggleAnswer={vi.fn()}
       />
     );
@@ -263,7 +259,6 @@ describe("ExamRunner", () => {
           onChangePage={setCurrentPageId}
           onExpire={vi.fn()}
           onFinish={vi.fn()}
-          onPause={vi.fn()}
           onToggleAnswer={vi.fn()}
         />
       );
@@ -279,7 +274,6 @@ describe("ExamRunner", () => {
           onChangePage={vi.fn()}
           onExpire={vi.fn()}
           onFinish={vi.fn()}
-          onPause={vi.fn()}
           onToggleAnswer={vi.fn()}
         />
       );

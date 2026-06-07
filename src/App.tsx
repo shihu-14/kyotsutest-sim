@@ -52,14 +52,6 @@ export function App() {
     setPhase("select");
   };
 
-  const pauseExam = () => {
-    setSelectedExam(null);
-    setDeadline(null);
-    setCurrentPageId("");
-    setShowCompletedScoring(false);
-    setPhase("select");
-  };
-
   const deleteExam = (examId: string) => {
     setExams((current) => current.filter((exam) => exam.id !== examId));
     if (selectedExam?.id === examId) {
@@ -173,7 +165,6 @@ export function App() {
       onExitReview={() => setPhase("scoring")}
       onExpire={finishExam}
       onFinish={finishExam}
-      onPause={pauseExam}
       onToggleAnswer={handleToggleAnswer}
     />
   );

@@ -14,10 +14,17 @@ interface ExamRunnerProps {
   onChangePage: (pageId: string) => void;
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
   onFinish: () => void;
-  onPause: () => void;
   onExitReview?: () => void;
   onExpire: () => void;
 }
+
+const defaultFinishGradient = {
+  angle: 135,
+  start: "#ff8a3c",
+  middle: "#e85f3a",
+  end: "#a94337",
+  middleStop: 52
+};
 
 export function ExamRunner({
   exam,
@@ -28,14 +35,13 @@ export function ExamRunner({
   onChangePage,
   onToggleAnswer,
   onFinish,
-  onPause,
   onExitReview,
   onExpire
 }: ExamRunnerProps) {
   const [bookletZoom, setBookletZoom] = useState(1);
   const [showCover, setShowCover] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
-  const [showPauseConfirm, setShowPauseConfirm] = useState(false);
+  const [finishGradient, setFinishGradient] = useState(defaultFinishGradient);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
@@ -51,6 +57,14 @@ export function ExamRunner({
   const pageTabsStyle = {
     "--visible-page-tabs": String(Math.min(exam.pages.length, 13)),
     "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
+  } as CSSProperties;
+  const finishGradientStyle = {
+    "--finish-gradient-angle": `${finishGradient.angle}deg`,
+    "--finish-gradient-start": finishGradient.start,
+    "--finish-gradient-middle": finishGradient.middle,
+    "--finish-gradient-end": finishGradient.end,
+    "--finish-gradient-middle-stop": `${finishGradient.middleStop}%`,
+    background: `linear-gradient(${finishGradient.angle}deg, ${finishGradient.start} 0%, ${finishGradient.middle} ${finishGradient.middleStop}%, ${finishGradient.end} 100%)`
   } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
@@ -85,6 +99,10 @@ export function ExamRunner({
 
   const updateBookletZoom = (value: number) => {
     setBookletZoom(Math.min(1.6, Math.max(1, value)));
+  };
+
+  const updateFinishGradient = (updates: Partial<typeof defaultFinishGradient>) => {
+    setFinishGradient((current) => ({ ...current, ...updates }));
   };
 
   useEffect(() => {
@@ -200,14 +218,71 @@ export function ExamRunner({
               結果へ戻る
             </button>
           ) : (
-            <>
-              <button className="secondary-button" type="button" onClick={() => setShowPauseConfirm(true)}>
-                中断
-              </button>
-              <button className="danger-button" type="button" onClick={() => setShowFinishConfirm(true)}>
+            <div className="finish-action-stack">
+              <details className="finish-color-debug">
+                <summary>終了色</summary>
+                <div className="finish-color-debug-grid">
+                  <label>
+                    <span>開始</span>
+                    <input
+                      aria-label="試験終了グラデーション開始色"
+                      type="color"
+                      value={finishGradient.start}
+                      onChange={(event) => updateFinishGradient({ start: event.currentTarget.value })}
+                    />
+                  </label>
+                  <label>
+                    <span>中央</span>
+                    <input
+                      aria-label="試験終了グラデーション中央色"
+                      type="color"
+                      value={finishGradient.middle}
+                      onChange={(event) => updateFinishGradient({ middle: event.currentTarget.value })}
+                    />
+                  </label>
+                  <label>
+                    <span>終了</span>
+                    <input
+                      aria-label="試験終了グラデーション終了色"
+                      type="color"
+                      value={finishGradient.end}
+                      onChange={(event) => updateFinishGradient({ end: event.currentTarget.value })}
+                    />
+                  </label>
+                  <label className="finish-color-debug-wide">
+                    <span>角度 {finishGradient.angle}deg</span>
+                    <input
+                      aria-label="試験終了グラデーション角度"
+                      max="360"
+                      min="0"
+                      type="range"
+                      value={finishGradient.angle}
+                      onChange={(event) => updateFinishGradient({ angle: Number(event.currentTarget.value) })}
+                    />
+                  </label>
+                  <label className="finish-color-debug-wide">
+                    <span>中央位置 {finishGradient.middleStop}%</span>
+                    <input
+                      aria-label="試験終了グラデーション中央位置"
+                      max="100"
+                      min="0"
+                      type="range"
+                      value={finishGradient.middleStop}
+                      onChange={(event) => updateFinishGradient({ middleStop: Number(event.currentTarget.value) })}
+                    />
+                  </label>
+                  <div className="finish-gradient-preview" style={finishGradientStyle} aria-hidden="true" />
+                </div>
+              </details>
+              <button
+                className="danger-button finish-button"
+                style={finishGradientStyle}
+                type="button"
+                onClick={() => setShowFinishConfirm(true)}
+              >
                 試験終了
               </button>
-            </>
+            </div>
           )}
         </div>
       </header>
@@ -309,7 +384,8 @@ export function ExamRunner({
                 戻る
               </button>
               <button
-                className="danger-button"
+                className="danger-button finish-button"
+                style={finishGradientStyle}
                 type="button"
                 onClick={() => {
                   setShowFinishConfirm(false);
@@ -317,30 +393,6 @@ export function ExamRunner({
                 }}
               >
                 採点へ進む
-              </button>
-            </div>
-          </section>
-        </div>
-      ) : null}
-
-      {showPauseConfirm ? (
-        <div className="dialog-backdrop" role="presentation">
-          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="pause-dialog-title">
-            <h2 id="pause-dialog-title">試験を中断しますか</h2>
-            <p>現在の解答は保持されます。採点せずに一覧へ戻ります。</p>
-            <div className="dialog-actions">
-              <button className="secondary-button" type="button" onClick={() => setShowPauseConfirm(false)}>
-                戻る
-              </button>
-              <button
-                className="danger-button"
-                type="button"
-                onClick={() => {
-                  setShowPauseConfirm(false);
-                  onPause();
-                }}
-              >
-                中断する
               </button>
             </div>
           </section>
