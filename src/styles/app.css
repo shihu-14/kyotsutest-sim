@@ -3874,6 +3874,11 @@ button:disabled {
   transform: translate(2px, -2px);
 }
 
+.bubble.filled.review-correct::after {
+  inset: -1.5px;
+  z-index: 2;
+}
+
 .scoring-screen {
   position: relative;
   display: grid;
