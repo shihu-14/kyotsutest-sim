@@ -1166,12 +1166,6 @@ button:disabled {
   text-align: center;
 }
 
-.timer.urgent {
-  border-color: #a94337;
-  background: #fff0eb;
-  color: #8c2f29;
-}
-
 .stopwatch-timer {
   --timer-size: 92px;
   --timer-crown-angle: 90deg;
@@ -1267,13 +1261,6 @@ button:disabled {
   font-size: calc(var(--timer-size) * 0.22);
   font-weight: 950;
   line-height: 1.05;
-}
-
-.stopwatch-timer.urgent {
-  --timer-accent: #d64235;
-  --timer-track: rgba(214, 66, 53, 0.18);
-  --timer-text: #7d1d15;
-  --timer-muted: rgba(125, 29, 21, 0.64);
 }
 
 .timer-classic-amber {

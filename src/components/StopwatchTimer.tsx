@@ -29,7 +29,7 @@ export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "tim
   return (
     <div
       aria-label={label ?? `残り時間 ${formatted}`}
-      className={`stopwatch-timer ${variant} ${remainingMs <= 60_000 ? "urgent" : ""}`}
+      className={`stopwatch-timer ${variant}`}
       role="timer"
       style={style}
     >

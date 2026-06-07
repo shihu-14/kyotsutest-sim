@@ -15,4 +15,10 @@ describe("StopwatchTimer", () => {
     expect(timer.style.getPropertyValue("--timer-progress-angle")).toBe("270deg");
     expect(timer.style.getPropertyValue("--timer-elapsed-angle")).toBe("90deg");
   });
+
+  it("keeps the same color class when time is almost over", () => {
+    render(<StopwatchTimer formatted="00:45" remainingMs={45_000} totalMs={40 * 60_000} />);
+
+    expect(screen.getByRole("timer", { name: "残り時間 00:45" })).not.toHaveClass("urgent");
+  });
 });
