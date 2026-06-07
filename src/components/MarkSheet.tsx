@@ -10,7 +10,7 @@ interface MarkSheetProps {
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
 }
 
-const digitLabels = Array.from({ length: 10 }, (_item, index) => String(index));
+const digitLabels = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
 
 function getMajorSection(section: string): string {
   return section.split(/\s+/)[0] || section;

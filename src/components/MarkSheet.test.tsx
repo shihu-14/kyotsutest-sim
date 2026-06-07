@@ -26,6 +26,24 @@ describe("MarkSheet", () => {
     expect(onToggleAnswer).toHaveBeenCalledWith(sampleExams[0].questions[0], "-3");
   });
 
+  it("renders mark choices from 1 through 9 and then 0", () => {
+    render(
+      <MarkSheet
+        activePageId="p1"
+        answers={{}}
+        exam={sampleExams[0]}
+        onJumpToPage={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    const firstQuestionChoices = screen
+      .getAllByRole("button", { name: /^ア [0-9]$/ })
+      .map((button) => button.textContent);
+
+    expect(firstQuestionChoices).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]);
+  });
+
   it("jumps to the target problem page from a question label", async () => {
     const user = userEvent.setup();
     const onJumpToPage = vi.fn();
