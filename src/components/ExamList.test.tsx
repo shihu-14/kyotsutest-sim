@@ -20,7 +20,7 @@ describe("ExamList", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "新規作成" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "新規作成" })).toBeDisabled();
     expect(screen.getByLabelText(`${exam.title}の表紙`)).toBeInTheDocument();
     expect(screen.queryByText(exam.subject)).not.toBeInTheDocument();
     expect(screen.queryByText(exam.description)).not.toBeInTheDocument();
@@ -33,7 +33,7 @@ describe("ExamList", () => {
     expect(onSelect).toHaveBeenCalledWith(exam);
   });
 
-  it("registers the anime TeX exam as a published sample", () => {
+  it("registers the anime TeX exam as a published PDF-page sample", () => {
     const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026");
 
     expect(animeExam).toMatchObject({
@@ -43,6 +43,11 @@ describe("ExamList", () => {
       published: true,
       totalPoints: 100
     });
+    expect(animeExam?.source).toMatchObject({
+      kind: "latex-pdf",
+      markPlacement: "manual",
+      pdfPageImagesPath: "src/assets/exams/anime-onlymark-2026/pdf-pages"
+    });
     expect(animeExam?.pages).toHaveLength(13);
     expect(animeExam?.questions).toHaveLength(20);
     expect(animeExam?.pages.every((page) => page.pageImageUrl)).toBe(true);
@@ -50,7 +55,7 @@ describe("ExamList", () => {
     expect(animeExam?.questions.reduce((sum, question) => sum + question.points, 0)).toBe(100);
   });
 
-  it("opens card actions for edit and delete", async () => {
+  it("shows disabled card edit actions and keeps delete available", async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn();
     const onEdit = vi.fn();
@@ -70,10 +75,10 @@ describe("ExamList", () => {
     expect(card).not.toBeNull();
 
     await user.click(within(card!).getByLabelText(`${exam.title}の設定`));
-    await user.click(within(card!).getByRole("button", { name: "編集する" }));
+    expect(within(card!).getByRole("button", { name: "編集する" })).toBeDisabled();
     await user.click(within(card!).getByRole("button", { name: "削除する" }));
 
-    expect(onEdit).toHaveBeenCalledWith(exam);
+    expect(onEdit).not.toHaveBeenCalled();
     expect(onDelete).toHaveBeenCalledWith(exam.id);
   });
 

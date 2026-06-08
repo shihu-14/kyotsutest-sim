@@ -973,6 +973,10 @@ function buildPublishedExam(
     published: true,
     totalPoints: meta.totalPoints,
     description: meta.description,
+    source: {
+      kind: "structured",
+      markPlacement: "generated"
+    },
     instructions: coverInstructionsFromSource(coverSource),
     pages,
     questions

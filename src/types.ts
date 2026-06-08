@@ -69,6 +69,18 @@ export interface PageGradeAnchor {
   widthPercent?: number;
 }
 
+export type ExamSource =
+  | {
+      kind: "latex-pdf";
+      latexEntryPath: string;
+      pdfPageImagesPath: string;
+      markPlacement: "manual";
+    }
+  | {
+      kind: "structured";
+      markPlacement: "generated" | "manual";
+    };
+
 export interface ExamPage {
   id: string;
   pageNumber: number;
@@ -97,6 +109,7 @@ export interface Exam {
   totalPoints: number;
   description: string;
   coverImageUrl?: string;
+  source: ExamSource;
   instructions: string[];
   pages: ExamPage[];
   questions: QuestionSlot[];

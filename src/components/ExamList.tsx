@@ -19,6 +19,7 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
   const [homeMode, setHomeMode] = useState<
     "exams" | "designs" | "timers" | "pageNavs" | "homes" | "editors" | "scorings"
   >("exams");
+  const authoringDisabled = true;
   const previewExam = exams.find((exam) => exam.pages.some((page) => page.pageImageUrl)) ?? exams[0];
 
   return (
@@ -81,7 +82,12 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
           >
             編集候補
           </button>
-          <button className="secondary-button" type="button" onClick={onOpenEditor}>
+          <button
+            className="secondary-button authoring-disabled-button"
+            disabled={authoringDisabled}
+            type="button"
+            onClick={authoringDisabled ? undefined : onOpenEditor}
+          >
             新規作成
           </button>
         </div>
@@ -114,7 +120,12 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
                       <details className="exam-actions">
                         <summary aria-label={`${exam.title}の設定`}>⋮</summary>
                         <div className="exam-action-menu">
-                          <button type="button" onClick={() => onEdit(exam)}>
+                          <button
+                            className="authoring-disabled-button"
+                            disabled={authoringDisabled}
+                            type="button"
+                            onClick={authoringDisabled ? undefined : () => onEdit(exam)}
+                          >
                             編集する
                           </button>
                           <button type="button" onClick={() => onDelete(exam.id)}>
