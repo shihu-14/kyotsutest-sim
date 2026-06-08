@@ -1,4 +1,4 @@
-import type { Exam, PageMarkArea } from "../types";
+import type { Exam, PageGradeAnchor, PageMarkArea } from "../types";
 import animeCoverPage from "../assets/anime-pages/page-00.jpg";
 import animePage01 from "../assets/anime-pages/page-01.jpg";
 import animePage02 from "../assets/anime-pages/page-02.jpg";
@@ -89,6 +89,15 @@ function imageMarkRow(questionNumber: number, y: number, values: string[], xs: n
   return values.map((value, index) => imageMarkArea(questionNumber, value, xs[index], y));
 }
 
+function imageGradeAnchor(questionNumber: number, x: number, y: number, width = 120): PageGradeAnchor {
+  return {
+    questionId: animeQuestionId(questionNumber),
+    xPercent: Number(((x / animePageWidth) * 100).toFixed(3)),
+    yPercent: Number(((y / animePageHeight) * 100).toFixed(3)),
+    widthPercent: Number(((width / animePageWidth) * 100).toFixed(3))
+  };
+}
+
 const animeSmallChoices = ["1", "2", "3"];
 const animeFourChoices = ["1", "2", "3", "4"];
 const animeEightChoices = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -131,6 +140,33 @@ const animePageMarkAreas: Record<number, PageMarkArea[]> = {
     ...imageMarkRow(19, 1661, animeFourChoices, [238, 469, 699, 929])
   ],
   12: imageMarkRow(20, 989, animeFourChoices, [203, 420, 634, 851])
+};
+
+const animePageGradeAnchors: Record<number, PageGradeAnchor[]> = {
+  1: [imageGradeAnchor(1, 832, 318.5)],
+  2: [imageGradeAnchor(2, 416, 495.5)],
+  4: [
+    imageGradeAnchor(3, 443, 873.5),
+    imageGradeAnchor(4, 443, 949.5),
+    imageGradeAnchor(5, 443, 1025.5),
+    imageGradeAnchor(6, 443, 1101)
+  ],
+  5: [imageGradeAnchor(7, 703, 263.5)],
+  6: [imageGradeAnchor(8, 1079, 312.5)],
+  7: [
+    imageGradeAnchor(9, 479.5, 1121.5),
+    imageGradeAnchor(10, 479.5, 1205.5),
+    imageGradeAnchor(11, 479.5, 1289.5)
+  ],
+  8: [
+    imageGradeAnchor(12, 349, 392.5),
+    imageGradeAnchor(13, 349, 805.5),
+    imageGradeAnchor(14, 349, 1218.5)
+  ],
+  9: [imageGradeAnchor(15, 456, 436.5), imageGradeAnchor(16, 454.5, 515.5)],
+  10: [imageGradeAnchor(17, 516, 262.5)],
+  11: [imageGradeAnchor(18, 349, 389.5), imageGradeAnchor(19, 349, 1015.5)],
+  12: [imageGradeAnchor(20, 976, 208.5)]
 };
 
 export const sampleExams: Exam[] = [
@@ -359,6 +395,7 @@ export const sampleExams: Exam[] = [
       pageImageUrl,
       pageImageAlt: `${animePageTitles[index]}のPDF再現ページ`,
       markAreas: animePageMarkAreas[index + 1] ?? [],
+      gradeAnchors: animePageGradeAnchors[index + 1] ?? [],
       blocks: []
     })),
     questions: [

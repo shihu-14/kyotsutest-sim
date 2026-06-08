@@ -62,6 +62,13 @@ export interface PageMarkArea {
   heightPercent?: number;
 }
 
+export interface PageGradeAnchor {
+  questionId: string;
+  xPercent: number;
+  yPercent: number;
+  widthPercent?: number;
+}
+
 export interface ExamPage {
   id: string;
   pageNumber: number;
@@ -77,6 +84,7 @@ export interface ExamPage {
   pageImageUrl?: string;
   pageImageAlt?: string;
   markAreas?: PageMarkArea[];
+  gradeAnchors?: PageGradeAnchor[];
   blocks: ProblemBlock[];
 }
 

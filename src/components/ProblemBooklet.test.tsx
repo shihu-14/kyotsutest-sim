@@ -25,7 +25,8 @@ describe("ProblemBooklet", () => {
     await user.click(screen.getByRole("button", { name: "1 4" }));
 
     expect(onToggleAnswer).toHaveBeenCalledWith(question, "4");
-    expect(screen.getByRole("button", { name: "1 4" })).toHaveStyle("--mark-y-correction: -200%");
+    expect(screen.getByRole("button", { name: "1 4" })).toHaveStyle("--mark-y: 93.059%");
+    expect(screen.getByRole("button", { name: "1 4" })).not.toHaveStyle("--mark-y-correction: -200%");
   });
 
   it("renders selected exact-page marks as filled in review state", () => {
@@ -82,5 +83,41 @@ describe("ProblemBooklet", () => {
 
     expect(screen.getByRole("button", { name: "1 1" })).toHaveClass("selected");
     expect(screen.getByRole("button", { name: "1 4" })).toHaveClass("review-correct");
+  });
+
+  it("places exact-page grading stamps on the TeX answer-number box", () => {
+    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const page = animeExam.pages[0];
+    const question = animeExam.questions[0];
+
+    render(
+      <ProblemBooklet
+        answers={{ [question.id]: ["4"] }}
+        gradeStates={
+          new Map([
+            [
+              question.id,
+              {
+                question,
+                userAnswer: ["4"],
+                correctAnswer: ["4"],
+                isCorrect: true,
+                earnedPoints: 10,
+                status: "correct"
+              }
+            ]
+          ])
+        }
+        page={page}
+        questionsById={new Map(animeExam.questions.map((item) => [item.id, item]))}
+        reviewMode
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(document.querySelector(".page-image-grade-stamp")).toHaveStyle({
+      "--grade-x": "66.72%",
+      "--grade-y": "17.974%"
+    });
   });
 });

@@ -1,5 +1,13 @@
 import type { CSSProperties } from "react";
-import type { AnswerValue, ExamPage, GradedQuestion, PageMarkArea, QuestionSlot, UserAnswers } from "../types";
+import type {
+  AnswerValue,
+  ExamPage,
+  GradedQuestion,
+  PageGradeAnchor,
+  PageMarkArea,
+  QuestionSlot,
+  UserAnswers
+} from "../types";
 import { normalizePreviewText, renderMathSegments, mathToHtml } from "../utils/latex";
 
 interface ProblemBookletProps {
@@ -28,6 +36,7 @@ export function ProblemBooklet({
             <PageImageMarks
               areas={page.markAreas}
               answers={answers}
+              gradeAnchors={page.gradeAnchors ?? []}
               gradeStates={gradeStates}
               questionsById={questionsById}
               reviewMode={reviewMode}
@@ -113,6 +122,7 @@ export function ProblemBooklet({
 
 interface PageImageMarksProps {
   areas: PageMarkArea[];
+  gradeAnchors: PageGradeAnchor[];
   questionsById: Map<string, QuestionSlot>;
   answers: UserAnswers;
   gradeStates?: Map<string, GradedQuestion>;
@@ -120,13 +130,21 @@ interface PageImageMarksProps {
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
 }
 
-function PageImageMarks({ areas, questionsById, answers, gradeStates, reviewMode, onToggleAnswer }: PageImageMarksProps) {
-  const gradeAnchors = areas.filter((area, index) => {
-    if (!gradeStates?.has(area.questionId)) {
+function PageImageMarks({
+  areas,
+  gradeAnchors,
+  questionsById,
+  answers,
+  gradeStates,
+  reviewMode,
+  onToggleAnswer
+}: PageImageMarksProps) {
+  const visibleGradeAnchors = gradeAnchors.filter((anchor, index) => {
+    if (!gradeStates?.has(anchor.questionId)) {
       return false;
     }
 
-    return areas.findIndex((candidate) => candidate.questionId === area.questionId) === index;
+    return gradeAnchors.findIndex((candidate) => candidate.questionId === anchor.questionId) === index;
   });
 
   return (
@@ -152,8 +170,7 @@ function PageImageMarks({ areas, questionsById, answers, gradeStates, reviewMode
           "--mark-x": `${area.xPercent}%`,
           "--mark-y": `${area.yPercent}%`,
           "--mark-width": `${widthPercent}%`,
-          "--mark-height": `${heightPercent}%`,
-          "--mark-y-correction": "-200%"
+          "--mark-height": `${heightPercent}%`
         } as CSSProperties;
 
         return (
@@ -171,19 +188,20 @@ function PageImageMarks({ areas, questionsById, answers, gradeStates, reviewMode
           />
         );
       })}
-      {gradeAnchors.map((area) => {
-        const gradeState = gradeStates?.get(area.questionId);
+      {visibleGradeAnchors.map((anchor) => {
+        const gradeState = gradeStates?.get(anchor.questionId);
         if (!gradeState) {
           return null;
         }
 
         const style = {
-          "--mark-x": `${area.xPercent}%`,
-          "--mark-y": `${area.yPercent}%`
+          "--grade-x": `${anchor.xPercent}%`,
+          "--grade-y": `${anchor.yPercent}%`,
+          "--grade-size": `${(anchor.widthPercent ?? 9.6) * 0.88}%`
         } as CSSProperties;
 
         return (
-          <div className="page-image-grade-stamp" key={`${area.questionId}-grade`} style={style}>
+          <div className="page-image-grade-stamp" key={`${anchor.questionId}-grade`} style={style}>
             <GradeStamp isCorrect={gradeState.isCorrect} />
           </div>
         );

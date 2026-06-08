@@ -3339,7 +3339,7 @@ button:disabled {
   border-radius: 50%;
   background: transparent;
   padding: 0;
-  transform: translate(-50%, calc(-50% + var(--mark-y-correction, 0%)));
+  transform: translate(-50%, -50%);
   pointer-events: auto;
 }
 
@@ -3468,10 +3468,10 @@ button:disabled {
 
 .page-image-grade-stamp {
   position: absolute;
-  top: var(--mark-y);
-  left: var(--mark-x);
+  top: var(--grade-y);
+  left: var(--grade-x);
   z-index: 4;
-  width: 4.4%;
+  width: max(4.4%, var(--grade-size));
   aspect-ratio: 1;
   transform: translate(-50%, -50%);
   pointer-events: none;
