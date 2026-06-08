@@ -123,6 +123,15 @@ button:disabled {
   color: #273534;
 }
 
+.authoring-disabled-button:disabled {
+  border-color: #c7c7c7;
+  background: #eeeeee;
+  color: #858585;
+  cursor: default;
+  opacity: 1;
+  box-shadow: none;
+}
+
 .danger-button {
   background: #a94337;
   color: white;
@@ -942,6 +951,13 @@ button:disabled {
 
 .exam-action-menu button:hover {
   background: #fff1de;
+}
+
+.exam-action-menu .authoring-disabled-button:disabled,
+.exam-action-menu .authoring-disabled-button:disabled:hover {
+  background: #eeeeee;
+  color: #858585;
+  cursor: default;
 }
 
 .exam-cover-thumb {
