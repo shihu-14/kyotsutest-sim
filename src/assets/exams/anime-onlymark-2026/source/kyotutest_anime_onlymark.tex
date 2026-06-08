@@ -173,9 +173,9 @@
         \specialrule{1.2pt}{0pt}{0pt}
     \end{tabularx}
     \\
-    \eggfill{2} \quad 
-    \eggfill{3} \quad 
-    \eggfill{4} \quad 
+    % \eggfill{2} \quad
+    % \eggfill{3} \quad
+    % \eggfill{4} \quad
     % \eggfill{5} \quad 
     % \eggfill{6} \quad 
     % \eggfill{7} \quad 
@@ -224,8 +224,9 @@
     \node[anchor=north west] (img1) at (-5,0) {\includegraphics[scale=0.25]{hibike.png}};
     % ラベル I
     \node[anchor=south west] at ([shift={(-0.2,0.12)}] img1.north west) {\textbf{\large I}};
+    % \vspace*{1em}
     % img2（img1 の真下に配置）
-    \node[anchor=north west] (img2) at ([xshift=-0.3em, yshift=-1.3cm] img1.south west) {\includegraphics[width=12.8em]{sidonia2.png}};
+    \node[anchor=north west] (img2) at ([xshift=-0.3em, yshift=-2.5cm] img1.south west) {\includegraphics[width=12.8em]{sidonia2.png}};
     % ラベル II
     \node[anchor=south west] at ([shift={(-0.2,0.12)}] img2.north west) {\textbf{\large II}};
     % img3（img1 の右に配置）
@@ -233,7 +234,7 @@
     % ラベル III
     \node[anchor=south west] at ([shift={(-0.2,0.12)}] img3.north west) {\textbf{\large III}};
 \end{tikzpicture}
-\vspace{2.2em}
+\vspace{1.4em}
 \begin{center}
     \hspace{-2.0em}
     \makebox[\textwidth]{
@@ -242,8 +243,8 @@
          % セルの縦方向の余白を増やす
         \begin{tabularx}{\textwidth}{| X X |}
             \hline
-            \iibf{1} おねがい☆ティーチャー  & \iibf{2} オーバーロード \\
-            \iibf{3} オッドタクシー & \iibf{4} \,【推しの子】\\
+            \iibf{1} オッドタクシー & \iibf{2} おねがい☆ティーチャー \\
+            \iibf{3} オーバーロード & \iibf{4} \,【推しの子】\\
             \hline
         \end{tabularx}
     }
@@ -603,7 +604,7 @@
 \end{center}
 \vspace{2.5em}
 \begin{center}
-    \makebox[\textwidth]{
+    \makebox[\textwidth][r]{
         \newcommand{\iibf}[1]{\!\egg{#1}\;\:}
         \renewcommand{\arraystretch}{1.5}  % セルの縦方向の余白を増やす
         \begin{tabularx}{\textwidth}{|X X X X X|}
@@ -744,7 +745,7 @@
 \vspace{0.8em}
 
 \begin{center}
-    \hspace{-3.0em}
+    \hspace{-1.0em}
     \makebox[\textwidth]{
         \newcommand{\iibf}[1]{\!\egg{#1}\;\:}
         \renewcommand{\arraystretch}{1.5}  % セルの縦方向の余白を増やす
@@ -779,7 +780,7 @@
     \\
     \vspace{1.3em}
     \begin{tabularx}{\textwidth}{X X X}  % 3列を均等にする
-        \iibf{1} イマニティ  & \iibf{2} フリユーゲル  & \iibf{3} ファンタズマ
+        \iibf{1} イマニティ  & \iibf{2} ファンタズマ  & \iibf{3} フリユーゲル
     \end{tabularx}
     \\
     \vspace{1.5em}
@@ -794,7 +795,7 @@
     \\
     \vspace{1.3em}
     \begin{tabularx}{\textwidth}{X X X}  % 3列を均等にする
-        \iibf{1} ラファエル  & \iibf{2} メタトロン  & \iibf{3} ガブリエル
+        \iibf{1} ガブリエル  & \iibf{2} メタトロン  & \iibf{3} ラファエル
     \end{tabularx}
     \\
     \vspace{1.5em}
@@ -845,41 +846,46 @@
 % \end{multicols}
 \begin{figure}[htbp]
     \captionsetup[subfigure]{labelformat=empty} 
-    \begin{adjustbox}{scale=0.76, center}
+    \begin{adjustbox}{scale=0.43, center}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.28]{akusera.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{I}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{I}};
             \end{tikzpicture}
         }
+        \hspace*{1em}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.3]{yotuba3.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{II}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{II}};
             \end{tikzpicture}
         }
+        \hspace*{1em}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.19]{sinomiya.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{III}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{III}};
             \end{tikzpicture}
         }
+        \hspace*{1em}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.21]{nanakusa.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{IV}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{IV}};
             \end{tikzpicture}
         }
+        \hspace*{1em}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.21]{yanami.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{V}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{V}};
             \end{tikzpicture}
         }
+        \hspace*{1em}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.35]{titanda.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{VI}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{VI}};
             \end{tikzpicture}
         }
     \end{adjustbox}
@@ -887,38 +893,38 @@
 \vspace{-2.5em}
 \begin{figure}[htbp]
     \captionsetup[subfigure]{labelformat=empty} 
-    \begin{adjustbox}{scale=0.72, center}
+    \begin{adjustbox}{scale=0.43, center}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.26]{gozyou2.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{A}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{A}};
             \end{tikzpicture}
         }
         \hspace{1.5em}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.20]{igarashi.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{B}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{B}};
             \end{tikzpicture}
         }
         \hspace{1.5em}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.27]{issiki3.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{C}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{C}};
             \end{tikzpicture}
         }
         \hspace{1.5em}
         \subfloat[]{
             \begin{tikzpicture}
                 \node[anchor=north west] (img) at (0,0) {\includegraphics[scale=0.18]{itinose.png}};
-                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\textbf{D}};
+                \node[anchor=north west, xshift=-2pt, yshift=10pt] at (img.north west) {\huge\textbf{D}};
             \end{tikzpicture}
         }
     \end{adjustbox}
 \end{figure}
 
-\vspace{2em}
+\vspace{0.8em}
 \addtocounter{boxcounter}{-2}
 \counterbox[-0.10em]\hspace{4.0em}\text{・}\hspace{0.4em}\counterbox[-0.10em]\hspace{4.0em}
 \vspace{0.5em}
@@ -1032,13 +1038,14 @@
         \end{scope}
     \end{tikzpicture}
 \end{center}
-\vspace{1.2em}
+\vspace*{-1em}
 \begin{center}
-    \makebox[\textwidth]{
+    \hspace*{1.5em}
+    \makebox[\textwidth][r]{
         \newcommand{\iibf}[1]{\!\egg{#1}\!}
         \renewcommand{\arraystretch}{1.5} 
          % セルの縦方向の余白を増やす
-        \begin{tabularx}{\textwidth}{| X X X l|}
+        \begin{tabularx}{1.05\textwidth}{| X X X l|}
             \hline
             \iibf{1} 化物語 & \iibf{2} 虚構推理 &
             \iibf{3} 呪術廻戦 & \iibf{4} モブサイコ100 \\
@@ -1051,12 +1058,27 @@
 % ----------------------------------------------------------8--------------------------------
 \nextmondai
 以下の英文は, ~英語版Wikipediaにも掲載されているアニメに関する単語の説明である。~
-問1, ~問2の説明が意味する単語を, ~
+問1, ~問2, ~問3の説明が意味する単語を, ~
 次の\!\egg{1}\textasciitilde\!\egg{4}のうちから一つずつ選べ。\haiten{12} \\[0.1em]
 \begin{adjustwidth}{1em}{0em} 
     \raggedright
     \newcommand{\iibf}[1]{\!\egg{#1}\!}
     \noindent\textbf{問\hspace{0.5em}1} \hspace{0.5em} \counterbox \\ [1.0em]
+    \begin{adjustbox}{minipage=\linewidth} % 横幅調整
+        \begin{tcolorbox}[colframe=black, colback=beige, boxrule=0.7pt, arc=0mm]
+            {\spaceskip=0.4em A genre of science or fantasy fiction featuring a protagonist who is transported to or reincarnated in a different,
+            strange, or unfamiliar world. Also: an anime, manga, video game, etc., in this genre. Frequently as a modifier.}
+        \end{tcolorbox}
+    \end{adjustbox}
+    \\
+    \vspace{1.1em}
+    \hspace*{-0.7em}
+    \begin{tabularx}{1.06\textwidth}{X X l l}  % 3列を均等にする
+        \iibf{1} historical &\hspace*{0.45em} \iibf{2} isekai & \iibf{3} post-apocalyptic  & \iibf{4} supernatural\\
+    \end{tabularx}
+    \\
+    \vspace{3.8em}
+    \noindent\textbf{問\hspace{0.5em}2} \hspace{0.5em} \counterbox \\ [1.0em]
     \begin{adjustbox}{minipage=\linewidth} % 横幅調整
         \begin{tcolorbox}[colframe=black, colback=beige, boxrule=0.7pt, arc=0mm]
             {\spaceskip=0.4em A genre in Japanese anime and manga focuses on romantic or deeply emotional relationships
@@ -1067,11 +1089,11 @@
     \\
     \vspace{1.1em}
     \begin{tabularx}{\textwidth}{X X X X}  % 3列を均等にする
-        \iibf{1} isekai  & \iibf{2} romcom & \iibf{3} yuri & \iibf{4} catgirl\\
+        \iibf{1} catgirl & \iibf{2} romcom & \iibf{3} shojo & \iibf{4}yuri \\
     \end{tabularx}
     \\
-    \vspace{1.8em}
-    \noindent\textbf{問\hspace{0.5em}2} \hspace{0.5em} \counterbox \\ [1.0em]
+    \vspace{5.8em}
+    \noindent\textbf{問\hspace{0.5em}3} \hspace{0.5em} \counterbox \\ [1.0em]
     \begin{adjustbox}{minipage=\linewidth} % 横幅調整
         \begin{tcolorbox}[colframe=black, colback=beige, boxrule=0.7pt, arc=0mm]
             {\spaceskip=0.4em A type of self-published work, often in manga or novel format, created by independent artists or groups. 
@@ -1083,7 +1105,7 @@
     \\
     \vspace{1.1em}
     \begin{tabularx}{\textwidth}{X X X X}  % 3列を均等にする
-        \iibf{1} manga  & \iibf{2} lightnovel  & \iibf{3} comiket & \iibf{4} doujinshi\\
+        \iibf{1} comiket & \iibf{2} doujinshi  & \iibf{3} lightnovel & \iibf{4} manga\\
     \end{tabularx}
     \\
 \end{adjustwidth} 
@@ -1109,7 +1131,7 @@ since enemies \;\counterbox[-0.12em]\hspace{4.0em} feeblish\textsuperscript{*2} 
 
 \newcommand{\iibf}[1]{\!\egg{#1}\!}
 \begin{tabularx}{\textwidth}{X X X l}  % 3列を均等にする
-    \iibf{1}\;scoff & \iibf{2}\;despise  & \iibf{3}\;inferior & \iibf{4}\; underestimate
+    \iibf{1}\;despise & \iibf{2}\;overcome  & \hspace*{0.5em}\iibf{3}\;scoff & \iibf{4}\; underestimate
 \end{tabularx}
 
 

@@ -311,7 +311,7 @@ export const defaultAuthoringMeta: AuthoringMeta = {
   title: "漫画映画",
   subject: "漫画映画",
   description: "漫画・映画に関する題材を共通テスト形式で解くサンプル問題冊子。",
-  questionCount: 20,
+  questionCount: 21,
   totalPoints: 100,
   durationMinutes: 40
 };
@@ -333,7 +333,7 @@ export const defaultEnvironmentSource = String.raw`\usepackage[inner=0.9in,outer
 \newgeometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}`;
 
 export const defaultCoverSource = String.raw`\item 解答用紙に正しくマークされていない場合は, 採点されないことがあります。
-\item この問題冊子は, 全13ページで構成されています。問題は第1問から第9問まであり, 一部の問題には小問が含まれます。配点は各問題ごとに明記されています。
+\item この問題冊子は, 全14ページで構成されています。問題は第1問から第9問まであり, 一部の問題には小問が含まれます。配点は各問題ごとに明記されています。
 \item 試験中に問題冊子の印刷不鮮明，ページの落丁・乱丁及び問題の不備等に気付いた場合は教えてください。
 \item 解答は，各問題にある所定の記号をクリックまたはタップをしマークしなさい。
 \item 試験中の他のウェブサイトおよび書籍等の閲覧は禁止します。
@@ -493,27 +493,33 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 
 \sectiontitle{第8問}
 以下の英文は, 英語版 Wikipedia にも掲載されているアニメに関する単語の説明である。
-問1, 問2の説明が意味する単語を選べ。
-問1: romantic or deeply emotional relationships between female characters.
-\mark[answer=3,points=6,choices=4]{18}
-\choice{18}{1}{isekai}
-\choice{18}{2}{romcom}
-\choice{18}{3}{yuri}
-\choice{18}{4}{catgirl}
-問2: self-published work, often in manga or novel format, created by independent artists or groups.
-\mark[answer=4,points=6,choices=4]{19}
-\choice{19}{1}{manga}
-\choice{19}{2}{lightnovel}
-\choice{19}{3}{comiket}
-\choice{19}{4}{doujinshi}
+問1, 問2, 問3の説明が意味する単語を選べ。
+問1: A genre of science or fantasy fiction featuring a protagonist who is transported to or reincarnated in a different, strange, or unfamiliar world.
+\mark[answer=2,points=4,choices=4]{18}
+\choice{18}{1}{historical}
+\choice{18}{2}{isekai}
+\choice{18}{3}{post-apocalyptic}
+\choice{18}{4}{supernatural}
+問2: A genre in Japanese anime and manga focuses on romantic or deeply emotional relationships between female characters.
+\mark[answer=4,points=4,choices=4]{19}
+\choice{19}{1}{catgirl}
+\choice{19}{2}{romcom}
+\choice{19}{3}{shojo}
+\choice{19}{4}{yuri}
+問3: A type of self-published work, often in manga or novel format, created by independent artists or groups.
+\mark[answer=2,points=4,choices=4]{20}
+\choice{20}{1}{comiket}
+\choice{20}{2}{doujinshi}
+\choice{20}{3}{lightnovel}
+\choice{20}{4}{manga}
 
 \sectiontitle{第9問}
 以下は「ノーゲーム・ノーライフ」に登場するあるゲームが行われている場面を描いたものである。
 空欄に当てはまる単語として最も適当なものを選べ。
 Sora and dreadless Siro overwhelmed driven native executing gods since enemies ___ feeblish humanity.
-\mark[answer=4,points=10,choices=4]{20}
-\choice{20}{1}{scoff}
-\choice{20}{2}{despise}
-\choice{20}{3}{inferior}
-\choice{20}{4}{underestimate}
+\mark[answer=4,points=10,choices=4]{21}
+\choice{21}{1}{despise}
+\choice{21}{2}{overcome}
+\choice{21}{3}{scoff}
+\choice{21}{4}{underestimate}
 `;

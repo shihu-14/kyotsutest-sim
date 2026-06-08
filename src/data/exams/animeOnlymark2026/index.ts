@@ -13,6 +13,7 @@ import animePage10 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/pag
 import animePage11 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/page-11.jpg";
 import animePage12 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/page-12.jpg";
 import animePage13 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/page-13.jpg";
+import animePage14 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/page-14.jpg";
 import { animePageGradeAnchors, animePageId, animePageMarkAreas } from "./markLayout";
 
 const optionsFrom = (contents: string[]) =>
@@ -34,7 +35,8 @@ const animePageImages = [
   animePage10,
   animePage11,
   animePage12,
-  animePage13
+  animePage13,
+  animePage14
 ];
 
 const animePageTitles = [
@@ -49,6 +51,7 @@ const animePageTitles = [
   "第6問 順序関係",
   "第7問 口コミ",
   "第8問 英英辞典",
+  "第8問 英英辞典 続き",
   "第9問 英文クイズ",
   "キャラクター一覧"
 ];
@@ -65,6 +68,7 @@ export const animeOnlymarkExam: Exam = {
   source: {
     kind: "latex-pdf",
     latexEntryPath: "src/assets/exams/anime-onlymark-2026/source/kyotutest_anime_onlymark.tex",
+    pdfPath: "src/assets/exams/anime-onlymark-2026/source/kyotutest_anime_onlymark.pdf",
     pdfPageImagesPath: "src/assets/exams/anime-onlymark-2026/pdf-pages",
     markPlacement: "manual"
   },
@@ -335,10 +339,10 @@ export const animeOnlymarkExam: Exam = {
         section: "第8問",
         prompt: "問1の説明が意味する単語として最も適当なものを選べ。",
         pageId: animePageId(11),
-        points: 6,
+        points: 4,
         multi: false,
-        options: optionsFrom(["isekai", "romcom", "yuri", "catgirl"]),
-        correct: ["3"],
+        options: optionsFrom(["historical", "isekai", "post-apocalyptic", "supernatural"]),
+        correct: ["2"],
         explanation: "TeXサンプルの第8問 問1に対応する解答欄です。"
       },
       {
@@ -347,21 +351,33 @@ export const animeOnlymarkExam: Exam = {
         section: "第8問",
         prompt: "問2の説明が意味する単語として最も適当なものを選べ。",
         pageId: animePageId(11),
-        points: 6,
+        points: 4,
         multi: false,
-        options: optionsFrom(["manga", "lightnovel", "comiket", "doujinshi"]),
+        options: optionsFrom(["catgirl", "romcom", "shojo", "yuri"]),
         correct: ["4"],
         explanation: "TeXサンプルの第8問 問2に対応する解答欄です。"
       },
       {
         id: "anime-q20",
         label: "20",
+        section: "第8問",
+        prompt: "問3の説明が意味する単語として最も適当なものを選べ。",
+        pageId: animePageId(12),
+        points: 4,
+        multi: false,
+        options: optionsFrom(["comiket", "doujinshi", "lightnovel", "manga"]),
+        correct: ["2"],
+        explanation: "TeXサンプルの第8問 問3に対応する解答欄です。"
+      },
+      {
+        id: "anime-q21",
+        label: "21",
         section: "第9問",
         prompt: "空欄に当てはまる単語として最も適当なものを選べ。",
-        pageId: animePageId(12),
+        pageId: animePageId(13),
         points: 10,
         multi: false,
-        options: optionsFrom(["scoff", "despise", "inferior", "underestimate"]),
+        options: optionsFrom(["despise", "overcome", "scoff", "underestimate"]),
         correct: ["4"],
         explanation: "TeXサンプルの第9問に対応する解答欄です。"
       }
