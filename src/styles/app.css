@@ -3201,9 +3201,9 @@ button:disabled {
 }
 
 .page-tabs {
-  --page-tab-width: calc(50px * 1.45);
+  --page-tab-width: clamp(60px, 5vw, calc(50px * 1.45));
   --cover-tab-width: calc(46px * 1.8);
-  --visible-page-tabs: 13;
+  --visible-page-tabs: 12;
   --has-cover-tab: 1;
   display: flex;
   gap: 0;
@@ -3218,7 +3218,7 @@ button:disabled {
 
 .page-tab-scroll {
   display: flex;
-  flex: 0 1 calc(var(--visible-page-tabs) * var(--page-tab-width));
+  flex: 0 0 calc(var(--visible-page-tabs) * var(--page-tab-width));
   width: calc(var(--visible-page-tabs) * var(--page-tab-width));
   min-width: 0;
   overflow-x: auto;

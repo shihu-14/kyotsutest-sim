@@ -19,6 +19,7 @@ interface ExamRunnerProps {
 }
 
 const defaultFinishColor = "#e85f3a";
+const visiblePageTabCount = 12;
 
 export function ExamRunner({
   exam,
@@ -49,7 +50,7 @@ export function ExamRunner({
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
   const bookletStyle = { "--booklet-zoom": String(bookletZoom) } as CSSProperties;
   const pageTabsStyle = {
-    "--visible-page-tabs": String(Math.min(exam.pages.length, 13)),
+    "--visible-page-tabs": String(Math.min(exam.pages.length, visiblePageTabCount)),
     "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
   } as CSSProperties;
   const finishColorStyle = {
@@ -122,8 +123,8 @@ export function ExamRunner({
       return;
     }
 
-    const leftEdge = activeTab.offsetLeft;
-    const rightEdge = activeTab.offsetLeft + activeTab.offsetWidth;
+    const leftEdge = activeTab.offsetLeft - nav.offsetLeft;
+    const rightEdge = leftEdge + activeTab.offsetWidth;
     const visibleLeft = nav.scrollLeft;
     const visibleRight = nav.scrollLeft + nav.clientWidth;
     const maxScrollLeft = Math.max(0, nav.scrollWidth - nav.clientWidth);
@@ -137,7 +138,7 @@ export function ExamRunner({
     }
 
     if (navigationSource === "arrow" && previousPosition !== null && currentPosition < previousPosition) {
-      scrollTo(leftEdge);
+      scrollTo(rightEdge - nav.clientWidth);
       return;
     }
 
