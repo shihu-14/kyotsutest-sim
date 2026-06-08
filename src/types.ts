@@ -73,6 +73,7 @@ export type ExamSource =
   | {
       kind: "latex-pdf";
       latexEntryPath: string;
+      pdfPath?: string;
       pdfPageImagesPath: string;
       markPlacement: "manual";
     }

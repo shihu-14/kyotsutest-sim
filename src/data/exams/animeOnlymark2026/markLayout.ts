@@ -44,41 +44,42 @@ const animeNineChoices = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 export const animePageMarkAreas: Record<number, PageMarkArea[]> = {
   1: [
-    imageMarkArea(1, "1", 184, 1481),
-    imageMarkArea(1, "2", 645, 1481),
-    imageMarkArea(1, "3", 184, 1562.5),
-    imageMarkArea(1, "4", 645, 1562.5)
+    imageMarkArea(1, "1", 183.2, 1492.9),
+    imageMarkArea(1, "2", 638.5, 1492.9),
+    imageMarkArea(1, "3", 185.4, 1575.8),
+    imageMarkArea(1, "4", 644, 1575.8)
   ],
-  2: [imageMarkArea(2, "1", 222, 639.5), imageMarkArea(2, "2", 222, 1076)],
-  3: [imageMarkArea(2, "3", 222, 147), imageMarkArea(2, "4", 222, 873)],
+  2: [imageMarkArea(2, "1", 226.1, 637.3), imageMarkArea(2, "2", 219.5, 1074.7)],
+  3: [imageMarkArea(2, "3", 219.5, 147.7), imageMarkArea(2, "4", 226.1, 871.9)],
   4: [
-    ...imageMarkRow(3, 872.5, animeNineChoices, [658.5, 704, 749, 794, 840, 885, 930, 975.5, 1021]),
-    ...imageMarkRow(4, 948.5, animeNineChoices, [658.5, 704, 749, 794, 840, 885, 930, 975.5, 1021]),
-    ...imageMarkRow(5, 1024, animeNineChoices, [658.5, 704, 749, 794, 840, 885, 930, 975.5, 1021]),
-    ...imageMarkRow(6, 1100, animeNineChoices, [658.5, 704, 749, 794, 840, 885, 930, 975.5, 1021])
+    ...imageMarkRow(3, 873.2, animeNineChoices, [657.2, 703.5, 749.7, 791.5, 844.2, 889.4, 929, 974.1, 1020.2]),
+    ...imageMarkRow(4, 946.3, animeNineChoices, [662.8, 703.5, 747.5, 795.9, 844.2, 878.4, 929, 975.2, 1013.7]),
+    ...imageMarkRow(5, 1024.3, animeNineChoices, [659.5, 707.9, 749.7, 791.5, 844.2, 886.1, 929, 977.4, 1013.7]),
+    ...imageMarkRow(6, 1098.9, animeNineChoices, [662.8, 701.2, 747.5, 791.5, 833.2, 879.5, 929, 971.9, 1017])
   ],
-  5: imageMarkRow(7, 1532, ["1", "2", "3", "4", "5"], [213, 397, 582, 766, 950]),
-  6: imageMarkRow(8, 1302, animeEightChoices, [402, 473, 544, 615, 686, 756, 827, 897]),
+  5: imageMarkRow(7, 1531.1, ["1", "2", "3", "4", "5"], [193.1, 385.6, 567, 748.5, 930.1]),
+  6: imageMarkRow(8, 1298.6, animeEightChoices, [401, 471.4, 542.9, 617.7, 681.5, 755.2, 827.8, 896]),
   7: [
-    ...imageMarkRow(9, 1121, animeFourChoices, [728, 773, 818, 863.5]),
-    ...imageMarkRow(10, 1205, animeFourChoices, [728, 773, 818, 863.5]),
-    ...imageMarkRow(11, 1289, animeFourChoices, [728, 773, 818, 863.5])
+    ...imageMarkRow(9, 1117.3, animeFourChoices, [732, 771.7, 814.5, 858.6]),
+    ...imageMarkRow(10, 1206.2, animeFourChoices, [726.5, 771.7, 822.2, 867.4]),
+    ...imageMarkRow(11, 1289.1, animeFourChoices, [732, 771.7, 819, 865.2])
   ],
   8: [
-    ...imageMarkRow(12, 704.5, animeSmallChoices, [237, 545, 852]),
-    ...imageMarkRow(13, 1117.5, animeSmallChoices, [237, 545, 852]),
-    ...imageMarkRow(14, 1521, animeSmallChoices, [237, 545, 852])
+    ...imageMarkRow(12, 705.2, animeSmallChoices, [236, 544, 852]),
+    ...imageMarkRow(13, 1114.9, animeSmallChoices, [238.2, 539.5, 852]),
+    ...imageMarkRow(14, 1522.4, animeSmallChoices, [238.2, 539.5, 848.7])
   ],
   9: [
-    ...imageMarkRow(15, 438.5, animeSmallChoices, [693, 739, 784]),
-    ...imageMarkRow(16, 517, animeSmallChoices, [693, 739, 784])
+    ...imageMarkRow(15, 436.5, animeSmallChoices, [694.7, 732, 782.7]),
+    ...imageMarkRow(16, 514.4, animeSmallChoices, [687, 743, 781.5])
   ],
-  10: imageMarkRow(17, 1563.5, animeFourChoices, [213, 420, 626.5, 833]),
+  10: imageMarkRow(17, 1546.4, animeFourChoices, [198.6, 425.2, 649.5, 875.1]),
   11: [
-    ...imageMarkRow(18, 905, animeFourChoices, [237, 468, 698.5, 929]),
-    ...imageMarkRow(19, 1579, animeFourChoices, [237, 468, 698.5, 929])
+    ...imageMarkRow(18, 799.5, animeFourChoices, [219.5, 454.9, 650.7, 951]),
+    ...imageMarkRow(19, 1484.4, animeFourChoices, [230.5, 467, 698, 927.9])
   ],
-  12: imageMarkRow(20, 933.5, animeFourChoices, [204, 419, 635, 850])
+  12: imageMarkRow(20, 707.9, animeFourChoices, [236, 465.9, 698, 932.2]),
+  13: imageMarkRow(21, 936.5, animeFourChoices, [202.9, 418.6, 650.7, 844.2])
 };
 
 export const animePageGradeAnchors: Record<number, PageGradeAnchor[]> = {
@@ -104,6 +105,7 @@ export const animePageGradeAnchors: Record<number, PageGradeAnchor[]> = {
   ],
   9: [imageGradeAnchor(15, 456, 436.5), imageGradeAnchor(16, 454.5, 515.5)],
   10: [imageGradeAnchor(17, 516, 262.5)],
-  11: [imageGradeAnchor(18, 349, 389.5), imageGradeAnchor(19, 349, 1015.5)],
-  12: [imageGradeAnchor(20, 976, 208.5)]
+  11: [imageGradeAnchor(18, 350, 447), imageGradeAnchor(19, 350, 983)],
+  12: [imageGradeAnchor(20, 350, 146)],
+  13: [imageGradeAnchor(21, 976, 207)]
 };

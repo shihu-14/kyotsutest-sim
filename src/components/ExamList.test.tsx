@@ -46,12 +46,13 @@ describe("ExamList", () => {
     expect(animeExam?.source).toMatchObject({
       kind: "latex-pdf",
       markPlacement: "manual",
+      pdfPath: "src/assets/exams/anime-onlymark-2026/source/kyotutest_anime_onlymark.pdf",
       pdfPageImagesPath: "src/assets/exams/anime-onlymark-2026/pdf-pages"
     });
-    expect(animeExam?.pages).toHaveLength(13);
-    expect(animeExam?.questions).toHaveLength(20);
+    expect(animeExam?.pages).toHaveLength(14);
+    expect(animeExam?.questions).toHaveLength(21);
     expect(animeExam?.pages.every((page) => page.pageImageUrl)).toBe(true);
-    expect(animeExam?.pages[12]?.title).toBe("キャラクター一覧");
+    expect(animeExam?.pages[13]?.title).toBe("キャラクター一覧");
     expect(animeExam?.questions.reduce((sum, question) => sum + question.points, 0)).toBe(100);
   });
 

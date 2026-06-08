@@ -25,7 +25,7 @@ describe("ProblemBooklet", () => {
     await user.click(screen.getByRole("button", { name: "1 4" }));
 
     expect(onToggleAnswer).toHaveBeenCalledWith(question, "4");
-    expect(screen.getByRole("button", { name: "1 4" })).toHaveStyle("--mark-y: 88.177%");
+    expect(screen.getByRole("button", { name: "1 4" })).toHaveStyle("--mark-y: 88.928%");
     expect(screen.getByRole("button", { name: "1 4" })).not.toHaveStyle("--mark-y-correction: -200%");
   });
 
