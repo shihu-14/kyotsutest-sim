@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
 import katex from "katex";
 import type { AuthoringMeta } from "../types";
-import animeFigure01 from "../assets/anime-crops/page-01-figures.jpg";
-import animeFigure04 from "../assets/anime-crops/page-04-figure.jpg";
-import animeFigure05 from "../assets/anime-crops/page-05-figures.jpg";
-import animeFigure06 from "../assets/anime-crops/page-06-figure.jpg";
-import animeFigure07 from "../assets/anime-crops/page-07-figure.jpg";
-import animeFigure09 from "../assets/anime-crops/page-09-figures.jpg";
-import animeFigure10 from "../assets/anime-crops/page-10-figure.jpg";
+import animeFigure01 from "../assets/exams/anime-onlymark-2026/crops/page-01-figures.jpg";
+import animeFigure04 from "../assets/exams/anime-onlymark-2026/crops/page-04-figure.jpg";
+import animeFigure05 from "../assets/exams/anime-onlymark-2026/crops/page-05-figures.jpg";
+import animeFigure06 from "../assets/exams/anime-onlymark-2026/crops/page-06-figure.jpg";
+import animeFigure07 from "../assets/exams/anime-onlymark-2026/crops/page-07-figure.jpg";
+import animeFigure09 from "../assets/exams/anime-onlymark-2026/crops/page-09-figures.jpg";
+import animeFigure10 from "../assets/exams/anime-onlymark-2026/crops/page-10-figure.jpg";
 
 export interface ParsedMark {
   id: string;
