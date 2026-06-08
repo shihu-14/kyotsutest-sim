@@ -105,41 +105,41 @@ const animeNineChoices = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 const animePageMarkAreas: Record<number, PageMarkArea[]> = {
   1: [
-    imageMarkArea(1, "1", 184, 1565),
-    imageMarkArea(1, "2", 644, 1565),
-    imageMarkArea(1, "3", 184, 1649),
-    imageMarkArea(1, "4", 644, 1649)
+    imageMarkArea(1, "1", 184, 1481),
+    imageMarkArea(1, "2", 645, 1481),
+    imageMarkArea(1, "3", 184, 1562.5),
+    imageMarkArea(1, "4", 645, 1562.5)
   ],
-  2: [imageMarkArea(2, "1", 221, 686), imageMarkArea(2, "2", 221, 1158)],
-  3: [imageMarkArea(2, "3", 221, 154), imageMarkArea(2, "4", 221, 932)],
+  2: [imageMarkArea(2, "1", 222, 639.5), imageMarkArea(2, "2", 222, 1076)],
+  3: [imageMarkArea(2, "3", 222, 147), imageMarkArea(2, "4", 222, 873)],
   4: [
-    ...imageMarkRow(3, 957, animeNineChoices, [658, 704, 750, 796, 842, 887, 932, 977, 1022]),
-    ...imageMarkRow(4, 1037, animeNineChoices, [658, 704, 750, 796, 842, 887, 932, 977, 1022]),
-    ...imageMarkRow(5, 1117, animeNineChoices, [658, 704, 750, 796, 842, 887, 932, 977, 1022]),
-    ...imageMarkRow(6, 1197, animeNineChoices, [658, 704, 750, 796, 842, 887, 932, 977, 1022])
+    ...imageMarkRow(3, 872.5, animeNineChoices, [658.5, 704, 749, 794, 840, 885, 930, 975.5, 1021]),
+    ...imageMarkRow(4, 948.5, animeNineChoices, [658.5, 704, 749, 794, 840, 885, 930, 975.5, 1021]),
+    ...imageMarkRow(5, 1024, animeNineChoices, [658.5, 704, 749, 794, 840, 885, 930, 975.5, 1021]),
+    ...imageMarkRow(6, 1100, animeNineChoices, [658.5, 704, 749, 794, 840, 885, 930, 975.5, 1021])
   ],
-  5: imageMarkRow(7, 1634, ["1", "2", "3", "4", "5"], [213, 398, 582, 771, 951]),
-  6: imageMarkRow(8, 1386, animeEightChoices, [402, 473, 544, 615, 686, 756, 827, 897]),
+  5: imageMarkRow(7, 1532, ["1", "2", "3", "4", "5"], [213, 397, 582, 766, 950]),
+  6: imageMarkRow(8, 1302, animeEightChoices, [402, 473, 544, 615, 686, 756, 827, 897]),
   7: [
-    ...imageMarkRow(9, 1208, animeFourChoices, [728, 773, 819, 864]),
-    ...imageMarkRow(10, 1295, animeFourChoices, [728, 773, 819, 864]),
-    ...imageMarkRow(11, 1384, animeFourChoices, [728, 773, 819, 864])
+    ...imageMarkRow(9, 1121, animeFourChoices, [728, 773, 818, 863.5]),
+    ...imageMarkRow(10, 1205, animeFourChoices, [728, 773, 818, 863.5]),
+    ...imageMarkRow(11, 1289, animeFourChoices, [728, 773, 818, 863.5])
   ],
   8: [
-    ...imageMarkRow(12, 750, animeSmallChoices, [237, 545, 853]),
-    ...imageMarkRow(13, 1192, animeSmallChoices, [237, 545, 853]),
-    ...imageMarkRow(14, 1622, animeSmallChoices, [237, 545, 853])
+    ...imageMarkRow(12, 704.5, animeSmallChoices, [237, 545, 852]),
+    ...imageMarkRow(13, 1117.5, animeSmallChoices, [237, 545, 852]),
+    ...imageMarkRow(14, 1521, animeSmallChoices, [237, 545, 852])
   ],
   9: [
-    ...imageMarkRow(15, 470, animeSmallChoices, [694, 739, 784]),
-    ...imageMarkRow(16, 554, animeSmallChoices, [694, 739, 784])
+    ...imageMarkRow(15, 438.5, animeSmallChoices, [693, 739, 784]),
+    ...imageMarkRow(16, 517, animeSmallChoices, [693, 739, 784])
   ],
-  10: imageMarkRow(17, 1676, animeFourChoices, [213, 419, 623, 865]),
+  10: imageMarkRow(17, 1563.5, animeFourChoices, [213, 420, 626.5, 833]),
   11: [
-    ...imageMarkRow(18, 964, animeFourChoices, [238, 469, 699, 929]),
-    ...imageMarkRow(19, 1661, animeFourChoices, [238, 469, 699, 929])
+    ...imageMarkRow(18, 905, animeFourChoices, [237, 468, 698.5, 929]),
+    ...imageMarkRow(19, 1579, animeFourChoices, [237, 468, 698.5, 929])
   ],
-  12: imageMarkRow(20, 989, animeFourChoices, [203, 420, 634, 851])
+  12: imageMarkRow(20, 933.5, animeFourChoices, [204, 419, 635, 850])
 };
 
 const animePageGradeAnchors: Record<number, PageGradeAnchor[]> = {
