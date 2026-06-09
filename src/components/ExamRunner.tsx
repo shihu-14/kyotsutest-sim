@@ -15,10 +15,12 @@ interface ExamRunnerProps {
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
   onFinish: () => void;
   onExitReview?: () => void;
+  onReturnHome?: () => void;
   onExpire: () => void;
 }
 
-const defaultFinishColor = "#e85f3a";
+const timerAccentColor = "#ff4d00";
+const defaultHomeColor = "#fffaf1";
 const visiblePageTabCount = 12;
 
 export function ExamRunner({
@@ -31,12 +33,13 @@ export function ExamRunner({
   onToggleAnswer,
   onFinish,
   onExitReview,
+  onReturnHome,
   onExpire
 }: ExamRunnerProps) {
   const [bookletZoom, setBookletZoom] = useState(1);
   const [showCover, setShowCover] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
-  const [finishColor, setFinishColor] = useState(defaultFinishColor);
+  const [homeColor, setHomeColor] = useState(defaultHomeColor);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
@@ -54,8 +57,12 @@ export function ExamRunner({
     "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
   } as CSSProperties;
   const finishColorStyle = {
-    "--finish-color": finishColor,
-    backgroundColor: finishColor
+    "--finish-color": timerAccentColor,
+    backgroundColor: timerAccentColor
+  } as CSSProperties;
+  const homeColorStyle = {
+    "--home-action-color": homeColor,
+    backgroundColor: homeColor
   } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
@@ -206,21 +213,16 @@ export function ExamRunner({
             </button>
           ) : (
             <div className="finish-action-stack">
-              <details className="finish-color-debug">
-                <summary>採点ボタン色</summary>
-                <div className="finish-color-debug-grid">
-                  <label>
-                    <span>色</span>
-                    <input
-                      aria-label="採点へ進むボタン色"
-                      type="color"
-                      value={finishColor}
-                      onChange={(event) => setFinishColor(event.currentTarget.value)}
-                    />
-                  </label>
-                  <div className="finish-color-preview" style={finishColorStyle} aria-hidden="true" />
-                </div>
-              </details>
+              {onReturnHome ? (
+                <button
+                  className="secondary-button home-return-button"
+                  style={homeColorStyle}
+                  type="button"
+                  onClick={onReturnHome}
+                >
+                  ホームに戻る
+                </button>
+              ) : null}
               <button
                 className="danger-button finish-button"
                 style={finishColorStyle}
@@ -229,6 +231,23 @@ export function ExamRunner({
               >
                 採点へ進む
               </button>
+              {onReturnHome ? (
+                <details className="action-color-debug">
+                  <summary>ホーム色</summary>
+                  <div className="action-color-debug-grid">
+                    <label>
+                      <span>色</span>
+                      <input
+                        aria-label="ホームに戻るボタン色"
+                        type="color"
+                        value={homeColor}
+                        onChange={(event) => setHomeColor(event.currentTarget.value)}
+                      />
+                    </label>
+                    <div className="home-color-preview" style={homeColorStyle} aria-hidden="true" />
+                  </div>
+                </details>
+              ) : null}
             </div>
           )}
         </div>

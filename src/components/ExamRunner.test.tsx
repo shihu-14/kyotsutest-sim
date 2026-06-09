@@ -74,6 +74,7 @@ describe("ExamRunner", () => {
   it("asks for confirmation before finishing an active exam", async () => {
     const user = userEvent.setup();
     const onFinish = vi.fn();
+    const onReturnHome = vi.fn();
 
     render(
       <ExamRunner
@@ -84,6 +85,7 @@ describe("ExamRunner", () => {
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={onFinish}
+        onReturnHome={onReturnHome}
         onToggleAnswer={vi.fn()}
       />
     );
@@ -92,6 +94,7 @@ describe("ExamRunner", () => {
     expect(screen.getByLabelText("問題表示領域")).toBeInTheDocument();
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveTextContent(/^\d{2}:\d{2}$/);
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveClass("timer-color-stadium-alert");
+    expect(screen.getByText("ホームに戻る")).toBeInTheDocument();
     expect(screen.queryByText("解答済み")).not.toBeInTheDocument();
     expect(screen.queryByText("中断")).not.toBeInTheDocument();
 
@@ -108,9 +111,12 @@ describe("ExamRunner", () => {
     await user.click(screen.getByText("採点を開始"));
 
     expect(onFinish).toHaveBeenCalledTimes(1);
+    expect(onReturnHome).not.toHaveBeenCalled();
   });
 
-  it("customizes the finish action color from the debug controls", () => {
+  it("uses the timer color for scoring and customizes the home action color", () => {
+    const onReturnHome = vi.fn();
+
     render(
       <ExamRunner
         answers={{}}
@@ -120,18 +126,25 @@ describe("ExamRunner", () => {
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
+        onReturnHome={onReturnHome}
         onToggleAnswer={vi.fn()}
       />
     );
 
     const finishButton = document.querySelector<HTMLButtonElement>(".finish-button")!;
-    const colorInput = document.querySelector<HTMLInputElement>('input[aria-label="採点へ進むボタン色"]')!;
+    const homeButton = document.querySelector<HTMLButtonElement>(".home-return-button")!;
+    const colorInput = document.querySelector<HTMLInputElement>('input[aria-label="ホームに戻るボタン色"]')!;
 
-    expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#e85f3a");
+    expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#ff4d00");
+    expect(homeButton.style.getPropertyValue("--home-action-color")).toBe("#fffaf1");
 
     fireEvent.change(colorInput, { target: { value: "#123456" } });
 
-    expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#123456");
+    expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#ff4d00");
+    expect(homeButton.style.getPropertyValue("--home-action-color")).toBe("#123456");
+
+    fireEvent.click(homeButton);
+    expect(onReturnHome).toHaveBeenCalledTimes(1);
   });
 
   it("zooms only from the problem display area when using a modified wheel", () => {

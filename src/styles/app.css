@@ -138,9 +138,16 @@ button:disabled {
 }
 
 .finish-button {
-  background: var(--finish-color, #e85f3a);
+  background: var(--finish-color, #ff4d00);
   color: #ffffff;
-  box-shadow: 0 10px 20px rgba(116, 36, 25, 0.22);
+  box-shadow: 0 10px 20px rgba(255, 77, 0, 0.22);
+}
+
+.home-return-button {
+  border-color: rgba(39, 53, 52, 0.24);
+  background: var(--home-action-color, #fffaf1);
+  color: #273534;
+  box-shadow: 0 10px 20px rgba(52, 39, 22, 0.14);
 }
 
 .text-button {
@@ -1111,12 +1118,12 @@ button:disabled {
 
 .finish-action-stack {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 10px;
 }
 
-.finish-color-debug {
-  width: 242px;
+.action-color-debug {
+  width: 138px;
   border: 1px solid rgba(39, 53, 52, 0.26);
   border-radius: 8px;
   background: rgba(255, 250, 241, 0.96);
@@ -1125,7 +1132,7 @@ button:disabled {
   box-shadow: 0 10px 22px rgba(52, 39, 22, 0.14);
 }
 
-.finish-color-debug summary {
+.action-color-debug summary {
   cursor: pointer;
   padding: 9px 12px;
   font-size: 0.78rem;
@@ -1133,19 +1140,19 @@ button:disabled {
   list-style: none;
 }
 
-.finish-color-debug summary::-webkit-details-marker {
+.action-color-debug summary::-webkit-details-marker {
   display: none;
 }
 
-.finish-color-debug-grid {
+.action-color-debug-grid {
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
+  grid-template-columns: 54px minmax(0, 1fr);
   gap: 9px;
   border-top: 1px solid rgba(39, 53, 52, 0.16);
   padding: 10px;
 }
 
-.finish-color-debug label {
+.action-color-debug label {
   display: grid;
   gap: 5px;
   min-width: 0;
@@ -1153,7 +1160,7 @@ button:disabled {
   font-weight: 800;
 }
 
-.finish-color-debug input[type="color"] {
+.action-color-debug input[type="color"] {
   width: 100%;
   height: 28px;
   border: 1px solid rgba(39, 53, 52, 0.24);
@@ -1162,11 +1169,11 @@ button:disabled {
   padding: 2px;
 }
 
-.finish-color-preview {
+.home-color-preview {
   height: 20px;
   border: 1px solid rgba(39, 53, 52, 0.24);
   border-radius: 4px;
-  background: var(--finish-color, #e85f3a);
+  background: var(--home-action-color, #fffaf1);
 }
 
 .timer {
