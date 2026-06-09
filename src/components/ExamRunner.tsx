@@ -207,12 +207,12 @@ export function ExamRunner({
           ) : (
             <div className="finish-action-stack">
               <details className="finish-color-debug">
-                <summary>終了色</summary>
+                <summary>採点ボタン色</summary>
                 <div className="finish-color-debug-grid">
                   <label>
                     <span>色</span>
                     <input
-                      aria-label="試験終了ボタン色"
+                      aria-label="採点へ進むボタン色"
                       type="color"
                       value={finishColor}
                       onChange={(event) => setFinishColor(event.currentTarget.value)}
@@ -227,7 +227,7 @@ export function ExamRunner({
                 type="button"
                 onClick={() => setShowFinishConfirm(true)}
               >
-                試験終了
+                採点へ進む
               </button>
             </div>
           )}
@@ -324,11 +324,11 @@ export function ExamRunner({
       {showFinishConfirm ? (
         <div className="dialog-backdrop" role="presentation">
           <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-dialog-title">
-            <h2 id="finish-dialog-title">試験を終了しますか</h2>
-            <p>時間はまだ残っています。終了すると採点に進みます。</p>
+            <h2 id="finish-dialog-title">採点へ進みますか</h2>
+            <p>試験一覧には戻らず、このまま採点を開始します。解答はこれ以上変更できません。</p>
             <div className="dialog-actions">
               <button className="secondary-button" type="button" onClick={() => setShowFinishConfirm(false)}>
-                戻る
+                解答を続ける
               </button>
               <button
                 className="danger-button finish-button"
@@ -339,7 +339,7 @@ export function ExamRunner({
                   onFinish();
                 }}
               >
-                採点へ進む
+                採点を開始
               </button>
             </div>
           </section>
