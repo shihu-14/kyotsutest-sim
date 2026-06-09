@@ -165,6 +165,7 @@ export function App() {
       onExitReview={() => setPhase("scoring")}
       onExpire={finishExam}
       onFinish={finishExam}
+      onReturnHome={resetToList}
       onToggleAnswer={handleToggleAnswer}
     />
   );
