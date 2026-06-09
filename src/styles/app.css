@@ -139,7 +139,7 @@ button:disabled {
 
 .finish-button {
   background: var(--finish-color, #ff4d00);
-  color: #ffffff;
+  color: #111111;
   box-shadow: 0 10px 20px rgba(255, 77, 0, 0.22);
 }
 
@@ -1120,60 +1120,6 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 10px;
-}
-
-.action-color-debug {
-  width: 138px;
-  border: 1px solid rgba(39, 53, 52, 0.26);
-  border-radius: 8px;
-  background: rgba(255, 250, 241, 0.96);
-  color: #273534;
-  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
-  box-shadow: 0 10px 22px rgba(52, 39, 22, 0.14);
-}
-
-.action-color-debug summary {
-  cursor: pointer;
-  padding: 9px 12px;
-  font-size: 0.78rem;
-  font-weight: 900;
-  list-style: none;
-}
-
-.action-color-debug summary::-webkit-details-marker {
-  display: none;
-}
-
-.action-color-debug-grid {
-  display: grid;
-  grid-template-columns: 54px minmax(0, 1fr);
-  gap: 9px;
-  border-top: 1px solid rgba(39, 53, 52, 0.16);
-  padding: 10px;
-}
-
-.action-color-debug label {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-  font-size: 0.68rem;
-  font-weight: 800;
-}
-
-.action-color-debug input[type="color"] {
-  width: 100%;
-  height: 28px;
-  border: 1px solid rgba(39, 53, 52, 0.24);
-  border-radius: 4px;
-  background: #fffdf8;
-  padding: 2px;
-}
-
-.home-color-preview {
-  height: 20px;
-  border: 1px solid rgba(39, 53, 52, 0.24);
-  border-radius: 4px;
-  background: var(--home-action-color, #fffaf1);
 }
 
 .timer {
