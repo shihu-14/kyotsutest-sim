@@ -114,7 +114,7 @@ describe("ExamRunner", () => {
     expect(onReturnHome).not.toHaveBeenCalled();
   });
 
-  it("uses the default scoring width and keeps the home action fixed without color debug controls", () => {
+  it("uses default action widths without color debug controls", () => {
     const onReturnHome = vi.fn();
 
     render(
@@ -138,7 +138,7 @@ describe("ExamRunner", () => {
     expect(finishButton.style.color).toBe("rgb(255, 255, 255)");
     expect(finishButton.style.width).toBe("");
     expect(homeButton.style.getPropertyValue("--home-action-color")).toBe("#fffaf1");
-    expect(homeButton.style.width).toBe("128px");
+    expect(homeButton.style.width).toBe("");
     expect(screen.queryByText("ホーム色")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("ホームに戻るボタン色")).not.toBeInTheDocument();
 

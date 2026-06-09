@@ -21,7 +21,6 @@ interface ExamRunnerProps {
 
 const timerAccentColor = "#ff4d00";
 const homeActionColor = "#fffaf1";
-const actionButtonWidth = "128px";
 const visiblePageTabCount = 12;
 
 export function ExamRunner({
@@ -63,8 +62,7 @@ export function ExamRunner({
   } as CSSProperties;
   const homeColorStyle = {
     "--home-action-color": homeActionColor,
-    backgroundColor: homeActionColor,
-    width: actionButtonWidth
+    backgroundColor: homeActionColor
   } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
