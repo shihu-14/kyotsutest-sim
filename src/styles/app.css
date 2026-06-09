@@ -3572,6 +3572,10 @@ button:disabled {
   right: 0;
 }
 
+.exam-mode-background .stopwatch-timer {
+  transform: translateY(-10px);
+}
+
 .exam-mode-background .mark-sheet {
   height: calc(100% - 118px);
   margin-top: 118px;
