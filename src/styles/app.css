@@ -1115,13 +1115,13 @@ button:disabled {
 .toolbar-metrics {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 24px;
 }
 
 .finish-action-stack {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 20px;
 }
 
 .timer {
