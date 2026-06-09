@@ -95,16 +95,17 @@ describe("ExamRunner", () => {
     expect(screen.queryByText("解答済み")).not.toBeInTheDocument();
     expect(screen.queryByText("中断")).not.toBeInTheDocument();
 
-    await user.click(screen.getByText("試験終了"));
-
-    expect(onFinish).not.toHaveBeenCalled();
-    expect(screen.getByText("試験を終了しますか")).toBeInTheDocument();
-
-    await user.click(screen.getByText("戻る"));
-    expect(onFinish).not.toHaveBeenCalled();
-
-    await user.click(screen.getByText("試験終了"));
     await user.click(screen.getByText("採点へ進む"));
+
+    expect(onFinish).not.toHaveBeenCalled();
+    expect(screen.getByText("採点へ進みますか")).toBeInTheDocument();
+    expect(screen.getByText("試験一覧には戻らず、このまま採点を開始します。解答はこれ以上変更できません。")).toBeInTheDocument();
+
+    await user.click(screen.getByText("解答を続ける"));
+    expect(onFinish).not.toHaveBeenCalled();
+
+    await user.click(screen.getByText("採点へ進む"));
+    await user.click(screen.getByText("採点を開始"));
 
     expect(onFinish).toHaveBeenCalledTimes(1);
   });
@@ -124,7 +125,7 @@ describe("ExamRunner", () => {
     );
 
     const finishButton = document.querySelector<HTMLButtonElement>(".finish-button")!;
-    const colorInput = document.querySelector<HTMLInputElement>('input[aria-label="試験終了ボタン色"]')!;
+    const colorInput = document.querySelector<HTMLInputElement>('input[aria-label="採点へ進むボタン色"]')!;
 
     expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#e85f3a");
 
