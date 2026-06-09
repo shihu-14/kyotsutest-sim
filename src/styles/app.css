@@ -139,7 +139,7 @@ button:disabled {
 
 .finish-button {
   background: var(--finish-color, #ff4d00);
-  color: #111111;
+  color: #ffffff;
   box-shadow: 0 10px 20px rgba(255, 77, 0, 0.22);
 }
 
