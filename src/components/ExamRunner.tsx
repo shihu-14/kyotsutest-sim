@@ -59,8 +59,7 @@ export function ExamRunner({
   const finishColorStyle = {
     "--finish-color": timerAccentColor,
     backgroundColor: timerAccentColor,
-    color: "#111111",
-    width: actionButtonWidth
+    color: "#ffffff"
   } as CSSProperties;
   const homeColorStyle = {
     "--home-action-color": homeActionColor,
