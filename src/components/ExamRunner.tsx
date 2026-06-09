@@ -20,7 +20,8 @@ interface ExamRunnerProps {
 }
 
 const timerAccentColor = "#ff4d00";
-const defaultHomeColor = "#fffaf1";
+const homeActionColor = "#fffaf1";
+const actionButtonWidth = "128px";
 const visiblePageTabCount = 12;
 
 export function ExamRunner({
@@ -39,7 +40,6 @@ export function ExamRunner({
   const [bookletZoom, setBookletZoom] = useState(1);
   const [showCover, setShowCover] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
-  const [homeColor, setHomeColor] = useState(defaultHomeColor);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
@@ -58,11 +58,14 @@ export function ExamRunner({
   } as CSSProperties;
   const finishColorStyle = {
     "--finish-color": timerAccentColor,
-    backgroundColor: timerAccentColor
+    backgroundColor: timerAccentColor,
+    color: "#111111",
+    width: actionButtonWidth
   } as CSSProperties;
   const homeColorStyle = {
-    "--home-action-color": homeColor,
-    backgroundColor: homeColor
+    "--home-action-color": homeActionColor,
+    backgroundColor: homeActionColor,
+    width: actionButtonWidth
   } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
@@ -231,23 +234,6 @@ export function ExamRunner({
               >
                 採点へ進む
               </button>
-              {onReturnHome ? (
-                <details className="action-color-debug">
-                  <summary>ホーム色</summary>
-                  <div className="action-color-debug-grid">
-                    <label>
-                      <span>色</span>
-                      <input
-                        aria-label="ホームに戻るボタン色"
-                        type="color"
-                        value={homeColor}
-                        onChange={(event) => setHomeColor(event.currentTarget.value)}
-                      />
-                    </label>
-                    <div className="home-color-preview" style={homeColorStyle} aria-hidden="true" />
-                  </div>
-                </details>
-              ) : null}
             </div>
           )}
         </div>

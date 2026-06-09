@@ -114,7 +114,7 @@ describe("ExamRunner", () => {
     expect(onReturnHome).not.toHaveBeenCalled();
   });
 
-  it("uses the timer color for scoring and customizes the home action color", () => {
+  it("uses fixed matching action button widths without color debug controls", () => {
     const onReturnHome = vi.fn();
 
     render(
@@ -133,15 +133,14 @@ describe("ExamRunner", () => {
 
     const finishButton = document.querySelector<HTMLButtonElement>(".finish-button")!;
     const homeButton = document.querySelector<HTMLButtonElement>(".home-return-button")!;
-    const colorInput = document.querySelector<HTMLInputElement>('input[aria-label="ホームに戻るボタン色"]')!;
 
     expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#ff4d00");
+    expect(finishButton.style.color).toBe("rgb(17, 17, 17)");
+    expect(finishButton.style.width).toBe("128px");
     expect(homeButton.style.getPropertyValue("--home-action-color")).toBe("#fffaf1");
-
-    fireEvent.change(colorInput, { target: { value: "#123456" } });
-
-    expect(finishButton.style.getPropertyValue("--finish-color")).toBe("#ff4d00");
-    expect(homeButton.style.getPropertyValue("--home-action-color")).toBe("#123456");
+    expect(homeButton.style.width).toBe(finishButton.style.width);
+    expect(screen.queryByText("ホーム色")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("ホームに戻るボタン色")).not.toBeInTheDocument();
 
     fireEvent.click(homeButton);
     expect(onReturnHome).toHaveBeenCalledTimes(1);
