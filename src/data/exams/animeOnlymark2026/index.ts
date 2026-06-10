@@ -99,7 +99,7 @@ export const animeOnlymarkExam: Exam = {
         points: 10,
         multi: false,
         options: optionsFrom(["おねがい☆ティーチャー", "オーバーロード", "オッドタクシー", "【推しの子】"]),
-        correct: ["4"],
+        correct: ["1"],
         explanation: "TeXサンプルの第1問に対応する解答欄です。"
       },
       {
@@ -111,7 +111,7 @@ export const animeOnlymarkExam: Exam = {
         points: 2,
         multi: false,
         options: optionsFrom(["ルベーグ積分", "食塩水", "体心立方格子", "放物線"]),
-        correct: ["2"],
+        correct: ["3"],
         explanation: "TeXサンプルの第2問 問1に対応する解答欄です。"
       },
       {
@@ -223,7 +223,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["AAA", "AAĀ", "AĀA", "AĀĀ", "ĀAA", "ĀAĀ", "ĀĀA", "ĀĀĀ"]),
-        correct: ["4"],
+        correct: ["6"],
         explanation: "TeXサンプルの第4問 問1に対応する解答欄です。"
       },
       {
@@ -247,7 +247,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["A∩B", "Ā∩B", "A∩B̄", "Ā∩B̄"]),
-        correct: ["1"],
+        correct: ["2"],
         explanation: "TeXサンプルの第4問 問2に対応する解答欄です。"
       },
       {
@@ -271,7 +271,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["イマニティ", "フリューゲル", "ファンタズマ"]),
-        correct: ["2"],
+        correct: ["3"],
         explanation: "TeXサンプルの第5問 問1に対応する解答欄です。"
       },
       {
@@ -283,7 +283,7 @@ export const animeOnlymarkExam: Exam = {
         points: 3,
         multi: false,
         options: optionsFrom(["ラファエル", "メタトロン", "ガブリエル"]),
-        correct: ["1"],
+        correct: ["3"],
         explanation: "TeXサンプルの第5問 問2に対応する解答欄です。"
       },
       {
@@ -307,7 +307,7 @@ export const animeOnlymarkExam: Exam = {
         points: 5,
         multi: false,
         options: optionsFrom(["<", "=", ">"]),
-        correct: ["3"],
+        correct: ["1"],
         explanation: "TeXサンプルの第6問に対応する解答欄です。"
       },
       {
@@ -319,7 +319,7 @@ export const animeOnlymarkExam: Exam = {
         points: 5,
         multi: false,
         options: optionsFrom(["<", "=", ">"]),
-        correct: ["1"],
+        correct: ["2"],
         explanation: "TeXサンプルの第6問に対応する解答欄です。"
       },
       {
@@ -379,7 +379,7 @@ export const animeOnlymarkExam: Exam = {
         points: 10,
         multi: false,
         options: optionsFrom(["despise", "overcome", "scoff", "underestimate"]),
-        correct: ["4"],
+        correct: ["3"],
         explanation: "TeXサンプルの第9問に対応する解答欄です。"
       }
     ]

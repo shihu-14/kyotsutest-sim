@@ -36,7 +36,7 @@ describe("ProblemBooklet", () => {
 
     render(
       <ProblemBooklet
-        answers={{ [question.id]: ["4"] }}
+        answers={{ [question.id]: ["1"] }}
         page={page}
         questionsById={new Map(animeExam.questions.map((item) => [item.id, item]))}
         reviewMode
@@ -44,8 +44,8 @@ describe("ProblemBooklet", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "1 4" })).toHaveClass("selected");
-    expect(screen.getByRole("button", { name: "1 1" })).not.toHaveClass("review-correct");
+    expect(screen.getByRole("button", { name: "1 1" })).toHaveClass("selected");
+    expect(screen.getByRole("button", { name: "1 4" })).not.toHaveClass("review-correct");
   });
 
   it("renders multiple selected marks on an exact page when the question allows it", () => {
@@ -73,7 +73,7 @@ describe("ProblemBooklet", () => {
 
     render(
       <ProblemBooklet
-        answers={{ [question.id]: ["1"] }}
+        answers={{ [question.id]: ["4"] }}
         page={page}
         questionsById={new Map(animeExam.questions.map((item) => [item.id, item]))}
         reviewMode
@@ -81,8 +81,8 @@ describe("ProblemBooklet", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "1 1" })).toHaveClass("selected");
-    expect(screen.getByRole("button", { name: "1 4" })).toHaveClass("review-correct");
+    expect(screen.getByRole("button", { name: "1 4" })).toHaveClass("selected");
+    expect(screen.getByRole("button", { name: "1 1" })).toHaveClass("review-correct");
   });
 
   it("places exact-page grading stamps on the TeX answer-number box", () => {
