@@ -124,7 +124,7 @@ export const animeOnlymarkExam: Exam = {
         pageId: animePageId(1),
         points: 10,
         multi: false,
-        options: optionsFrom(["おねがい☆ティーチャー", "オーバーロード", "オッドタクシー", "【推しの子】"]),
+        options: optionsFrom(["オッドタクシー", "おねがい☆ティーチャー", "オーバーロード", "【推しの子】"]),
         correct: correctAnswer(1),
         explanation: "TeXサンプルの第1問に対応する解答欄です。"
       },

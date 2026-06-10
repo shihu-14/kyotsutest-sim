@@ -105,9 +105,10 @@ describe("AuthoringEditor", () => {
     await openSectionTex(user);
     const source = (screen.getByLabelText("TeXコード入力") as HTMLTextAreaElement).value;
     expect(source).toContain("% === 大問本文: 第1問 ===");
-    expect(source).toContain("% --- 解答番号 1: 正解 4 / 配点 10 / 選択肢 4 ---");
+    expect(source).toContain("% --- 解答番号 1: 正解 1 / 配点 10 / 選択肢 4 ---");
     expect(source).toContain("\\includegraphics[width=0.86\\linewidth]{");
     expect(source).toContain("anime-onlymark-2026/crops/page-01-figures.jpg");
+    expect(source).toContain("\\choice{1}{1}{オッドタクシー}");
     expect(source).toContain("\\choice{1}{4}{【推しの子】}");
   });
 

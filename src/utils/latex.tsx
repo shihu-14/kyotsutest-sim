@@ -345,10 +345,10 @@ export const defaultAuthoringSource = String.raw`\examtitle{漫画映画}
 このとき, 式 \(n_d\:g'' atf-\) が表すアニメの名称として最も適当なものを選べ。
 $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end{aligned}\right.$$
 \includegraphics[width=0.86\linewidth]{${animeFigure01}}
-\mark[answer=4,points=10,choices=4]{1}
-\choice{1}{1}{おねがい☆ティーチャー}
-\choice{1}{2}{オーバーロード}
-\choice{1}{3}{オッドタクシー}
+\mark[answer=1,points=10,choices=4]{1}
+\choice{1}{1}{オッドタクシー}
+\choice{1}{2}{おねがい☆ティーチャー}
+\choice{1}{3}{オーバーロード}
 \choice{1}{4}{【推しの子】}
 
 \sectiontitle{第2問}
@@ -356,7 +356,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \subsectiontitle{問1}
 第2期第十二話において, 赤羽業と浅野学秀が学期末テストで対決した。
 その勝敗を分けることとなったこの試験の最終問題として最も適当なものを選べ。
-\mark[answer=2,points=2,choices=4]{2}
+\mark[answer=3,points=2,choices=4]{2}
 \choice{2}{1}{実数上の非負値可測関数に関する極限等式の証明}
 \choice{2}{2}{食塩水の濃度計算}
 \choice{2}{3}{体心立方格子構造の領域体積}
@@ -422,7 +422,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
 I: 綾小路清隆, II: 竈門禰豆子, III: 御坂美琴。
 \includegraphics[width=0.88\linewidth]{${animeFigure06}}
-\mark[answer=4,points=4,choices=8]{8}
+\mark[answer=6,points=4,choices=8]{8}
 \choice{8}{1}{AAA}
 \choice{8}{2}{AAĀ}
 \choice{8}{3}{AĀA}
@@ -440,7 +440,7 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 \choice{9}{2}{Ā∩B}
 \choice{9}{3}{A∩B̄}
 \choice{9}{4}{Ā∩B̄}
-\mark[answer=1,points=4,choices=4]{10}
+\mark[answer=2,points=4,choices=4]{10}
 \choice{10}{1}{A∩B}
 \choice{10}{2}{Ā∩B}
 \choice{10}{3}{A∩B̄}
@@ -454,12 +454,12 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 \sectiontitle{第5問}
 以下の問1から問3の下線部の漢字に相当する読みとして最も適当なものを選べ。
 問1: 『水素爆弾』の直撃にも堪えた序列第六位「天翼種」。
-\mark[answer=2,points=4,choices=3]{12}
+\mark[answer=3,points=4,choices=3]{12}
 \choice{12}{1}{イマニティ}
 \choice{12}{2}{フリューゲル}
 \choice{12}{3}{ファンタズマ}
 問2: 「智慧之王」の声に従い暴食之王を起動。
-\mark[answer=1,points=3,choices=3]{13}
+\mark[answer=3,points=3,choices=3]{13}
 \choice{13}{1}{ラファエル}
 \choice{13}{2}{メタトロン}
 \choice{13}{3}{ガブリエル}
@@ -472,11 +472,11 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 \sectiontitle{第6問}
 画像 I から VI について関係式「I < II = III < IV < V << VI」が成り立っているとき, A と B, C と D に当てはまる記号として最も適当なものを選べ。
 \includegraphics[width=0.86\linewidth]{${animeFigure09}}
-\mark[answer=3,points=5,choices=3]{15}
+\mark[answer=1,points=5,choices=3]{15}
 \choice{15}{1}{<}
 \choice{15}{2}{=}
 \choice{15}{3}{>}
-\mark[answer=1,points=5,choices=3]{16}
+\mark[answer=2,points=5,choices=3]{16}
 \choice{16}{1}{<}
 \choice{16}{2}{=}
 \choice{16}{3}{>}
@@ -517,7 +517,7 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 以下は「ノーゲーム・ノーライフ」に登場するあるゲームが行われている場面を描いたものである。
 空欄に当てはまる単語として最も適当なものを選べ。
 Sora and dreadless Siro overwhelmed driven native executing gods since enemies ___ feeblish humanity.
-\mark[answer=4,points=10,choices=4]{21}
+\mark[answer=3,points=10,choices=4]{21}
 \choice{21}{1}{despise}
 \choice{21}{2}{overcome}
 \choice{21}{3}{scoff}
