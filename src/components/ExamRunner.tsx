@@ -40,7 +40,7 @@ export function ExamRunner({
   const [showCover, setShowCover] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showHomeConfirm, setShowHomeConfirm] = useState(false);
-  const [coverPracticeMarks, setCoverPracticeMarks] = useState<Set<AnswerValue>>(() => new Set());
+  const [coverMarks, setCoverMarks] = useState<Set<AnswerValue>>(() => new Set());
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
@@ -110,8 +110,8 @@ export function ExamRunner({
     setBookletZoom(Math.min(1.6, Math.max(1, value)));
   };
 
-  const toggleCoverPracticeMark = (value: AnswerValue) => {
-    setCoverPracticeMarks((current) => {
+  const toggleCoverMark = (value: AnswerValue) => {
+    setCoverMarks((current) => {
       const next = new Set(current);
       if (next.has(value)) {
         next.delete(value);
@@ -123,7 +123,7 @@ export function ExamRunner({
   };
 
   useEffect(() => {
-    setCoverPracticeMarks(new Set());
+    setCoverMarks(new Set());
   }, [exam.id]);
 
   useEffect(() => {
@@ -318,10 +318,10 @@ export function ExamRunner({
                     <div className="exact-page-frame cover-page-frame">
                       <img className="exact-page-image" src={exam.coverImageUrl} alt={`${exam.title}の表紙`} />
                       {exam.coverMarkAreas?.length ? (
-                        <CoverPracticeMarks
+                        <CoverImageMarks
                           areas={exam.coverMarkAreas}
-                          selectedValues={coverPracticeMarks}
-                          onToggle={toggleCoverPracticeMark}
+                          selectedValues={coverMarks}
+                          onToggle={toggleCoverMark}
                         />
                       ) : null}
                     </div>
@@ -421,15 +421,15 @@ export function ExamRunner({
   );
 }
 
-interface CoverPracticeMarksProps {
+interface CoverImageMarksProps {
   areas: CoverMarkArea[];
   selectedValues: Set<AnswerValue>;
   onToggle: (value: AnswerValue) => void;
 }
 
-function CoverPracticeMarks({ areas, selectedValues, onToggle }: CoverPracticeMarksProps) {
+function CoverImageMarks({ areas, selectedValues, onToggle }: CoverImageMarksProps) {
   return (
-    <div className="page-image-mark-layer" aria-label="表紙の確認用マーク領域">
+    <div className="page-image-mark-layer" aria-label="表紙のマーク欄">
       {areas.map((area) => {
         const style = {
           "--mark-x": `${area.xPercent}%`,
