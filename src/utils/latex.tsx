@@ -356,7 +356,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \subsectiontitle{問1}
 第2期第十二話において, 赤羽業と浅野学秀が学期末テストで対決した。
 その勝敗を分けることとなったこの試験の最終問題として最も適当なものを選べ。
-\mark[answer=3,points=2,choices=4]{2}
+\mark[answer=3,points=4,choices=4]{2}
 \choice{2}{1}{実数上の非負値可測関数に関する極限等式の証明}
 \choice{2}{2}{食塩水の濃度計算}
 \choice{2}{3}{体心立方格子構造の領域体積}
@@ -384,7 +384,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \choice{4}{7}{性別}
 \choice{4}{8}{ホームベース}
 \choice{4}{9}{変態終末期}
-\mark[answer=2,points=3,choices=9]{5}
+\mark[answer=2,points=2,choices=9]{5}
 \choice{5}{1}{野球バカ}
 \choice{5}{2}{鷹岡もどき}
 \choice{5}{3}{コロコロ上がり}
@@ -394,7 +394,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 \choice{5}{7}{性別}
 \choice{5}{8}{ホームベース}
 \choice{5}{9}{変態終末期}
-\mark[answer=8,points=3,choices=9]{6}
+\mark[answer=8,points=2,choices=9]{6}
 \choice{6}{1}{野球バカ}
 \choice{6}{2}{鷹岡もどき}
 \choice{6}{3}{コロコロ上がり}
@@ -422,7 +422,7 @@ $$\left\{\begin{aligned} y-x_n&=ci \\ fg''&=c \\ pb\times abq^\circ&={}_d t \end
 ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
 I: 綾小路清隆, II: 竈門禰豆子, III: 御坂美琴。
 \includegraphics[width=0.88\linewidth]{${animeFigure06}}
-\mark[answer=6,points=4,choices=8]{8}
+\mark[answer=6,points=7,choices=8]{8}
 \choice{8}{1}{AAA}
 \choice{8}{2}{AAĀ}
 \choice{8}{3}{AĀA}
@@ -435,17 +435,17 @@ I: 綾小路清隆, II: 竈門禰豆子, III: 御坂美琴。
 ベン図が与えられたとき, 要素 I から III の分類として最も適当なものを選べ。
 I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 \includegraphics[width=0.86\linewidth]{${animeFigure07}}
-\mark[answer=4,points=4,choices=4]{9}
+\mark[answer=4,points=3,choices=4]{9}
 \choice{9}{1}{A∩B}
 \choice{9}{2}{Ā∩B}
 \choice{9}{3}{A∩B̄}
 \choice{9}{4}{Ā∩B̄}
-\mark[answer=2,points=4,choices=4]{10}
+\mark[answer=2,points=3,choices=4]{10}
 \choice{10}{1}{A∩B}
 \choice{10}{2}{Ā∩B}
 \choice{10}{3}{A∩B̄}
 \choice{10}{4}{Ā∩B̄}
-\mark[answer=1,points=4,choices=4]{11}
+\mark[answer=1,points=3,choices=4]{11}
 \choice{11}{1}{A∩B}
 \choice{11}{2}{Ā∩B}
 \choice{11}{3}{A∩B̄}
@@ -454,7 +454,7 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 \sectiontitle{第5問}
 以下の問1から問3の下線部の漢字に相当する読みとして最も適当なものを選べ。
 問1: 『水素爆弾』の直撃にも堪えた序列第六位「天翼種」。
-\mark[answer=3,points=4,choices=3]{12}
+\mark[answer=3,points=3,choices=3]{12}
 \choice{12}{1}{イマニティ}
 \choice{12}{2}{フリューゲル}
 \choice{12}{3}{ファンタズマ}
@@ -464,7 +464,7 @@ I: 椎名真昼, II: 西森柚咲, III: 楪いのり。
 \choice{13}{2}{メタトロン}
 \choice{13}{3}{ガブリエル}
 問3: 「超能力者」用の付帯施設は学校敷地内にまとまっているとは限らない。
-\mark[answer=2,points=3,choices=3]{14}
+\mark[answer=2,points=4,choices=3]{14}
 \choice{14}{1}{レベル1}
 \choice{14}{2}{レベル5}
 \choice{14}{3}{レベル6}
