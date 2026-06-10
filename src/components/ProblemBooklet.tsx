@@ -285,28 +285,28 @@ function GradeStamp({ isCorrect }: { isCorrect: boolean }) {
     <svg
       aria-label={isCorrect ? "正解" : "不正解"}
       className={`grade-stamp red-pen ${isCorrect ? "circle" : "cross"}`}
-      viewBox="0 0 100 100"
+      viewBox="0 0 110 110"
     >
       {isCorrect ? (
         <path
           className="circle-stroke"
-          d="M23 71 C10 58 10 37 24 23 C39 8 67 8 82 24 C96 39 94 63 78 78 C63 92 39 91 25 80"
+          d="M33 82 C17 73 10 54 18 37 C29 14 59 8 82 19 C99 27 106 45 99 60 C90 80 64 91 39 87 C29 85 22 81 18 76"
           pathLength={220}
-          style={{ strokeWidth: 9 }}
+          style={{ strokeWidth: 9.5 }}
         />
       ) : (
         <>
           <path
             className="cross-stroke first"
-            d="M16 13 C34 27 52 42 70 60 C79 69 86 77 93 86"
+            d="M15 11 C34 24 53 42 72 63 C83 75 91 86 100 96"
             pathLength={52}
-            style={{ strokeWidth: 15 }}
+            style={{ strokeWidth: 20 }}
           />
           <path
             className="cross-stroke second"
-            d="M91 11 C74 31 58 51 40 73 C30 84 23 93 14 98"
+            d="M99 7 C80 29 62 53 40 78 C28 92 18 103 8 108"
             pathLength={52}
-            style={{ strokeWidth: 15 }}
+            style={{ strokeWidth: 20 }}
           />
         </>
       )}

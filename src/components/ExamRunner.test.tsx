@@ -262,7 +262,7 @@ describe("ExamRunner", () => {
     expect(screen.getByRole("article", { name: "漫画映画の表紙" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "前のページへ" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "次のページ" })).not.toBeInTheDocument();
-    expect(screen.getByLabelText("表紙の確認用マーク領域")).toBeInTheDocument();
+    expect(screen.getByLabelText("表紙のマーク欄")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "表紙 10 1" })).toHaveStyle({
       "--mark-x": "40.577%",
       "--mark-y": "69.357%"
