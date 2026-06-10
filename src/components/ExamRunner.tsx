@@ -66,7 +66,10 @@ export function ExamRunner({
     backgroundColor: homeActionColor
   } as CSSProperties;
   const exitDialogStyle = {
-    width: "min(640px, calc(100vw - 40px))"
+    width: "min(550px, calc(100vw - 40px))"
+  } as CSSProperties;
+  const exitDialogCopyStyle = {
+    whiteSpace: "nowrap"
   } as CSSProperties;
   const exitDialogActionsStyle = {
     gap: "16px"
@@ -340,7 +343,7 @@ export function ExamRunner({
             style={exitDialogStyle}
             onClick={(event) => event.stopPropagation()}
           >
-            <p>残り時間がありますが，解答を終了し採点へ進みますか</p>
+            <p style={exitDialogCopyStyle}>残り時間がありますが，解答を終了し採点へ進みますか</p>
             <div className="dialog-actions" style={exitDialogActionsStyle}>
               <button className="secondary-button" type="button" onClick={() => setShowFinishConfirm(false)}>
                 解答を続ける
@@ -370,7 +373,7 @@ export function ExamRunner({
             style={exitDialogStyle}
             onClick={(event) => event.stopPropagation()}
           >
-            <p>試験を中断してホームへ戻りますか(現在の解答は保存されません)</p>
+            <p style={exitDialogCopyStyle}>試験を中断してホームへ戻りますか（現在の解答は保存されません）</p>
             <div className="dialog-actions" style={exitDialogActionsStyle}>
               <button className="secondary-button" type="button" onClick={() => setShowHomeConfirm(false)}>
                 解答を続ける
