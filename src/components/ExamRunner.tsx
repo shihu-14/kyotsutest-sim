@@ -39,6 +39,7 @@ export function ExamRunner({
   const [bookletZoom, setBookletZoom] = useState(1);
   const [showCover, setShowCover] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
+  const [showHomeConfirm, setShowHomeConfirm] = useState(false);
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
@@ -218,7 +219,7 @@ export function ExamRunner({
                   className="secondary-button home-return-button"
                   style={homeColorStyle}
                   type="button"
-                  onClick={onReturnHome}
+                  onClick={() => setShowHomeConfirm(true)}
                 >
                   ホームに戻る
                 </button>
@@ -325,9 +326,8 @@ export function ExamRunner({
 
       {showFinishConfirm ? (
         <div className="dialog-backdrop" role="presentation">
-          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="finish-dialog-title">
-            <h2 id="finish-dialog-title">採点へ進みますか</h2>
-            <p>試験一覧には戻らず、このまま採点を開始します。解答はこれ以上変更できません。</p>
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-label="採点へ進む確認">
+            <p>残り時間がありますが、解答を終了し採点へ進みますか。</p>
             <div className="dialog-actions">
               <button className="secondary-button" type="button" onClick={() => setShowFinishConfirm(false)}>
                 解答を続ける
@@ -341,7 +341,30 @@ export function ExamRunner({
                   onFinish();
                 }}
               >
-                採点を開始
+                採点へ進む
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
+      {showHomeConfirm ? (
+        <div className="dialog-backdrop" role="presentation">
+          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-label="ホームに戻る確認">
+            <p>試験を中断してホームへ戻りますか．(現在の解答は保存されません)</p>
+            <div className="dialog-actions">
+              <button className="secondary-button" type="button" onClick={() => setShowHomeConfirm(false)}>
+                解答を続ける
+              </button>
+              <button
+                className="danger-button finish-button"
+                style={finishColorStyle}
+                type="button"
+                onClick={() => {
+                  setShowHomeConfirm(false);
+                  onReturnHome?.();
+                }}
+              >
+                ホームに戻る
               </button>
             </div>
           </section>

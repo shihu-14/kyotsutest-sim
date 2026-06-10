@@ -52,6 +52,19 @@ export function App() {
     setPhase("select");
   };
 
+  const discardExamAndReturnHome = useCallback(() => {
+    if (selectedExam) {
+      clearAnswers(selectedExam.id);
+      clearDeadline(selectedExam.id);
+    }
+    setAnswers({});
+    setSelectedExam(null);
+    setDeadline(null);
+    setCurrentPageId("");
+    setShowCompletedScoring(false);
+    setPhase("select");
+  }, [selectedExam]);
+
   const deleteExam = (examId: string) => {
     setExams((current) => current.filter((exam) => exam.id !== examId));
     if (selectedExam?.id === examId) {
@@ -165,7 +178,7 @@ export function App() {
       onExitReview={() => setPhase("scoring")}
       onExpire={finishExam}
       onFinish={finishExam}
-      onReturnHome={resetToList}
+      onReturnHome={discardExamAndReturnHome}
       onToggleAnswer={handleToggleAnswer}
     />
   );

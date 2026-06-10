@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../data/sampleExam";
@@ -101,14 +101,15 @@ describe("ExamRunner", () => {
     await user.click(screen.getByText("採点へ進む"));
 
     expect(onFinish).not.toHaveBeenCalled();
-    expect(screen.getByText("採点へ進みますか")).toBeInTheDocument();
-    expect(screen.getByText("試験一覧には戻らず、このまま採点を開始します。解答はこれ以上変更できません。")).toBeInTheDocument();
+    const finishDialog = screen.getByRole("dialog", { name: "採点へ進む確認" });
+    expect(within(finishDialog).getByText("残り時間がありますが、解答を終了し採点へ進みますか。")).toBeInTheDocument();
+    expect(within(finishDialog).queryByRole("heading")).not.toBeInTheDocument();
 
-    await user.click(screen.getByText("解答を続ける"));
+    await user.click(within(finishDialog).getByText("解答を続ける"));
     expect(onFinish).not.toHaveBeenCalled();
 
     await user.click(screen.getByText("採点へ進む"));
-    await user.click(screen.getByText("採点を開始"));
+    await user.click(within(screen.getByRole("dialog", { name: "採点へ進む確認" })).getByText("採点へ進む"));
 
     expect(onFinish).toHaveBeenCalledTimes(1);
     expect(onReturnHome).not.toHaveBeenCalled();
@@ -143,6 +144,11 @@ describe("ExamRunner", () => {
     expect(screen.queryByLabelText("ホームに戻るボタン色")).not.toBeInTheDocument();
 
     fireEvent.click(homeButton);
+    const homeDialog = screen.getByRole("dialog", { name: "ホームに戻る確認" });
+    expect(onReturnHome).not.toHaveBeenCalled();
+    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか．(現在の解答は保存されません)")).toBeInTheDocument();
+    expect(within(homeDialog).queryByRole("heading")).not.toBeInTheDocument();
+    fireEvent.click(within(homeDialog).getByText("ホームに戻る"));
     expect(onReturnHome).toHaveBeenCalledTimes(1);
   });
 
