@@ -65,6 +65,12 @@ export function ExamRunner({
     "--home-action-color": homeActionColor,
     backgroundColor: homeActionColor
   } as CSSProperties;
+  const exitDialogStyle = {
+    width: "min(640px, calc(100vw - 40px))"
+  } as CSSProperties;
+  const exitDialogActionsStyle = {
+    gap: "16px"
+  } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
   const canGoNext = showCover ? exam.pages.length > 0 : pageIndex < exam.pages.length - 1;
@@ -325,10 +331,17 @@ export function ExamRunner({
       </section>
 
       {showFinishConfirm ? (
-        <div className="dialog-backdrop" role="presentation">
-          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-label="採点へ進む確認">
-            <p>残り時間がありますが、解答を終了し採点へ進みますか。</p>
-            <div className="dialog-actions">
+        <div className="dialog-backdrop" role="presentation" onClick={() => setShowFinishConfirm(false)}>
+          <section
+            className="confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="採点へ進む確認"
+            style={exitDialogStyle}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p>残り時間がありますが，解答を終了し採点へ進みますか</p>
+            <div className="dialog-actions" style={exitDialogActionsStyle}>
               <button className="secondary-button" type="button" onClick={() => setShowFinishConfirm(false)}>
                 解答を続ける
               </button>
@@ -348,10 +361,17 @@ export function ExamRunner({
         </div>
       ) : null}
       {showHomeConfirm ? (
-        <div className="dialog-backdrop" role="presentation">
-          <section className="confirm-dialog" role="dialog" aria-modal="true" aria-label="ホームに戻る確認">
-            <p>試験を中断してホームへ戻りますか．(現在の解答は保存されません)</p>
-            <div className="dialog-actions">
+        <div className="dialog-backdrop" role="presentation" onClick={() => setShowHomeConfirm(false)}>
+          <section
+            className="confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="ホームに戻る確認"
+            style={exitDialogStyle}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p>試験を中断してホームへ戻りますか(現在の解答は保存されません)</p>
+            <div className="dialog-actions" style={exitDialogActionsStyle}>
               <button className="secondary-button" type="button" onClick={() => setShowHomeConfirm(false)}>
                 解答を続ける
               </button>

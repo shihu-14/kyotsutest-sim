@@ -102,10 +102,19 @@ describe("ExamRunner", () => {
 
     expect(onFinish).not.toHaveBeenCalled();
     const finishDialog = screen.getByRole("dialog", { name: "採点へ進む確認" });
-    expect(within(finishDialog).getByText("残り時間がありますが、解答を終了し採点へ進みますか。")).toBeInTheDocument();
+    expect(within(finishDialog).getByText("残り時間がありますが，解答を終了し採点へ進みますか")).toBeInTheDocument();
     expect(within(finishDialog).queryByRole("heading")).not.toBeInTheDocument();
+    expect(finishDialog).toHaveStyle({ width: "min(640px, calc(100vw - 40px))" });
+    expect(finishDialog.querySelector(".dialog-actions")).toHaveStyle({ gap: "16px" });
 
-    await user.click(within(finishDialog).getByText("解答を続ける"));
+    fireEvent.click(document.querySelector(".dialog-backdrop")!);
+    expect(screen.queryByRole("dialog", { name: "採点へ進む確認" })).not.toBeInTheDocument();
+    expect(onFinish).not.toHaveBeenCalled();
+
+    await user.click(screen.getByText("採点へ進む"));
+    const reopenedFinishDialog = screen.getByRole("dialog", { name: "採点へ進む確認" });
+
+    await user.click(within(reopenedFinishDialog).getByText("解答を続ける"));
     expect(onFinish).not.toHaveBeenCalled();
 
     await user.click(screen.getByText("採点へ進む"));
@@ -146,9 +155,17 @@ describe("ExamRunner", () => {
     fireEvent.click(homeButton);
     const homeDialog = screen.getByRole("dialog", { name: "ホームに戻る確認" });
     expect(onReturnHome).not.toHaveBeenCalled();
-    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか．(現在の解答は保存されません)")).toBeInTheDocument();
+    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか(現在の解答は保存されません)")).toBeInTheDocument();
     expect(within(homeDialog).queryByRole("heading")).not.toBeInTheDocument();
-    fireEvent.click(within(homeDialog).getByText("ホームに戻る"));
+    expect(homeDialog).toHaveStyle({ width: "min(640px, calc(100vw - 40px))" });
+    expect(homeDialog.querySelector(".dialog-actions")).toHaveStyle({ gap: "16px" });
+
+    fireEvent.click(document.querySelector(".dialog-backdrop")!);
+    expect(screen.queryByRole("dialog", { name: "ホームに戻る確認" })).not.toBeInTheDocument();
+    expect(onReturnHome).not.toHaveBeenCalled();
+
+    fireEvent.click(homeButton);
+    fireEvent.click(within(screen.getByRole("dialog", { name: "ホームに戻る確認" })).getByText("ホームに戻る"));
     expect(onReturnHome).toHaveBeenCalledTimes(1);
   });
 
