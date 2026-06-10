@@ -181,6 +181,16 @@ describe("ExamList", () => {
     expect(screen.getByRole("heading", { name: "編集画面デザイン候補" })).toBeInTheDocument();
     expect(screen.getAllByRole("tab")).toHaveLength(10);
     expect(screen.getByRole("article", { name: "01 Overleaf Splitのプレビュー" })).toBeInTheDocument();
+    expect(
+      screen.getAllByText(
+        (_content, element) => element?.textContent?.includes("\\mark[answer=1,points=10,choices=4]{1}") ?? false
+      ).length
+    ).toBeGreaterThan(0);
+    expect(
+      screen.queryAllByText(
+        (_content, element) => element?.textContent?.includes("\\mark[answer=4,points=10,choices=4]{1}") ?? false
+      )
+    ).toHaveLength(0);
 
     await user.click(screen.getByRole("tab", { name: /10 Review Studio/ }));
 

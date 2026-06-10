@@ -5,6 +5,8 @@ interface EditorDesignPreviewProps {
   exam: Exam;
 }
 
+type PreviewQuestion = Exam["questions"][number];
+
 type EditorLayout =
   | "overleaf"
   | "workbench"
@@ -110,13 +112,41 @@ const editorCandidates: EditorCandidate[] = [
 ];
 
 const sections = ["環境設定", "大問1", "大問2", "大問3"];
-const codeLines = [`% === 大問本文: 第1問 ===`, "\\section{第1問}", "式が表すアニメの名称として最も適当なものを選べ。", "", "% --- 解答番号 1 ---", "\\mark[answer=4,points=10,choices=4]{1}"];
 
-function CodePane({ title = "大問TeX" }: { title?: string }) {
+function previewQuestion(exam: Exam) {
+  return exam.questions[0];
+}
+
+function previewAnswer(question?: PreviewQuestion) {
+  return question?.correct.join("|") || "-";
+}
+
+function previewChoiceCount(question?: PreviewQuestion) {
+  return question?.options.length ?? 0;
+}
+
+function previewPoints(question?: PreviewQuestion) {
+  return question?.points ?? 0;
+}
+
+function codeLines(exam: Exam) {
+  const question = previewQuestion(exam);
+
+  return [
+    "% === 大問本文: 第1問 ===",
+    "\\section{第1問}",
+    "式が表すアニメの名称として最も適当なものを選べ。",
+    "",
+    `% --- 解答番号 ${question?.label ?? "1"} ---`,
+    `\\mark[answer=${previewAnswer(question)},points=${previewPoints(question)},choices=${previewChoiceCount(question)}]{${question?.label ?? "1"}}`
+  ];
+}
+
+function CodePane({ exam, title = "大問TeX" }: { exam: Exam; title?: string }) {
   return (
     <section className="editor-code-pane">
       <header>{title}</header>
-      <pre>{codeLines.join("\n")}</pre>
+      <pre>{codeLines(exam).join("\n")}</pre>
     </section>
   );
 }
@@ -168,7 +198,7 @@ function renderEditorLayout(layout: EditorLayout, exam: Exam) {
     return (
       <div className="editor-layout-overleaf">
         <SectionNav />
-        <CodePane />
+        <CodePane exam={exam} />
         <PaperPane />
       </div>
     );
@@ -183,7 +213,7 @@ function renderEditorLayout(layout: EditorLayout, exam: Exam) {
             <span>section-1.tex</span>
             <span>answers.json</span>
           </div>
-          <CodePane title="section-1.tex" />
+          <CodePane exam={exam} title="section-1.tex" />
           <div className="editor-terminal">問題数 OK / 解答番号 OK / 画像参照 OK</div>
         </main>
       </div>
@@ -193,9 +223,9 @@ function renderEditorLayout(layout: EditorLayout, exam: Exam) {
   if (layout === "codepen") {
     return (
       <div className="editor-layout-codepen">
-        <CodePane title="大問TeX" />
-        <CodePane title="解答設定" />
-        <CodePane title="環境TeX" />
+        <CodePane exam={exam} title="大問TeX" />
+        <CodePane exam={exam} title="解答設定" />
+        <CodePane exam={exam} title="環境TeX" />
         <PaperPane />
       </div>
     );
@@ -205,7 +235,7 @@ function renderEditorLayout(layout: EditorLayout, exam: Exam) {
     return (
       <div className="editor-layout-stackblitz">
         <SectionNav />
-        <CodePane />
+        <CodePane exam={exam} />
         <PaperPane />
         <div className="editor-terminal">Compiled in 112ms</div>
       </div>
@@ -213,12 +243,16 @@ function renderEditorLayout(layout: EditorLayout, exam: Exam) {
   }
 
   if (layout === "blocks") {
+    const question = previewQuestion(exam);
+
     return (
       <div className="editor-layout-blocks">
         <article>
           <h3>第1問</h3>
           <div className="editor-block">本文ブロック</div>
-          <div className="editor-block">解答番号 1 / 正解 4 / 10点</div>
+          <div className="editor-block">
+            解答番号 {question?.label ?? "1"} / 正解 {previewAnswer(question)} / {previewPoints(question)}点
+          </div>
           <div className="editor-block">画像ブロック</div>
         </article>
         <Inspector exam={exam} />
@@ -244,12 +278,12 @@ function renderEditorLayout(layout: EditorLayout, exam: Exam) {
           <span>正解</span>
           <span>配点</span>
           <span>選択肢</span>
-          {["1", "2", "3", "4"].map((row) => (
-            <div className="editor-sheet-row" key={row}>
-              <strong>{row}</strong>
-              <span>4</span>
-              <span>10</span>
-              <span>4</span>
+          {exam.questions.slice(0, 4).map((question) => (
+            <div className="editor-sheet-row" key={question.id}>
+              <strong>{question.label}</strong>
+              <span>{previewAnswer(question)}</span>
+              <span>{question.points}</span>
+              <span>{question.options.length}</span>
             </div>
           ))}
         </div>
@@ -259,13 +293,17 @@ function renderEditorLayout(layout: EditorLayout, exam: Exam) {
   }
 
   if (layout === "writer") {
+    const question = previewQuestion(exam);
+
     return (
       <div className="editor-layout-writer">
         <SectionNav />
         <article>
           <h3>第1問</h3>
           <p>式が表すアニメの名称として最も適当なものを選べ。</p>
-          <p className="editor-inline-mark">解答番号 1 / 正解 4 / 配点 10</p>
+          <p className="editor-inline-mark">
+            解答番号 {question?.label ?? "1"} / 正解 {previewAnswer(question)} / 配点 {previewPoints(question)}
+          </p>
         </article>
       </div>
     );
@@ -287,8 +325,8 @@ function renderEditorLayout(layout: EditorLayout, exam: Exam) {
 
   return (
     <div className="editor-layout-review">
-      <CodePane title="変更前" />
-      <CodePane title="変更後" />
+      <CodePane exam={exam} title="変更前" />
+      <CodePane exam={exam} title="変更後" />
       <PaperPane />
       <div className="editor-terminal">差分 3件 / 警告 0件 / 公開可能</div>
     </div>

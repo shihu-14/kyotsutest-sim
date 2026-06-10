@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { parseAuthoringLatex, renderMathSegments } from "./latex";
+import { animeOnlymarkAnswerKey } from "../data/exams/animeOnlymark2026";
+import { defaultAuthoringSource, parseAuthoringLatex, renderMathSegments } from "./latex";
 
 describe("latex utilities", () => {
   it("extracts mark commands into grading slots", () => {
@@ -39,5 +40,11 @@ describe("latex utilities", () => {
     const nodes = renderMathSegments("関数 $x^2$ を考える。");
 
     expect(nodes.length).toBe(3);
+  });
+
+  it("keeps the anime default TeX answer marks aligned with the answer key", () => {
+    const parsed = parseAuthoringLatex(defaultAuthoringSource);
+
+    expect(parsed.marks.map((mark) => mark.answer[0])).toEqual(animeOnlymarkAnswerKey);
   });
 });
