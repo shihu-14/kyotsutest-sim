@@ -42,7 +42,7 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "ホームに戻る" }));
     const homeDialog = screen.getByRole("dialog", { name: "ホームに戻る確認" });
-    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか．(現在の解答は保存されません)")).toBeInTheDocument();
+    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか(現在の解答は保存されません)")).toBeInTheDocument();
 
     await user.click(within(homeDialog).getByRole("button", { name: "ホームに戻る" }));
 
