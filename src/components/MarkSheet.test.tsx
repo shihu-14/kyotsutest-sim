@@ -83,6 +83,48 @@ describe("MarkSheet", () => {
     expect(screen.queryByRole("button", { name: "第2問 問2" })).not.toBeInTheDocument();
   });
 
+  it("marks the provided anime answer key as correct in review mode", () => {
+    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const answerKey = [
+      "1",
+      "3",
+      "4",
+      "7",
+      "2",
+      "8",
+      "3",
+      "6",
+      "4",
+      "2",
+      "1",
+      "3",
+      "3",
+      "2",
+      "1",
+      "2",
+      "1",
+      "2",
+      "4",
+      "2",
+      "3"
+    ];
+
+    render(
+      <MarkSheet
+        activePageId="anime-p01"
+        answers={{}}
+        exam={animeExam}
+        reviewMode
+        onJumpToPage={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    answerKey.forEach((correctLabel, index) => {
+      expect(screen.getByRole("button", { name: `${index + 1} ${correctLabel}` })).toHaveClass("review-correct");
+    });
+  });
+
   it("renders multiple selected marks when a question allows multiple answers", () => {
     render(
       <MarkSheet

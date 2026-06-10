@@ -43,4 +43,38 @@ describe("answer utilities", () => {
     expect(summary.totalScore).toBe(32);
     expect(summary.totalPoints).toBe(32);
   });
+
+  it("grades the anime sample with the provided answer key", () => {
+    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const answerKey = [
+      "1",
+      "3",
+      "4",
+      "7",
+      "2",
+      "8",
+      "3",
+      "6",
+      "4",
+      "2",
+      "1",
+      "3",
+      "3",
+      "2",
+      "1",
+      "2",
+      "1",
+      "2",
+      "4",
+      "2",
+      "3"
+    ];
+    const answers = Object.fromEntries(animeExam.questions.map((question, index) => [question.id, [answerKey[index]]]));
+    const summary = gradeExam(animeExam, answers);
+
+    expect(animeExam.questions.map((question) => question.correct[0])).toEqual(answerKey);
+    expect(summary.gradedQuestions.every((question) => question.isCorrect)).toBe(true);
+    expect(summary.totalScore).toBe(100);
+    expect(summary.totalPoints).toBe(100);
+  });
 });
