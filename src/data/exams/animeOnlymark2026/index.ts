@@ -16,11 +16,37 @@ import animePage13 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/pag
 import animePage14 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/page-14.jpg";
 import { animeCoverMarkAreas, animePageGradeAnchors, animePageId, animePageMarkAreas } from "./markLayout";
 
+export const animeOnlymarkAnswerKey = [
+  "1",
+  "3",
+  "4",
+  "7",
+  "2",
+  "8",
+  "3",
+  "6",
+  "4",
+  "2",
+  "1",
+  "3",
+  "3",
+  "2",
+  "1",
+  "2",
+  "1",
+  "2",
+  "4",
+  "2",
+  "3"
+];
+
 const optionsFrom = (contents: string[]) =>
   contents.map((content, index) => {
     const value = String(index + 1);
     return { value, label: value, content };
   });
+
+const correctAnswer = (questionNumber: number) => [animeOnlymarkAnswerKey[questionNumber - 1]];
 
 const animePageImages = [
   animePage01,
@@ -99,7 +125,7 @@ export const animeOnlymarkExam: Exam = {
         points: 10,
         multi: false,
         options: optionsFrom(["おねがい☆ティーチャー", "オーバーロード", "オッドタクシー", "【推しの子】"]),
-        correct: ["1"],
+        correct: correctAnswer(1),
         explanation: "TeXサンプルの第1問に対応する解答欄です。"
       },
       {
@@ -111,7 +137,7 @@ export const animeOnlymarkExam: Exam = {
         points: 2,
         multi: false,
         options: optionsFrom(["ルベーグ積分", "食塩水", "体心立方格子", "放物線"]),
-        correct: ["3"],
+        correct: correctAnswer(2),
         explanation: "TeXサンプルの第2問 問1に対応する解答欄です。"
       },
       {
@@ -133,7 +159,7 @@ export const animeOnlymarkExam: Exam = {
           "ホームベース",
           "変態終末期"
         ]),
-        correct: ["4"],
+        correct: correctAnswer(3),
         explanation: "TeXサンプルの第2問 問2に対応する解答欄です。"
       },
       {
@@ -155,7 +181,7 @@ export const animeOnlymarkExam: Exam = {
           "ホームベース",
           "変態終末期"
         ]),
-        correct: ["7"],
+        correct: correctAnswer(4),
         explanation: "TeXサンプルの第2問 問2に対応する解答欄です。"
       },
       {
@@ -177,7 +203,7 @@ export const animeOnlymarkExam: Exam = {
           "ホームベース",
           "変態終末期"
         ]),
-        correct: ["2"],
+        correct: correctAnswer(5),
         explanation: "TeXサンプルの第2問 問2に対応する解答欄です。"
       },
       {
@@ -199,7 +225,7 @@ export const animeOnlymarkExam: Exam = {
           "ホームベース",
           "変態終末期"
         ]),
-        correct: ["8"],
+        correct: correctAnswer(6),
         explanation: "TeXサンプルの第2問 問2に対応する解答欄です。"
       },
       {
@@ -211,7 +237,7 @@ export const animeOnlymarkExam: Exam = {
         points: 10,
         multi: false,
         options: optionsFrom(["$\\Omega$", "$\\alpha$", "$\\beta$", "$\\gamma$", "$\\delta$"]),
-        correct: ["3"],
+        correct: correctAnswer(7),
         explanation: "TeXサンプルの第3問に対応する解答欄です。"
       },
       {
@@ -223,7 +249,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["AAA", "AAĀ", "AĀA", "AĀĀ", "ĀAA", "ĀAĀ", "ĀĀA", "ĀĀĀ"]),
-        correct: ["6"],
+        correct: correctAnswer(8),
         explanation: "TeXサンプルの第4問 問1に対応する解答欄です。"
       },
       {
@@ -235,7 +261,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["A∩B", "Ā∩B", "A∩B̄", "Ā∩B̄"]),
-        correct: ["4"],
+        correct: correctAnswer(9),
         explanation: "TeXサンプルの第4問 問2に対応する解答欄です。"
       },
       {
@@ -247,7 +273,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["A∩B", "Ā∩B", "A∩B̄", "Ā∩B̄"]),
-        correct: ["2"],
+        correct: correctAnswer(10),
         explanation: "TeXサンプルの第4問 問2に対応する解答欄です。"
       },
       {
@@ -259,7 +285,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["A∩B", "Ā∩B", "A∩B̄", "Ā∩B̄"]),
-        correct: ["1"],
+        correct: correctAnswer(11),
         explanation: "TeXサンプルの第4問 問2に対応する解答欄です。"
       },
       {
@@ -271,7 +297,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["イマニティ", "フリューゲル", "ファンタズマ"]),
-        correct: ["3"],
+        correct: correctAnswer(12),
         explanation: "TeXサンプルの第5問 問1に対応する解答欄です。"
       },
       {
@@ -283,7 +309,7 @@ export const animeOnlymarkExam: Exam = {
         points: 3,
         multi: false,
         options: optionsFrom(["ラファエル", "メタトロン", "ガブリエル"]),
-        correct: ["3"],
+        correct: correctAnswer(13),
         explanation: "TeXサンプルの第5問 問2に対応する解答欄です。"
       },
       {
@@ -295,7 +321,7 @@ export const animeOnlymarkExam: Exam = {
         points: 3,
         multi: false,
         options: optionsFrom(["レベル1", "レベル5", "レベル6"]),
-        correct: ["2"],
+        correct: correctAnswer(14),
         explanation: "TeXサンプルの第5問 問3に対応する解答欄です。"
       },
       {
@@ -307,7 +333,7 @@ export const animeOnlymarkExam: Exam = {
         points: 5,
         multi: false,
         options: optionsFrom(["<", "=", ">"]),
-        correct: ["1"],
+        correct: correctAnswer(15),
         explanation: "TeXサンプルの第6問に対応する解答欄です。"
       },
       {
@@ -319,7 +345,7 @@ export const animeOnlymarkExam: Exam = {
         points: 5,
         multi: false,
         options: optionsFrom(["<", "=", ">"]),
-        correct: ["2"],
+        correct: correctAnswer(16),
         explanation: "TeXサンプルの第6問に対応する解答欄です。"
       },
       {
@@ -331,7 +357,7 @@ export const animeOnlymarkExam: Exam = {
         points: 10,
         multi: false,
         options: optionsFrom(["化物語", "虚構推理", "呪術廻戦", "モブサイコ100"]),
-        correct: ["1"],
+        correct: correctAnswer(17),
         explanation: "TeXサンプルの第7問に対応する解答欄です。"
       },
       {
@@ -343,7 +369,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["historical", "isekai", "post-apocalyptic", "supernatural"]),
-        correct: ["2"],
+        correct: correctAnswer(18),
         explanation: "TeXサンプルの第8問 問1に対応する解答欄です。"
       },
       {
@@ -355,7 +381,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["catgirl", "romcom", "shojo", "yuri"]),
-        correct: ["4"],
+        correct: correctAnswer(19),
         explanation: "TeXサンプルの第8問 問2に対応する解答欄です。"
       },
       {
@@ -367,7 +393,7 @@ export const animeOnlymarkExam: Exam = {
         points: 4,
         multi: false,
         options: optionsFrom(["comiket", "doujinshi", "lightnovel", "manga"]),
-        correct: ["2"],
+        correct: correctAnswer(20),
         explanation: "TeXサンプルの第8問 問3に対応する解答欄です。"
       },
       {
@@ -379,7 +405,7 @@ export const animeOnlymarkExam: Exam = {
         points: 10,
         multi: false,
         options: optionsFrom(["despise", "overcome", "scoff", "underestimate"]),
-        correct: ["3"],
+        correct: correctAnswer(21),
         explanation: "TeXサンプルの第9問に対応する解答欄です。"
       }
     ]
