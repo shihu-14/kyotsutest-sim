@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { animeOnlymarkAnswerKey } from "../data/exams/animeOnlymark2026";
+import { animeOnlymarkAnswerKey, animeOnlymarkExam } from "../data/exams/animeOnlymark2026";
 import { defaultAuthoringSource, parseAuthoringLatex, renderMathSegments } from "./latex";
 
 describe("latex utilities", () => {
@@ -46,5 +46,11 @@ describe("latex utilities", () => {
     const parsed = parseAuthoringLatex(defaultAuthoringSource);
 
     expect(parsed.marks.map((mark) => mark.answer[0])).toEqual(animeOnlymarkAnswerKey);
+  });
+
+  it("keeps the anime default TeX points aligned with the exam data", () => {
+    const parsed = parseAuthoringLatex(defaultAuthoringSource);
+
+    expect(parsed.marks.map((mark) => mark.points)).toEqual(animeOnlymarkExam.questions.map((question) => question.points));
   });
 });
