@@ -14,7 +14,7 @@ import animePage11 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/pag
 import animePage12 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/page-12.jpg";
 import animePage13 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/page-13.jpg";
 import animePage14 from "../../../assets/exams/anime-onlymark-2026/pdf-pages/page-14.jpg";
-import { animePageGradeAnchors, animePageId, animePageMarkAreas } from "./markLayout";
+import { animeCoverMarkAreas, animePageGradeAnchors, animePageId, animePageMarkAreas } from "./markLayout";
 
 const optionsFrom = (contents: string[]) =>
   contents.map((content, index) => {
@@ -65,6 +65,7 @@ export const animeOnlymarkExam: Exam = {
   totalPoints: 100,
   description: "kyotutest_anime_onlymark.tex をPDF化したページ画像をもとにした、アニメ題材の共通テスト形式サンプル。",
   coverImageUrl: animeCoverPage,
+  coverMarkAreas: animeCoverMarkAreas,
   source: {
     kind: "latex-pdf",
     latexEntryPath: "src/assets/exams/anime-onlymark-2026/source/kyotutest_anime_onlymark.tex",

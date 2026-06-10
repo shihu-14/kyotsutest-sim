@@ -1,4 +1,4 @@
-import type { PageGradeAnchor, PageMarkArea } from "../../../types";
+import type { CoverMarkArea, PageGradeAnchor, PageMarkArea } from "../../../types";
 
 export const animePageId = (pageNumber: number) => `anime-p${String(pageNumber).padStart(2, "0")}`;
 
@@ -37,10 +37,34 @@ function imageGradeAnchor(questionNumber: number, x: number, y: number, width = 
   };
 }
 
+function coverMarkArea(value: string, x: number, y: number, width = 34, height = 38): CoverMarkArea {
+  return {
+    id: `cover-mark-${value}`,
+    label: "10",
+    value,
+    xPercent: Number(((x / animePageWidth) * 100).toFixed(3)),
+    yPercent: Number(((y / animePageHeight) * 100).toFixed(3)),
+    widthPercent: Number(((width / animePageWidth) * 100).toFixed(3)),
+    heightPercent: Number(((height / animePageHeight) * 100).toFixed(3))
+  };
+}
+
 const animeSmallChoices = ["1", "2", "3"];
 const animeFourChoices = ["1", "2", "3", "4"];
 const animeEightChoices = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const animeNineChoices = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+export const animeCoverMarkAreas: CoverMarkArea[] = [
+  coverMarkArea("1", 506, 1229),
+  coverMarkArea("2", 556, 1229),
+  coverMarkArea("3", 597, 1229),
+  coverMarkArea("4", 642, 1229),
+  coverMarkArea("5", 692, 1229),
+  coverMarkArea("6", 733, 1229),
+  coverMarkArea("7", 778, 1229),
+  coverMarkArea("8", 828, 1229),
+  coverMarkArea("9", 869, 1229)
+];
 
 export const animePageMarkAreas: Record<number, PageMarkArea[]> = {
   1: [
