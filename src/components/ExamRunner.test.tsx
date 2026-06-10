@@ -104,7 +104,10 @@ describe("ExamRunner", () => {
     const finishDialog = screen.getByRole("dialog", { name: "採点へ進む確認" });
     expect(within(finishDialog).getByText("残り時間がありますが，解答を終了し採点へ進みますか")).toBeInTheDocument();
     expect(within(finishDialog).queryByRole("heading")).not.toBeInTheDocument();
-    expect(finishDialog).toHaveStyle({ width: "min(640px, calc(100vw - 40px))" });
+    expect(finishDialog).toHaveStyle({ width: "min(550px, calc(100vw - 40px))" });
+    expect(within(finishDialog).getByText("残り時間がありますが，解答を終了し採点へ進みますか")).toHaveStyle({
+      whiteSpace: "nowrap"
+    });
     expect(finishDialog.querySelector(".dialog-actions")).toHaveStyle({ gap: "16px" });
 
     fireEvent.click(document.querySelector(".dialog-backdrop")!);
@@ -155,9 +158,12 @@ describe("ExamRunner", () => {
     fireEvent.click(homeButton);
     const homeDialog = screen.getByRole("dialog", { name: "ホームに戻る確認" });
     expect(onReturnHome).not.toHaveBeenCalled();
-    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか(現在の解答は保存されません)")).toBeInTheDocument();
+    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか（現在の解答は保存されません）")).toBeInTheDocument();
     expect(within(homeDialog).queryByRole("heading")).not.toBeInTheDocument();
-    expect(homeDialog).toHaveStyle({ width: "min(640px, calc(100vw - 40px))" });
+    expect(homeDialog).toHaveStyle({ width: "min(550px, calc(100vw - 40px))" });
+    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか（現在の解答は保存されません）")).toHaveStyle({
+      whiteSpace: "nowrap"
+    });
     expect(homeDialog.querySelector(".dialog-actions")).toHaveStyle({ gap: "16px" });
 
     fireEvent.click(document.querySelector(".dialog-backdrop")!);
