@@ -69,6 +69,16 @@ export interface PageGradeAnchor {
   widthPercent?: number;
 }
 
+export interface CoverMarkArea {
+  id: string;
+  label: string;
+  value: AnswerValue;
+  xPercent: number;
+  yPercent: number;
+  widthPercent?: number;
+  heightPercent?: number;
+}
+
 export type ExamSource =
   | {
       kind: "latex-pdf";
@@ -110,6 +120,7 @@ export interface Exam {
   totalPoints: number;
   description: string;
   coverImageUrl?: string;
+  coverMarkAreas?: CoverMarkArea[];
   source: ExamSource;
   instructions: string[];
   pages: ExamPage[];

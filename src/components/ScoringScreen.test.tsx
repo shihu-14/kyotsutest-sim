@@ -20,6 +20,7 @@ describe("ScoringScreen", () => {
     expect(screen.queryByLabelText("採点結果")).not.toBeInTheDocument();
     expect(screen.queryByText("採点済み")).not.toBeInTheDocument();
     expect(screen.queryByText("正答")).not.toBeInTheDocument();
+    expect(document.querySelector(".scoring-progress-note")).not.toBeInTheDocument();
   });
 
   it("can reopen directly in the completed scoring state", () => {
@@ -42,19 +43,19 @@ describe("ScoringScreen", () => {
 
     render(<ScoringScreen answers={{}} exam={sampleExams[0]} onRestart={vi.fn()} onReview={vi.fn()} />);
 
-    expect(screen.getByText("表紙")).toBeInTheDocument();
+    expect(screen.queryByText("表紙")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(1000);
     });
 
-    expect(screen.getByText("1ページ")).toBeInTheDocument();
+    expect(screen.queryByText("1ページ")).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(420);
     });
 
-    expect(screen.getAllByLabelText("不正解")[0].querySelector(".cross-stroke.first")).not.toBeNull();
+    expect(screen.getAllByLabelText("不正解")[0].querySelector("path.cross-stroke.first")).not.toBeNull();
   });
 });

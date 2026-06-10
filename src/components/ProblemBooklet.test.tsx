@@ -119,5 +119,6 @@ describe("ProblemBooklet", () => {
       "--grade-x": "66.72%",
       "--grade-y": "17.974%"
     });
+    expect(screen.getByLabelText("正解").querySelector("path.circle-stroke")).not.toBeNull();
   });
 });

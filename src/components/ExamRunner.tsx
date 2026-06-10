@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from "react";
-import type { AnswerValue, Exam, QuestionSlot, UserAnswers } from "../types";
+import type { AnswerValue, CoverMarkArea, Exam, QuestionSlot, UserAnswers } from "../types";
 import { useCountdown } from "../hooks/useCountdown";
 import { MarkSheet } from "./MarkSheet";
 import { ProblemBooklet } from "./ProblemBooklet";
@@ -40,6 +40,7 @@ export function ExamRunner({
   const [showCover, setShowCover] = useState(false);
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showHomeConfirm, setShowHomeConfirm] = useState(false);
+  const [coverPracticeMarks, setCoverPracticeMarks] = useState<Set<AnswerValue>>(() => new Set());
   const bookletStageRef = useRef<HTMLDivElement | null>(null);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
@@ -108,6 +109,22 @@ export function ExamRunner({
   const updateBookletZoom = (value: number) => {
     setBookletZoom(Math.min(1.6, Math.max(1, value)));
   };
+
+  const toggleCoverPracticeMark = (value: AnswerValue) => {
+    setCoverPracticeMarks((current) => {
+      const next = new Set(current);
+      if (next.has(value)) {
+        next.delete(value);
+      } else {
+        next.add(value);
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    setCoverPracticeMarks(new Set());
+  }, [exam.id]);
 
   useEffect(() => {
     const stage = bookletStageRef.current;
@@ -300,6 +317,13 @@ export function ExamRunner({
                   <article className="booklet-page exact-page cover-page-display" aria-label={`${exam.title}の表紙`}>
                     <div className="exact-page-frame cover-page-frame">
                       <img className="exact-page-image" src={exam.coverImageUrl} alt={`${exam.title}の表紙`} />
+                      {exam.coverMarkAreas?.length ? (
+                        <CoverPracticeMarks
+                          areas={exam.coverMarkAreas}
+                          selectedValues={coverPracticeMarks}
+                          onToggle={toggleCoverPracticeMark}
+                        />
+                      ) : null}
                     </div>
                   </article>
                 ) : (
@@ -394,5 +418,38 @@ export function ExamRunner({
         </div>
       ) : null}
     </main>
+  );
+}
+
+interface CoverPracticeMarksProps {
+  areas: CoverMarkArea[];
+  selectedValues: Set<AnswerValue>;
+  onToggle: (value: AnswerValue) => void;
+}
+
+function CoverPracticeMarks({ areas, selectedValues, onToggle }: CoverPracticeMarksProps) {
+  return (
+    <div className="page-image-mark-layer" aria-label="表紙の確認用マーク領域">
+      {areas.map((area) => {
+        const style = {
+          "--mark-x": `${area.xPercent}%`,
+          "--mark-y": `${area.yPercent}%`,
+          "--mark-width": `${area.widthPercent ?? 3.2}%`,
+          "--mark-height": `${area.heightPercent ?? 2.6}%`
+        } as CSSProperties;
+
+        return (
+          <button
+            aria-label={`表紙 ${area.label} ${area.value}`}
+            aria-pressed={selectedValues.has(area.value)}
+            className={["page-image-mark", selectedValues.has(area.value) ? "selected" : ""].filter(Boolean).join(" ")}
+            key={area.id}
+            style={style}
+            type="button"
+            onClick={() => onToggle(area.value)}
+          />
+        );
+      })}
+    </div>
   );
 }

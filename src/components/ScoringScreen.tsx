@@ -99,9 +99,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
           aria-label="問題用紙への採点"
         >
           <div className="scoring-booklet-shell">
-            <div className="scoring-progress-note" aria-live="polite">
-              {showCover ? "表紙" : displayPage ? `${displayPage.pageNumber}ページ` : "採点完了"}
-            </div>
             <div className="scoring-page-turn" key={showCover ? "cover" : displayPage?.id ?? "done"}>
               {showCover ? (
                 <article className="booklet-page exact-page cover-page-display" aria-label={`${exam.title}の表紙`}>
