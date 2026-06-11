@@ -300,6 +300,10 @@ describe("ExamRunner", () => {
     await user.click(screen.getByRole("button", { name: "表紙 10 1" }));
     expect(screen.getByRole("button", { name: "表紙 10 1" })).toHaveClass("selected");
 
+    await user.click(screen.getByRole("button", { name: "表紙 10 2" }));
+    expect(screen.getByRole("button", { name: "表紙 10 1" })).not.toHaveClass("selected");
+    expect(screen.getByRole("button", { name: "表紙 10 2" })).toHaveClass("selected");
+
     await user.click(screen.getByRole("button", { name: "次のページへ" }));
 
     expect(onChangePage).toHaveBeenCalledWith(animeExam.pages[0].id);
