@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { Exam, GradeSummary, UserAnswers } from "../types";
 import { gradeExam } from "../utils/answer";
+import { MarkSheet } from "./MarkSheet";
 import { ProblemBooklet } from "./ProblemBooklet";
+import { ReviewScoreBadge } from "./ReviewScoreBadge";
 
 interface ScoringScreenProps {
   exam: Exam;
@@ -15,6 +17,7 @@ const coverPageIndex = -1;
 const coverDelayMs = 1000;
 const revealDelayMs = 420;
 const pageTurnDelayMs = 760;
+const emptyPageTurnDelayMs = 260;
 const resultDelayMs = 620;
 
 export function ScoringScreen({ exam, answers, startComplete = false, onReview, onRestart }: ScoringScreenProps) {
@@ -22,6 +25,10 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
+  );
+  const questionPageIds = useMemo(
+    () => new Set(summary.gradedQuestions.map((item) => item.question.pageId)),
+    [summary.gradedQuestions]
   );
   const firstPageIndex = exam.coverImageUrl ? coverPageIndex : 0;
   const [visibleCount, setVisibleCount] = useState(() => (startComplete ? summary.gradedQuestions.length : 0));
@@ -38,6 +45,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
   const displayPageIndex =
     currentPageIndex >= 0 ? Math.min(currentPageIndex, Math.max(0, exam.pages.length - 1)) : currentPageIndex;
   const displayPage = displayPageIndex >= 0 ? exam.pages[displayPageIndex] : undefined;
+  const reviewDisplayPage = displayPage ?? exam.pages[0];
   const showCover = currentPageIndex === coverPageIndex && Boolean(exam.coverImageUrl);
   const isBookletComplete = currentPageIndex >= exam.pages.length;
 
@@ -54,6 +62,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
 
     const currentPage = currentPageIndex >= 0 ? exam.pages[currentPageIndex] : undefined;
     const nextQuestion = summary.gradedQuestions[visibleCount];
+    const isEmptyScoringPage = Boolean(currentPage && !questionPageIds.has(currentPage.id));
     const delay =
       currentPageIndex === coverPageIndex
         ? coverDelayMs
@@ -61,7 +70,9 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
           ? resultDelayMs
           : nextQuestion?.question.pageId === currentPage?.id
             ? revealDelayMs
-            : pageTurnDelayMs;
+            : isEmptyScoringPage
+              ? emptyPageTurnDelayMs
+              : pageTurnDelayMs;
 
     const timeoutId = window.setTimeout(() => {
       if (currentPageIndex === coverPageIndex) {
@@ -83,7 +94,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
     }, delay);
 
     return () => window.clearTimeout(timeoutId);
-  }, [currentPageIndex, exam.pages, showResult, startComplete, summary.gradedQuestions, visibleCount]);
+  }, [currentPageIndex, exam.pages, questionPageIds, showResult, startComplete, summary.gradedQuestions, visibleCount]);
 
   const screenClassName = ["screen", "scoring-screen", startComplete ? "scoring-static" : ""]
     .filter(Boolean)
@@ -121,6 +132,17 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
         </section>
       ) : null}
 
+      {showResult && reviewDisplayPage ? (
+        <ScoringReviewBackdrop
+          answers={answers}
+          exam={exam}
+          page={reviewDisplayPage}
+          questionsById={questionsById}
+          startComplete={startComplete}
+          summary={summary}
+        />
+      ) : null}
+
       {showResult ? (
         <section className="scoring-final-result visible" aria-label="採点結果" aria-live="polite">
           <div className="scoring-final-content">
@@ -134,12 +156,92 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
                 復習する
               </button>
               <button className="secondary-button" type="button" onClick={onRestart}>
-                メニューに戻る
+                ホームに戻る
               </button>
             </div>
           </div>
         </section>
       ) : null}
     </main>
+  );
+}
+
+interface ScoringReviewBackdropProps {
+  exam: Exam;
+  answers: UserAnswers;
+  page: Exam["pages"][number];
+  questionsById: Map<string, Exam["questions"][number]>;
+  startComplete: boolean;
+  summary: GradeSummary;
+}
+
+function ScoringReviewBackdrop({
+  exam,
+  answers,
+  page,
+  questionsById,
+  startComplete,
+  summary
+}: ScoringReviewBackdropProps) {
+  const gradeStates = useMemo(
+    () => new Map(summary.gradedQuestions.map((item) => [item.question.id, item])),
+    [summary.gradedQuestions]
+  );
+  const pageTabsStyle = {
+    "--visible-page-tabs": String(Math.min(exam.pages.length, 12)),
+    "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
+  } as CSSProperties;
+
+  return (
+    <section
+      className={["scoring-review-backdrop", startComplete ? "static" : ""].filter(Boolean).join(" ")}
+      aria-hidden="true"
+    >
+      <div className="exam-layout exam-mode-background scoring-review-layout">
+        <header className="exam-toolbar">
+          <div className="toolbar-metrics">
+            <ReviewScoreBadge summary={summary} />
+          </div>
+        </header>
+        <section className="exam-body">
+          <div className="booklet-shell">
+            <nav className="page-tabs" style={pageTabsStyle}>
+              {exam.coverImageUrl ? (
+                <span className="cover-tab">表紙</span>
+              ) : null}
+              <div className="page-tab-scroll">
+                {exam.pages.map((item) => (
+                  <span className={item.id === page.id ? "active" : ""} key={item.id}>
+                    {item.pageNumber}
+                  </span>
+                ))}
+              </div>
+            </nav>
+            <div className="booklet-stage-shell">
+              <div className="booklet-stage">
+                <div className="booklet-scroll-surface exact-scroll-surface">
+                  <ProblemBooklet
+                    answers={answers}
+                    gradeStates={gradeStates}
+                    page={page}
+                    questionsById={questionsById}
+                    reviewMode
+                    onToggleAnswer={() => undefined}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <MarkSheet
+            activePageId={page.id}
+            answers={answers}
+            exam={exam}
+            reviewMode
+            onJumpToPage={() => undefined}
+            onToggleAnswer={() => undefined}
+          />
+        </section>
+      </div>
+    </section>
   );
 }
