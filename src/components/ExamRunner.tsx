@@ -12,7 +12,9 @@ interface ExamRunnerProps {
   answers: UserAnswers;
   currentPageId: string;
   deadline: number | null;
+  initialShowCover?: boolean;
   reviewMode?: boolean;
+  rootElement?: "main" | "div";
   onChangePage: (pageId: string) => void;
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
   onFinish: () => void;
@@ -30,7 +32,9 @@ export function ExamRunner({
   answers,
   currentPageId,
   deadline,
+  initialShowCover = false,
   reviewMode = false,
+  rootElement = "main",
   onChangePage,
   onToggleAnswer,
   onFinish,
@@ -39,7 +43,7 @@ export function ExamRunner({
   onExpire
 }: ExamRunnerProps) {
   const [bookletZoom, setBookletZoom] = useState(1);
-  const [showCover, setShowCover] = useState(false);
+  const [showCover, setShowCover] = useState(() => initialShowCover && Boolean(exam.coverImageUrl));
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showHomeConfirm, setShowHomeConfirm] = useState(false);
   const [coverMarks, setCoverMarks] = useState<Set<AnswerValue>>(() => new Set());
@@ -81,6 +85,7 @@ export function ExamRunner({
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
   const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
   const canGoNext = showCover ? exam.pages.length > 0 : pageIndex < exam.pages.length - 1;
+  const RootElement = rootElement;
 
   const goPrevious = () => {
     if (showCover) {
@@ -128,6 +133,10 @@ export function ExamRunner({
   useEffect(() => {
     setCoverMarks(new Set());
   }, [exam.id]);
+
+  useEffect(() => {
+    setShowCover(initialShowCover && Boolean(exam.coverImageUrl));
+  }, [exam.coverImageUrl, exam.id, initialShowCover]);
 
   useEffect(() => {
     const stage = bookletStageRef.current;
@@ -225,7 +234,7 @@ export function ExamRunner({
   };
 
   return (
-    <main className="exam-layout exam-mode-background">
+    <RootElement className="exam-layout exam-mode-background">
       <header className="exam-toolbar" aria-label="試験操作">
         <div className="toolbar-metrics">
           {reviewMode && reviewSummary ? <ReviewScoreBadge summary={reviewSummary} /> : null}
@@ -426,7 +435,7 @@ export function ExamRunner({
           </section>
         </div>
       ) : null}
-    </main>
+    </RootElement>
   );
 }
 

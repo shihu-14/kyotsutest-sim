@@ -173,6 +173,7 @@ export function App() {
       currentPageId={currentPageId}
       deadline={deadline}
       exam={selectedExam}
+      initialShowCover={phase === "review" && Boolean(selectedExam.coverImageUrl)}
       reviewMode={phase === "review"}
       onChangePage={setCurrentPageId}
       onExitReview={discardExamAndReturnHome}

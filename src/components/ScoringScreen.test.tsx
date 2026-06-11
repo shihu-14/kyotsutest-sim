@@ -13,7 +13,7 @@ describe("ScoringScreen", () => {
   it("starts scoring on the booklet instead of the old scoring list", () => {
     render(<ScoringScreen answers={{}} exam={sampleExams[0]} onRestart={vi.fn()} onReview={vi.fn()} />);
 
-    expect(screen.getByRole("heading", { name: "採点" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "採点" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "自動採点" })).not.toBeInTheDocument();
     expect(screen.queryByText("現在の合計点")).not.toBeInTheDocument();
     expect(screen.getByLabelText("問題用紙への採点")).toHaveClass("scoring-booklet-scene");
@@ -33,6 +33,10 @@ describe("ScoringScreen", () => {
     expect(screen.getByText("最終得点")).toBeInTheDocument();
     expect(screen.getByLabelText("採点結果")).toHaveClass("scoring-final-result");
     expect(document.querySelector(".scoring-review-backdrop")).toBeInTheDocument();
+    expect(document.querySelector(".scoring-review-backdrop .page-tabs .cover-tab")).toHaveClass("active");
+    expect(document.querySelector(".scoring-review-backdrop .booklet-side-arrow.next")).toBeInTheDocument();
+    expect(document.querySelector(".scoring-review-backdrop .booklet-side-arrow.previous")).not.toBeInTheDocument();
+    expect(document.querySelector(".scoring-review-backdrop .review-score-badge")).toBeInTheDocument();
     expect(screen.queryByLabelText("問題用紙への採点")).not.toBeInTheDocument();
     expect(screen.getByText("復習する").closest(".result-actions")).not.toHaveClass("scoring-result-actions");
     expect(document.querySelector(".scoring-final-result .secondary-button")).toHaveTextContent("ホームに戻る");
