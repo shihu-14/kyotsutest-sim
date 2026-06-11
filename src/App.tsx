@@ -19,6 +19,8 @@ export function App() {
   const [currentPageId, setCurrentPageId] = useState<string>("");
   const [showCompletedScoring, setShowCompletedScoring] = useState(false);
   const [reviewFadeIn, setReviewFadeIn] = useState(false);
+  const [reviewUiVisible, setReviewUiVisible] = useState(false);
+  const [reviewUiSettled, setReviewUiSettled] = useState(false);
 
   const openCover = (exam: Exam) => {
     setSelectedExam(exam);
@@ -26,6 +28,8 @@ export function App() {
     setDeadline(loadDeadline(exam.id));
     setCurrentPageId(exam.pages[0]?.id ?? "");
     setReviewFadeIn(false);
+    setReviewUiVisible(false);
+    setReviewUiSettled(false);
     setPhase("cover");
   };
 
@@ -41,6 +45,8 @@ export function App() {
     saveDeadline(selectedExam.id, nextDeadline);
     setCurrentPageId(selectedExam.pages[0]?.id ?? "");
     setReviewFadeIn(false);
+    setReviewUiVisible(false);
+    setReviewUiSettled(false);
     setPhase("exam");
   };
 
@@ -53,6 +59,8 @@ export function App() {
     setCurrentPageId("");
     setShowCompletedScoring(false);
     setReviewFadeIn(false);
+    setReviewUiVisible(false);
+    setReviewUiSettled(false);
     setPhase("select");
   };
 
@@ -67,6 +75,8 @@ export function App() {
     setCurrentPageId("");
     setShowCompletedScoring(false);
     setReviewFadeIn(false);
+    setReviewUiVisible(false);
+    setReviewUiSettled(false);
     setPhase("select");
   }, [selectedExam]);
 
@@ -84,18 +94,24 @@ export function App() {
     setDeadline(null);
     setShowCompletedScoring(false);
     setReviewFadeIn(false);
+    setReviewUiVisible(false);
+    setReviewUiSettled(false);
     setPhase("scoring");
   }, [selectedExam]);
 
   const openNewEditor = () => {
     setEditingExam(null);
     setReviewFadeIn(false);
+    setReviewUiVisible(false);
+    setReviewUiSettled(false);
     setPhase("editor");
   };
 
   const openExamEditor = (exam: Exam) => {
     setEditingExam(exam);
     setReviewFadeIn(false);
+    setReviewUiVisible(false);
+    setReviewUiSettled(false);
     setPhase("editor");
   };
 
@@ -110,6 +126,8 @@ export function App() {
     });
     setEditingExam(null);
     setReviewFadeIn(false);
+    setReviewUiVisible(false);
+    setReviewUiSettled(false);
     setPhase("select");
   };
 
@@ -125,6 +143,21 @@ export function App() {
       saveAnswers(selectedExam.id, answers);
     }
   }, [answers, selectedExam]);
+
+  useEffect(() => {
+    if (phase !== "review" || !reviewFadeIn) {
+      setReviewUiVisible(false);
+      setReviewUiSettled(false);
+      return undefined;
+    }
+
+    const showTimeoutId = window.setTimeout(() => setReviewUiVisible(true), 0);
+    const settleTimeoutId = window.setTimeout(() => setReviewUiSettled(true), 620);
+    return () => {
+      window.clearTimeout(showTimeoutId);
+      window.clearTimeout(settleTimeoutId);
+    };
+  }, [phase, reviewFadeIn]);
 
   if (phase === "editor") {
     return (
@@ -166,6 +199,8 @@ export function App() {
           setShowCompletedScoring(true);
           setCurrentPageId(selectedExam.pages[0]?.id ?? "");
           setReviewFadeIn(true);
+          setReviewUiVisible(false);
+          setReviewUiSettled(false);
           setPhase("review");
         }}
       />
@@ -178,7 +213,15 @@ export function App() {
       currentPageId={currentPageId}
       deadline={deadline}
       exam={selectedExam}
-      className={reviewFadeIn ? "review-mode-fade-in" : undefined}
+      className={
+        [
+          reviewFadeIn ? "review-mode-fade-in" : "",
+          reviewFadeIn && reviewUiVisible ? "review-mode-fade-in-ready" : "",
+          reviewFadeIn && reviewUiSettled ? "review-mode-fade-in-settled" : ""
+        ]
+          .filter(Boolean)
+          .join(" ") || undefined
+      }
       reviewMode={phase === "review"}
       onChangePage={setCurrentPageId}
       onExitReview={discardExamAndReturnHome}
