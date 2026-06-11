@@ -8,6 +8,8 @@ import type {
   QuestionSlot,
   UserAnswers
 } from "../types";
+import gradeCircleStamp from "../assets/stamps/grade-circle.png";
+import gradeCrossStamp from "../assets/stamps/grade-cross.png";
 import { normalizePreviewText, renderMathSegments, mathToHtml } from "../utils/latex";
 
 interface ProblemBookletProps {
@@ -281,35 +283,14 @@ function QuestionBlock({ question, answers, gradeStatesActive, gradeState, revie
 }
 
 function GradeStamp({ isCorrect }: { isCorrect: boolean }) {
+  const label = isCorrect ? "正解" : "不正解";
+
   return (
-    <svg
-      aria-label={isCorrect ? "正解" : "不正解"}
-      className={`grade-stamp red-pen ${isCorrect ? "circle" : "cross"}`}
-      viewBox="0 0 110 110"
+    <span
+      aria-label={label}
+      className={`grade-stamp stamp-image ${isCorrect ? "circle" : "cross"}`}
     >
-      {isCorrect ? (
-        <path
-          className="circle-stroke"
-          d="M33 82 C17 73 10 54 18 37 C29 14 59 8 82 19 C99 27 106 45 99 60 C90 80 64 91 39 87 C29 85 22 81 18 76"
-          pathLength={220}
-          style={{ strokeWidth: 9.5 }}
-        />
-      ) : (
-        <>
-          <path
-            className="cross-stroke first"
-            d="M15 11 C34 24 53 42 72 63 C83 75 91 86 100 96"
-            pathLength={52}
-            style={{ strokeWidth: 20 }}
-          />
-          <path
-            className="cross-stroke second"
-            d="M99 7 C80 29 62 53 40 78 C28 92 18 103 8 108"
-            pathLength={52}
-            style={{ strokeWidth: 20 }}
-          />
-        </>
-      )}
-    </svg>
+      <img alt="" className="stamp-image-source" draggable={false} src={isCorrect ? gradeCircleStamp : gradeCrossStamp} />
+    </span>
   );
 }

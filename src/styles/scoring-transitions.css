@@ -1,3 +1,33 @@
+.grade-stamp.stamp-image {
+  display: block;
+  width: 76px;
+  height: 76px;
+  fill: initial;
+  stroke: none;
+  pointer-events: none;
+}
+
+.grade-stamp.stamp-image .stamp-image-source {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  animation: stamp-image-pop 280ms ease-out both;
+}
+
+.page-image-grade-stamp .grade-stamp.stamp-image {
+  width: 100%;
+  height: 100%;
+}
+
+.scoring-static .grade-stamp.stamp-image .stamp-image-source {
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+
 .review-score-badge {
   display: grid;
   min-width: 128px;
@@ -121,6 +151,23 @@
 @keyframes scoring-review-ui-fade-in {
   to {
     opacity: 1;
+  }
+}
+
+@keyframes stamp-image-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+
+  70% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

@@ -60,7 +60,7 @@ describe("ScoringScreen", () => {
       vi.advanceTimersByTime(92);
     });
 
-    expect(screen.getAllByLabelText("不正解")[0].querySelector("path.cross-stroke.first")).not.toBeNull();
+    expect(screen.getAllByLabelText("不正解")[0].querySelector("img.stamp-image-source")).not.toBeNull();
   });
 
   it("shows only the score pop and then forces review mode", () => {
