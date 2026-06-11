@@ -58,6 +58,10 @@ export function ExamRunner({
     [exam.questions]
   );
   const reviewSummary = useMemo(() => (reviewMode ? gradeExam(exam, answers) : null), [answers, exam, reviewMode]);
+  const reviewGradeStates = useMemo(
+    () => (reviewSummary ? new Map(reviewSummary.gradedQuestions.map((item) => [item.question.id, item])) : undefined),
+    [reviewSummary]
+  );
   const page = exam.pages.find((candidate) => candidate.id === currentPageId) ?? exam.pages[0];
   const pageIndex = exam.pages.findIndex((candidate) => candidate.id === page.id);
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
@@ -347,6 +351,7 @@ export function ExamRunner({
                 ) : (
                   <ProblemBooklet
                     answers={answers}
+                    gradeStates={reviewGradeStates}
                     page={page}
                     questionsById={questionsById}
                     reviewMode={reviewMode}

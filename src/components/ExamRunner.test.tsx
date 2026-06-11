@@ -204,6 +204,29 @@ describe("ExamRunner", () => {
     expect(document.querySelector('[role="dialog"][aria-label="ホームに戻る確認"]')).not.toBeInTheDocument();
   });
 
+  it("keeps grading stamps on problem numbers in review mode", () => {
+    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+
+    render(
+      <ExamRunner
+        answers={{ "anime-q01": ["1"] }}
+        currentPageId={animeExam.pages[0].id}
+        deadline={null}
+        exam={animeExam}
+        reviewMode
+        onChangePage={vi.fn()}
+        onExitReview={vi.fn()}
+        onExpire={vi.fn()}
+        onFinish={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(document.querySelector(".page-image-grade-stamp")).toBeInTheDocument();
+    expect(screen.getByLabelText("正解")).toHaveClass("grade-stamp", "stamp-image", "circle");
+    expect(screen.getByLabelText("正解").querySelector("img.stamp-image-source")).not.toBeNull();
+  });
+
   it("zooms only from the problem display area when using a modified wheel", () => {
     render(
       <ExamRunner
