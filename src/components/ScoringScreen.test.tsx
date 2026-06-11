@@ -33,9 +33,10 @@ describe("ScoringScreen", () => {
     expect(screen.getByText("最終得点")).toBeInTheDocument();
     expect(screen.getByLabelText("採点結果")).toHaveClass("scoring-final-result");
     expect(document.querySelector(".scoring-review-backdrop")).toBeInTheDocument();
-    expect(document.querySelector(".scoring-review-backdrop .page-tabs .cover-tab")).toHaveClass("active");
+    expect(document.querySelector(".scoring-review-backdrop .page-tabs .cover-tab")).not.toHaveClass("active");
+    expect(document.querySelector(".scoring-review-backdrop .page-tab-scroll button.active")).toHaveTextContent("1");
     expect(document.querySelector(".scoring-review-backdrop .booklet-side-arrow.next")).toBeInTheDocument();
-    expect(document.querySelector(".scoring-review-backdrop .booklet-side-arrow.previous")).not.toBeInTheDocument();
+    expect(document.querySelector(".scoring-review-backdrop .booklet-side-arrow.previous")).toBeInTheDocument();
     expect(document.querySelector(".scoring-review-backdrop .review-score-badge")).toBeInTheDocument();
     expect(screen.queryByLabelText("問題用紙への採点")).not.toBeInTheDocument();
     expect(screen.getByText("復習する").closest(".result-actions")).not.toHaveClass("scoring-result-actions");
@@ -51,13 +52,13 @@ describe("ScoringScreen", () => {
     expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(220);
     });
 
     expect(screen.queryByText("1ページ")).not.toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(420);
+      vi.advanceTimersByTime(92);
     });
 
     expect(screen.getAllByLabelText("不正解")[0].querySelector("path.cross-stroke.first")).not.toBeNull();
@@ -110,17 +111,17 @@ describe("ScoringScreen", () => {
     expect(screen.getByText("採点あり1")).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(420);
+      vi.advanceTimersByTime(92);
     });
 
     act(() => {
-      vi.advanceTimersByTime(760);
+      vi.advanceTimersByTime(167);
     });
 
     expect(screen.getByText("採点なしページ")).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(259);
+      vi.advanceTimersByTime(56);
     });
 
     expect(screen.getByText("採点なしページ")).toBeInTheDocument();
