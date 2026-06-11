@@ -175,7 +175,7 @@ export function App() {
       exam={selectedExam}
       reviewMode={phase === "review"}
       onChangePage={setCurrentPageId}
-      onExitReview={() => setPhase("scoring")}
+      onExitReview={discardExamAndReturnHome}
       onExpire={finishExam}
       onFinish={finishExam}
       onReturnHome={discardExamAndReturnHome}

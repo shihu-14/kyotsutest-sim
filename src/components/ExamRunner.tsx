@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from "react";
 import type { AnswerValue, CoverMarkArea, Exam, QuestionSlot, UserAnswers } from "../types";
+import { gradeExam } from "../utils/answer";
 import { useCountdown } from "../hooks/useCountdown";
 import { MarkSheet } from "./MarkSheet";
 import { ProblemBooklet } from "./ProblemBooklet";
+import { ReviewScoreBadge } from "./ReviewScoreBadge";
 import { StopwatchTimer } from "./StopwatchTimer";
 
 interface ExamRunnerProps {
@@ -49,6 +51,7 @@ export function ExamRunner({
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
   );
+  const reviewSummary = useMemo(() => (reviewMode ? gradeExam(exam, answers) : null), [answers, exam, reviewMode]);
   const page = exam.pages.find((candidate) => candidate.id === currentPageId) ?? exam.pages[0];
   const pageIndex = exam.pages.findIndex((candidate) => candidate.id === page.id);
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
@@ -225,6 +228,7 @@ export function ExamRunner({
     <main className="exam-layout exam-mode-background">
       <header className="exam-toolbar" aria-label="試験操作">
         <div className="toolbar-metrics">
+          {reviewMode && reviewSummary ? <ReviewScoreBadge summary={reviewSummary} /> : null}
           {!reviewMode ? (
             <StopwatchTimer
               formatted={countdown.formatted}
@@ -235,8 +239,13 @@ export function ExamRunner({
             />
           ) : null}
           {reviewMode ? (
-            <button className="secondary-button" type="button" onClick={onExitReview}>
-              結果へ戻る
+            <button
+              className="secondary-button home-return-button"
+              style={homeColorStyle}
+              type="button"
+              onClick={onExitReview}
+            >
+              ホームに戻る
             </button>
           ) : (
             <div className="finish-action-stack">

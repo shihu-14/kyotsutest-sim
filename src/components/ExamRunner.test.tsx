@@ -175,6 +175,35 @@ describe("ExamRunner", () => {
     expect(onReturnHome).toHaveBeenCalledTimes(1);
   });
 
+  it("shows the score in the timer position during review and returns home without confirmation", async () => {
+    const user = userEvent.setup();
+    const onExitReview = vi.fn();
+
+    render(
+      <ExamRunner
+        answers={{ q1: ["-3"] }}
+        currentPageId="p1"
+        deadline={null}
+        exam={sampleExams[0]}
+        reviewMode
+        onChangePage={vi.fn()}
+        onExitReview={onExitReview}
+        onExpire={vi.fn()}
+        onFinish={vi.fn()}
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(document.querySelector('[role="timer"]')).not.toBeInTheDocument();
+    expect(document.querySelector('[role="status"][aria-label="得点 4/32"]')).toHaveClass("review-score-badge");
+    expect(screen.queryByText("結果へ戻る")).not.toBeInTheDocument();
+
+    await user.click(screen.getByText("ホームに戻る"));
+
+    expect(onExitReview).toHaveBeenCalledTimes(1);
+    expect(document.querySelector('[role="dialog"][aria-label="ホームに戻る確認"]')).not.toBeInTheDocument();
+  });
+
   it("zooms only from the problem display area when using a modified wheel", () => {
     render(
       <ExamRunner
