@@ -13,6 +13,7 @@ interface ExamRunnerProps {
   currentPageId: string;
   deadline: number | null;
   initialShowCover?: boolean;
+  className?: string;
   reviewMode?: boolean;
   rootElement?: "main" | "div";
   onChangePage: (pageId: string) => void;
@@ -33,6 +34,7 @@ export function ExamRunner({
   currentPageId,
   deadline,
   initialShowCover = false,
+  className,
   reviewMode = false,
   rootElement = "main",
   onChangePage,
@@ -234,7 +236,7 @@ export function ExamRunner({
   };
 
   return (
-    <RootElement className="exam-layout exam-mode-background">
+    <RootElement className={["exam-layout", "exam-mode-background", className].filter(Boolean).join(" ")}>
       <header className="exam-toolbar" aria-label="試験操作">
         <div className="toolbar-metrics">
           {reviewMode && reviewSummary ? <ReviewScoreBadge summary={reviewSummary} /> : null}

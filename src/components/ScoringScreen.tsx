@@ -9,7 +9,6 @@ interface ScoringScreenProps {
   answers: UserAnswers;
   startComplete?: boolean;
   onReview: () => void;
-  onRestart: () => void;
 }
 
 const coverPageIndex = -1;
@@ -20,8 +19,9 @@ const revealDelayMs = Math.round(420 * speed);
 const pageTurnDelayMs = Math.round(760 * speed);
 const emptyPageTurnDelayMs = Math.round(260 * speed);
 const resultDelayMs = Math.round(620 * speed);
+const autoReviewDelayMs = 2500;
 
-export function ScoringScreen({ exam, answers, startComplete = false, onReview, onRestart }: ScoringScreenProps) {
+export function ScoringScreen({ exam, answers, startComplete = false, onReview }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
@@ -96,6 +96,15 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
     return () => window.clearTimeout(timeoutId);
   }, [currentPageIndex, exam.pages, questionPageIds, showResult, startComplete, summary.gradedQuestions, visibleCount]);
 
+  useEffect(() => {
+    if (startComplete || !showResult) {
+      return undefined;
+    }
+
+    const timeoutId = window.setTimeout(onReview, autoReviewDelayMs);
+    return () => window.clearTimeout(timeoutId);
+  }, [onReview, showResult, startComplete]);
+
   const screenClassName = ["screen", "scoring-screen", startComplete ? "scoring-static" : ""]
     .filter(Boolean)
     .join(" ");
@@ -127,7 +136,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
         </section>
       ) : null}
 
-      {showResult && exam.pages[0] ? (
+      {showResult && startComplete && exam.pages[0] ? (
         <ScoringReviewBackdrop
           answers={answers}
           exam={exam}
@@ -136,21 +145,19 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
       ) : null}
 
       {showResult ? (
-        <section className="scoring-final-result visible" aria-label="採点結果" aria-live="polite">
+        <section
+          className={["scoring-final-result", "visible", startComplete ? "" : "auto-review-score-pop"]
+            .filter(Boolean)
+            .join(" ")}
+          aria-label="採点結果"
+          aria-live="polite"
+        >
           <div className="scoring-final-content">
             <p>最終得点</p>
             <strong className="scoring-score-value">
               {summary.totalScore}
               <small>/{summary.totalPoints}</small>
             </strong>
-            <div className={["result-actions", startComplete ? "" : "scoring-result-actions"].filter(Boolean).join(" ")}>
-              <button className="primary-button" type="button" onClick={onReview}>
-                復習する
-              </button>
-              <button className="secondary-button" type="button" onClick={onRestart}>
-                ホームに戻る
-              </button>
-            </div>
           </div>
         </section>
       ) : null}
