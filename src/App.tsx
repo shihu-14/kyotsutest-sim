@@ -18,12 +18,14 @@ export function App() {
   const [deadline, setDeadline] = useState<number | null>(null);
   const [currentPageId, setCurrentPageId] = useState<string>("");
   const [showCompletedScoring, setShowCompletedScoring] = useState(false);
+  const [reviewFadeIn, setReviewFadeIn] = useState(false);
 
   const openCover = (exam: Exam) => {
     setSelectedExam(exam);
     setAnswers(loadAnswers(exam.id));
     setDeadline(loadDeadline(exam.id));
     setCurrentPageId(exam.pages[0]?.id ?? "");
+    setReviewFadeIn(false);
     setPhase("cover");
   };
 
@@ -38,6 +40,7 @@ export function App() {
     setDeadline(nextDeadline);
     saveDeadline(selectedExam.id, nextDeadline);
     setCurrentPageId(selectedExam.pages[0]?.id ?? "");
+    setReviewFadeIn(false);
     setPhase("exam");
   };
 
@@ -49,6 +52,7 @@ export function App() {
     setDeadline(null);
     setCurrentPageId("");
     setShowCompletedScoring(false);
+    setReviewFadeIn(false);
     setPhase("select");
   };
 
@@ -62,6 +66,7 @@ export function App() {
     setDeadline(null);
     setCurrentPageId("");
     setShowCompletedScoring(false);
+    setReviewFadeIn(false);
     setPhase("select");
   }, [selectedExam]);
 
@@ -78,16 +83,19 @@ export function App() {
     }
     setDeadline(null);
     setShowCompletedScoring(false);
+    setReviewFadeIn(false);
     setPhase("scoring");
   }, [selectedExam]);
 
   const openNewEditor = () => {
     setEditingExam(null);
+    setReviewFadeIn(false);
     setPhase("editor");
   };
 
   const openExamEditor = (exam: Exam) => {
     setEditingExam(exam);
+    setReviewFadeIn(false);
     setPhase("editor");
   };
 
@@ -101,6 +109,7 @@ export function App() {
       return current.map((item) => (item.id === exam.id ? exam : item));
     });
     setEditingExam(null);
+    setReviewFadeIn(false);
     setPhase("select");
   };
 
@@ -153,14 +162,10 @@ export function App() {
         answers={answers}
         exam={selectedExam}
         startComplete={showCompletedScoring}
-        onRestart={() => {
-          clearAnswers(selectedExam.id);
-          clearDeadline(selectedExam.id);
-          resetToList();
-        }}
         onReview={() => {
           setShowCompletedScoring(true);
           setCurrentPageId(selectedExam.pages[0]?.id ?? "");
+          setReviewFadeIn(true);
           setPhase("review");
         }}
       />
@@ -173,6 +178,7 @@ export function App() {
       currentPageId={currentPageId}
       deadline={deadline}
       exam={selectedExam}
+      className={reviewFadeIn ? "review-mode-fade-in" : undefined}
       reviewMode={phase === "review"}
       onChangePage={setCurrentPageId}
       onExitReview={discardExamAndReturnHome}
