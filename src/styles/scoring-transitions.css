@@ -55,12 +55,12 @@
 }
 
 .scoring-review-backdrop .booklet-shell {
-  transform-origin: center center;
-  animation: scoring-review-booklet-settle 860ms cubic-bezier(0.2, 0.82, 0.2, 1) both;
+  opacity: 0;
+  animation: scoring-review-ui-fade-in 560ms ease-out 2000ms forwards;
 }
 
 .scoring-review-backdrop.static .booklet-shell {
-  transform: none;
+  opacity: 1;
   animation: none;
 }
 
@@ -76,16 +76,6 @@
 .scoring-review-backdrop.static .toolbar-metrics {
   opacity: 1;
   animation: none;
-}
-
-@keyframes scoring-review-booklet-settle {
-  from {
-    transform: translateX(18vw) translateY(-1.5vh) scale(0.86);
-  }
-
-  to {
-    transform: translateX(0) translateY(0) scale(1);
-  }
 }
 
 @keyframes scoring-review-ui-fade-in {
