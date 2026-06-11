@@ -122,13 +122,11 @@ export function ExamRunner({
 
   const toggleCoverMark = (value: AnswerValue) => {
     setCoverMarks((current) => {
-      const next = new Set(current);
-      if (next.has(value)) {
-        next.delete(value);
-      } else {
-        next.add(value);
+      if (current.has(value)) {
+        return new Set();
       }
-      return next;
+
+      return new Set([value]);
     });
   };
 
