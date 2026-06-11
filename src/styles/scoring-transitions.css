@@ -33,8 +33,27 @@
 }
 
 .review-mode-fade-in {
+  animation: none;
+}
+
+.review-mode-fade-in .exam-toolbar,
+.review-mode-fade-in .booklet-shell,
+.review-mode-fade-in .mark-sheet {
   opacity: 0;
-  animation: scoring-review-mode-fade-in 560ms ease-out both;
+  transition: opacity 560ms ease-out;
+}
+
+.review-mode-fade-in.review-mode-fade-in-ready .exam-toolbar,
+.review-mode-fade-in.review-mode-fade-in-ready .booklet-shell,
+.review-mode-fade-in.review-mode-fade-in-ready .mark-sheet {
+  opacity: 1;
+}
+
+.review-mode-fade-in.review-mode-fade-in-settled .exam-toolbar,
+.review-mode-fade-in.review-mode-fade-in-settled .booklet-shell,
+.review-mode-fade-in.review-mode-fade-in-settled .mark-sheet {
+  opacity: 1;
+  transition: none;
 }
 
 .scoring-final-result {
@@ -121,11 +140,5 @@
   to {
     opacity: 0;
     transform: scale(0.96);
-  }
-}
-
-@keyframes scoring-review-mode-fade-in {
-  to {
-    opacity: 1;
   }
 }

@@ -19,7 +19,7 @@ const revealDelayMs = Math.round(420 * speed);
 const pageTurnDelayMs = Math.round(760 * speed);
 const emptyPageTurnDelayMs = Math.round(260 * speed);
 const resultDelayMs = Math.round(620 * speed);
-const autoReviewDelayMs = 2500;
+const autoReviewDelayMs = 2000;
 
 export function ScoringScreen({ exam, answers, startComplete = false, onReview }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);

@@ -107,7 +107,7 @@ describe("ScoringScreen", () => {
     expect(onReview).not.toHaveBeenCalled();
 
     act(() => {
-      vi.advanceTimersByTime(2499);
+      vi.advanceTimersByTime(1999);
     });
 
     expect(onReview).not.toHaveBeenCalled();
