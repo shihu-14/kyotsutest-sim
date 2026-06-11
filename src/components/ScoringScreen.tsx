@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Exam, GradeSummary, UserAnswers } from "../types";
 import { gradeExam } from "../utils/answer";
-import { MarkSheet } from "./MarkSheet";
+import { ExamRunner } from "./ExamRunner";
 import { ProblemBooklet } from "./ProblemBooklet";
-import { ReviewScoreBadge } from "./ReviewScoreBadge";
 
 interface ScoringScreenProps {
   exam: Exam;
@@ -45,7 +44,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
   const displayPageIndex =
     currentPageIndex >= 0 ? Math.min(currentPageIndex, Math.max(0, exam.pages.length - 1)) : currentPageIndex;
   const displayPage = displayPageIndex >= 0 ? exam.pages[displayPageIndex] : undefined;
-  const reviewDisplayPage = displayPage ?? exam.pages[0];
   const showCover = currentPageIndex === coverPageIndex && Boolean(exam.coverImageUrl);
   const isBookletComplete = currentPageIndex >= exam.pages.length;
 
@@ -102,8 +100,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
 
   return (
     <main className={screenClassName}>
-      <h1 className="scoring-heading">採点</h1>
-
       {!showResult ? (
         <section
           className={`scoring-booklet-scene ${isBookletComplete ? "fade-out" : ""}`}
@@ -132,14 +128,11 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
         </section>
       ) : null}
 
-      {showResult && reviewDisplayPage ? (
+      {showResult && exam.pages[0] ? (
         <ScoringReviewBackdrop
           answers={answers}
           exam={exam}
-          page={reviewDisplayPage}
-          questionsById={questionsById}
           startComplete={startComplete}
-          summary={summary}
         />
       ) : null}
 
@@ -169,79 +162,29 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
 interface ScoringReviewBackdropProps {
   exam: Exam;
   answers: UserAnswers;
-  page: Exam["pages"][number];
-  questionsById: Map<string, Exam["questions"][number]>;
   startComplete: boolean;
-  summary: GradeSummary;
 }
 
-function ScoringReviewBackdrop({
-  exam,
-  answers,
-  page,
-  questionsById,
-  startComplete,
-  summary
-}: ScoringReviewBackdropProps) {
-  const gradeStates = useMemo(
-    () => new Map(summary.gradedQuestions.map((item) => [item.question.id, item])),
-    [summary.gradedQuestions]
-  );
-  const pageTabsStyle = {
-    "--visible-page-tabs": String(Math.min(exam.pages.length, 12)),
-    "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
-  } as CSSProperties;
-
+function ScoringReviewBackdrop({ exam, answers, startComplete }: ScoringReviewBackdropProps) {
   return (
     <section
       className={["scoring-review-backdrop", startComplete ? "static" : ""].filter(Boolean).join(" ")}
       aria-hidden="true"
     >
-      <div className="exam-layout exam-mode-background scoring-review-layout">
-        <header className="exam-toolbar">
-          <div className="toolbar-metrics">
-            <ReviewScoreBadge summary={summary} />
-          </div>
-        </header>
-        <section className="exam-body">
-          <div className="booklet-shell">
-            <nav className="page-tabs" style={pageTabsStyle}>
-              {exam.coverImageUrl ? (
-                <span className="cover-tab">表紙</span>
-              ) : null}
-              <div className="page-tab-scroll">
-                {exam.pages.map((item) => (
-                  <span className={item.id === page.id ? "active" : ""} key={item.id}>
-                    {item.pageNumber}
-                  </span>
-                ))}
-              </div>
-            </nav>
-            <div className="booklet-stage-shell">
-              <div className="booklet-stage">
-                <div className="booklet-scroll-surface exact-scroll-surface">
-                  <ProblemBooklet
-                    answers={answers}
-                    gradeStates={gradeStates}
-                    page={page}
-                    questionsById={questionsById}
-                    reviewMode
-                    onToggleAnswer={() => undefined}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-          <MarkSheet
-            activePageId={page.id}
-            answers={answers}
-            exam={exam}
-            reviewMode
-            onJumpToPage={() => undefined}
-            onToggleAnswer={() => undefined}
-          />
-        </section>
-      </div>
+      <ExamRunner
+        answers={answers}
+        currentPageId={exam.pages[0]?.id ?? ""}
+        deadline={null}
+        exam={exam}
+        initialShowCover={Boolean(exam.coverImageUrl)}
+        reviewMode
+        rootElement="div"
+        onChangePage={() => undefined}
+        onExitReview={() => undefined}
+        onExpire={() => undefined}
+        onFinish={() => undefined}
+        onToggleAnswer={() => undefined}
+      />
     </section>
   );
 }
