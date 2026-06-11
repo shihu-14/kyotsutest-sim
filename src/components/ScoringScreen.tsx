@@ -13,11 +13,13 @@ interface ScoringScreenProps {
 }
 
 const coverPageIndex = -1;
-const coverDelayMs = 1000;
-const revealDelayMs = 420;
-const pageTurnDelayMs = 760;
-const emptyPageTurnDelayMs = 260;
-const resultDelayMs = 620;
+const debugFastScoring = true;
+const speed = debugFastScoring ? 0.22 : 1;
+const coverDelayMs = Math.round(1000 * speed);
+const revealDelayMs = Math.round(420 * speed);
+const pageTurnDelayMs = Math.round(760 * speed);
+const emptyPageTurnDelayMs = Math.round(260 * speed);
+const resultDelayMs = Math.round(620 * speed);
 
 export function ScoringScreen({ exam, answers, startComplete = false, onReview, onRestart }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);
@@ -45,7 +47,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
     currentPageIndex >= 0 ? Math.min(currentPageIndex, Math.max(0, exam.pages.length - 1)) : currentPageIndex;
   const displayPage = displayPageIndex >= 0 ? exam.pages[displayPageIndex] : undefined;
   const showCover = currentPageIndex === coverPageIndex && Boolean(exam.coverImageUrl);
-  const isBookletComplete = currentPageIndex >= exam.pages.length;
 
   useEffect(() => {
     setVisibleCount(startComplete ? summary.gradedQuestions.length : 0);
@@ -79,6 +80,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
       }
 
       if (currentPageIndex >= exam.pages.length) {
+        setCurrentPageIndex(0);
         setShowResult(true);
         return;
       }
@@ -101,10 +103,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview, 
   return (
     <main className={screenClassName}>
       {!showResult ? (
-        <section
-          className={`scoring-booklet-scene ${isBookletComplete ? "fade-out" : ""}`}
-          aria-label="問題用紙への採点"
-        >
+        <section className="scoring-booklet-scene" aria-label="問題用紙への採点">
           <div className="scoring-booklet-shell">
             <div className="scoring-page-turn" key={showCover ? "cover" : displayPage?.id ?? "done"}>
               {showCover ? (
@@ -176,7 +175,6 @@ function ScoringReviewBackdrop({ exam, answers, startComplete }: ScoringReviewBa
         currentPageId={exam.pages[0]?.id ?? ""}
         deadline={null}
         exam={exam}
-        initialShowCover={Boolean(exam.coverImageUrl)}
         reviewMode
         rootElement="div"
         onChangePage={() => undefined}
