@@ -45,6 +45,28 @@
   animation: none;
 }
 
+.page-image-mark {
+  --problem-page-mark-ink: #111;
+  --problem-page-review-red-ink: #c73228;
+  isolation: isolate;
+}
+
+.page-image-mark.selected.review-correct::before {
+  position: absolute;
+  inset: -1.5px;
+  z-index: 0;
+  border-radius: 50%;
+  background: var(--problem-page-review-red-ink);
+  content: "";
+  transform: translate(3px, -3px);
+}
+
+.page-image-mark.selected.review-correct::after {
+  inset: -1.5px;
+  z-index: 2;
+  background: var(--problem-page-mark-ink);
+}
+
 .review-score-badge {
   display: grid;
   min-width: 128px;
