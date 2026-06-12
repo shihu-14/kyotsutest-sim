@@ -159,12 +159,7 @@ function PageImageMarks({
 
         const selected = answers[question.id] ?? [];
         const checked = selected.includes(area.value);
-        const gradeState = gradeStates?.get(question.id);
-        const correct =
-          reviewMode &&
-          !checked &&
-          question.correct.includes(area.value) &&
-          (!gradeStates || (gradeState ? !gradeState.isCorrect : false));
+        const correct = reviewMode && question.correct.includes(area.value);
         const option = question.options.find((candidate) => candidate.value === area.value);
         const widthPercent = area.widthPercent ?? 3.2;
         const heightPercent = area.heightPercent ?? 2.6;

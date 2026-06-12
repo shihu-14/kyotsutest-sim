@@ -45,6 +45,7 @@ describe("ProblemBooklet", () => {
     );
 
     expect(screen.getByRole("button", { name: "1 1" })).toHaveClass("selected");
+    expect(screen.getByRole("button", { name: "1 1" })).toHaveClass("review-correct");
     expect(screen.getByRole("button", { name: "1 4" })).not.toHaveClass("review-correct");
   });
 
