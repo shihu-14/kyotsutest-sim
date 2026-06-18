@@ -12,13 +12,11 @@ interface ScoringScreenProps {
 }
 
 const coverPageIndex = -1;
-const debugFastScoring = true;
-const speed = debugFastScoring ? 0.22 : 1;
-const coverDelayMs = Math.round(1000 * speed);
-const revealDelayMs = Math.round(420 * speed);
-const pageTurnDelayMs = Math.round(760 * speed);
-const emptyPageTurnDelayMs = Math.round(260 * speed);
-const resultDelayMs = Math.round(620 * speed);
+const coverDelayMs = 1000;
+const revealDelayMs = 420;
+const pageTurnDelayMs = 760;
+const emptyPageTurnDelayMs = 260;
+const resultDelayMs = 620;
 const autoReviewDelayMs = 2000;
 
 export function ScoringScreen({ exam, answers, startComplete = false, onReview }: ScoringScreenProps) {

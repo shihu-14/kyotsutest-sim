@@ -51,13 +51,13 @@ describe("ScoringScreen", () => {
     expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(220);
+      vi.advanceTimersByTime(1000);
     });
 
     expect(screen.queryByText("1ページ")).not.toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(92);
+      vi.advanceTimersByTime(420);
     });
 
     expect(screen.getAllByLabelText("不正解")[0].querySelector("img.stamp-image-source")).not.toBeNull();
@@ -89,15 +89,15 @@ describe("ScoringScreen", () => {
     render(<ScoringScreen answers={{}} exam={quickExam} onReview={onReview} />);
 
     act(() => {
-      vi.advanceTimersByTime(92);
+      vi.advanceTimersByTime(420);
     });
 
     act(() => {
-      vi.advanceTimersByTime(167);
+      vi.advanceTimersByTime(760);
     });
 
     act(() => {
-      vi.advanceTimersByTime(136);
+      vi.advanceTimersByTime(620);
     });
 
     expect(screen.getByLabelText("採点結果")).toHaveClass("auto-review-score-pop");
@@ -166,17 +166,17 @@ describe("ScoringScreen", () => {
     expect(screen.getByText("採点あり1")).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(92);
+      vi.advanceTimersByTime(420);
     });
 
     act(() => {
-      vi.advanceTimersByTime(167);
+      vi.advanceTimersByTime(760);
     });
 
     expect(screen.getByText("採点なしページ")).toBeInTheDocument();
 
     act(() => {
-      vi.advanceTimersByTime(56);
+      vi.advanceTimersByTime(259);
     });
 
     expect(screen.getByText("採点なしページ")).toBeInTheDocument();
