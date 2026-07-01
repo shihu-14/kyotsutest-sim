@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { AuthoringEditor } from "./components/AuthoringEditor";
-import { CoverPage } from "./components/CoverPage";
-import { ExamList } from "./components/ExamList";
-import { ExamRunner } from "./components/ExamRunner";
-import { ScoringScreen } from "./components/ScoringScreen";
+import { AuthoringEditor } from "./components/authoring/AuthoringEditor";
+import { CoverPage } from "./components/home/CoverPage";
+import { ExamList } from "./components/home/ExamList";
+import { ExamRunner } from "./components/exam/ExamRunner";
+import { ScoringScreen } from "./components/scoring/ScoringScreen";
 import { sampleExams } from "./data/sampleExam";
 import type { AnswerValue, Exam, ExamPhase, QuestionSlot, UserAnswers } from "./types";
 import { clearAnswers, clearDeadline, loadAnswers, loadDeadline, saveAnswers, saveDeadline } from "./utils/storage";

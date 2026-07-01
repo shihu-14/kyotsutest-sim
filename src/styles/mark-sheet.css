@@ -1,0 +1,272 @@
+.mark-sheet {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border-color: #b8bfc6;
+  border-radius: 0;
+  background: #f9fbfb;
+  padding: 0;
+  box-shadow: 0 16px 34px rgba(37, 44, 50, 0.18);
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+}
+
+.mark-sheet h2 {
+  margin: 0;
+  color: #d55d23;
+  font-size: 1rem;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.subject-sheet {
+  border: 1px solid #f0b08b;
+  margin: 12px 12px 8px;
+  background: #fff0e8;
+  padding: 10px;
+}
+
+.subject-sheet p {
+  margin: 4px 0 8px;
+  color: #c65e27;
+  font-size: 0.72rem;
+}
+
+.subject-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.subject-tabs span {
+  border: 1px solid #f07825;
+  background: #fffaf7;
+  color: #f07825;
+  padding: 5px 9px;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.subject-tabs span.active {
+  background: #fff;
+  color: #222;
+}
+
+.major-tabs {
+  display: flex;
+  gap: 7px;
+  border-bottom: 2px solid #f07825;
+  margin: 0 12px;
+  padding-bottom: 8px;
+}
+
+.major-tabs button {
+  width: 30px;
+  height: 30px;
+  border: 2px solid #f07825;
+  border-radius: 2px;
+  background: #fff;
+  color: #f07825;
+  font-weight: 900;
+}
+
+.major-tabs button.active {
+  background: #f07825;
+  color: #fff;
+}
+
+.answer-table {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  margin: 12px;
+  border: 2px solid #f07825;
+  border-radius: 0;
+  background: #fffdf9;
+}
+
+.answer-title {
+  border-bottom: 1px solid #f07825;
+  color: #d55d23;
+  padding: 3px 0;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.answer-grid {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: auto;
+  scrollbar-width: none;
+  color: #e27939;
+  font-size: 0.72rem;
+}
+
+.answer-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.answer-grid-head,
+.answer-number,
+.answer-options {
+  border-bottom: 1px solid #f2ad82;
+}
+
+.answer-number-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid #f2ad82;
+  padding: 4px;
+  writing-mode: vertical-rl;
+}
+
+.answer-options-head,
+.answer-options {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  align-items: center;
+}
+
+.answer-options-head {
+  min-height: 24px;
+  text-align: center;
+}
+
+.answer-grid-row {
+  display: contents;
+}
+
+.answer-section-row {
+  display: grid;
+  grid-column: 1 / -1;
+}
+
+.answer-section-button {
+  border: 0;
+  border-bottom: 1px solid #f2ad82;
+  background: #fff2e9;
+  color: #c65e27;
+  padding: 5px 8px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-align: left;
+}
+
+.answer-section-button.active {
+  background: #f07825;
+  color: #fff;
+}
+
+.answer-grid-row.active .answer-number {
+  background: #fff0e5;
+  color: #ba4f1d;
+}
+
+.answer-number {
+  border-top: 0;
+  border-right: 1px solid #f2ad82;
+  border-left: 0;
+  background: #fffaf4;
+  color: #e27939;
+  padding: 0;
+  font-weight: 900;
+}
+
+.answer-options {
+  min-width: 0;
+  min-height: 30px;
+  padding: 2px 3px;
+}
+
+.answer-options .bubble {
+  justify-self: center;
+}
+
+.bubble {
+  --answer-mark-ink: #222;
+  --answer-review-red-ink: #c73228;
+
+  position: relative;
+  isolation: isolate;
+  width: 18px;
+  height: 24px;
+  border: 1.5px solid #f0a06f;
+  border-radius: 50%;
+  background: #fffdf9;
+  color: #e27939;
+  padding: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.bubble::before,
+.bubble::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+}
+
+.bubble.filled {
+  border-color: var(--answer-mark-ink);
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.bubble.filled::after {
+  z-index: 1;
+  background: var(--answer-mark-ink);
+  opacity: 1;
+}
+
+.bubble.unavailable {
+  opacity: 0.38;
+}
+
+.mark-sheet .bubble:disabled {
+  cursor: default;
+}
+
+.mark-sheet.review-mode .bubble:disabled:not(.unavailable) {
+  opacity: 1;
+}
+
+.bubble.review-correct {
+  border-color: var(--answer-review-red-ink);
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.bubble.review-correct::before {
+  z-index: 0;
+  background: var(--answer-review-red-ink);
+  opacity: 1;
+}
+
+.bubble.filled.review-correct {
+  border-color: var(--answer-mark-ink);
+  background: transparent;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.bubble.filled.review-correct::before {
+  inset: -1.5px;
+  transform: translate(3px, -3px);
+}
+
+.bubble.filled.review-correct::after {
+  inset: -1.5px;
+  z-index: 2;
+}
