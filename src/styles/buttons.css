@@ -1,0 +1,70 @@
+.primary-button,
+.secondary-button,
+.danger-button,
+.text-button {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.primary-button {
+  background: #1f6f5b;
+  color: white;
+  box-shadow: 0 8px 18px rgba(31, 111, 91, 0.2);
+}
+
+.secondary-button {
+  border-color: #b9ab94;
+  background: #fffaf1;
+  color: #273534;
+}
+
+.authoring-disabled-button:disabled {
+  border-color: #c7c7c7;
+  background: #eeeeee;
+  color: #858585;
+  cursor: default;
+  opacity: 1;
+  box-shadow: none;
+}
+
+.danger-button {
+  background: #a94337;
+  color: white;
+}
+
+.finish-button {
+  background: var(--finish-color, #ff4d00);
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(255, 77, 0, 0.22);
+}
+
+.home-return-button {
+  border-color: rgba(39, 53, 52, 0.24);
+  background: var(--home-action-color, #fffaf1);
+  color: #273534;
+  padding-inline: 7px;
+  box-shadow: 0 10px 20px rgba(52, 39, 22, 0.14);
+  white-space: nowrap;
+}
+
+.text-button {
+  border: 0;
+  background: transparent;
+  color: #365f57;
+  padding-inline: 0;
+}
+
+.large-button {
+  width: 100%;
+  margin-top: 22px;
+  padding: 14px 18px;
+  font-size: 1.05rem;
+}
+
+.compact {
+  padding: 7px 10px;
+  font-size: 0.86rem;
+}

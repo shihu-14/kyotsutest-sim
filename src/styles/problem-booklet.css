@@ -1,0 +1,520 @@
+.booklet-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+}
+
+.booklet-stage-shell {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+
+.booklet-stage {
+  --booklet-zoom: 1;
+  container-type: size;
+  position: relative;
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  border-radius: 8px;
+  background: transparent;
+  box-shadow: none;
+  padding: 22px 14px 0;
+  scrollbar-width: none;
+}
+
+.booklet-stage::-webkit-scrollbar {
+  display: none;
+}
+
+.booklet-side-arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: grid;
+  width: 42px;
+  height: 78px;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(36, 42, 48, 0.36);
+  color: #ffffff;
+  font-size: 2.4rem;
+  font-weight: 500;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.booklet-side-arrow.previous {
+  left: 10px;
+}
+
+.booklet-side-arrow.next {
+  right: 10px;
+}
+
+.booklet-side-arrow:not(:disabled):hover {
+  background: rgba(36, 42, 48, 0.54);
+}
+
+.booklet-scroll-surface {
+  --scroll-page-width: calc(100cqw * var(--booklet-zoom));
+  --scroll-page-height: calc(100cqh * var(--booklet-zoom));
+  display: grid;
+  width: max(100%, var(--scroll-page-width));
+  height: max(100%, var(--scroll-page-height));
+  min-width: 100%;
+  min-height: 100%;
+  place-items: center;
+}
+
+.booklet-scroll-surface.exact-scroll-surface {
+  --exact-base-width: min(100cqw, calc(100cqh * 1247 / 1772));
+  --exact-base-height: min(100cqh, calc(100cqw * 1772 / 1247));
+  --scroll-page-width: calc(var(--exact-base-width) * var(--booklet-zoom));
+  --scroll-page-height: calc(var(--exact-base-height) * var(--booklet-zoom));
+}
+
+.booklet-scroll-surface .booklet-page {
+  flex: 0 0 auto;
+  width: var(--scroll-page-width);
+  height: var(--scroll-page-height);
+  min-height: var(--scroll-page-height);
+}
+
+.booklet-scroll-surface .booklet-page.exact-page {
+  width: var(--scroll-page-width);
+  aspect-ratio: 1247 / 1772;
+}
+
+.page-tabs {
+  --page-tab-width: clamp(60px, 5vw, calc(50px * 1.45));
+  --cover-tab-width: calc(46px * 1.8);
+  --visible-page-tabs: 12;
+  --has-cover-tab: 1;
+  display: flex;
+  gap: 0;
+  width: min(100%, calc((var(--has-cover-tab) * var(--cover-tab-width)) + (var(--visible-page-tabs) * var(--page-tab-width))));
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 6px;
+  margin-bottom: 6px;
+  background: transparent;
+  scrollbar-width: none;
+}
+
+.page-tab-scroll {
+  display: flex;
+  flex: 0 0 calc(var(--visible-page-tabs) * var(--page-tab-width));
+  width: calc(var(--visible-page-tabs) * var(--page-tab-width));
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+.page-tabs::-webkit-scrollbar,
+.page-tab-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.page-tabs button {
+  box-sizing: border-box;
+  display: grid;
+  flex: 0 0 var(--page-tab-width);
+  width: var(--page-tab-width);
+  min-width: var(--page-tab-width);
+  max-width: var(--page-tab-width);
+  height: 34px;
+  place-items: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.52);
+  color: #ffffff;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  line-height: 1;
+  padding: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.page-tabs button:last-child {
+  box-shadow: none;
+}
+
+.page-tabs .cover-tab {
+  flex: 0 0 var(--cover-tab-width);
+  width: var(--cover-tab-width);
+  min-width: var(--cover-tab-width);
+  max-width: var(--cover-tab-width);
+  border-radius: 0;
+  border-left: 0;
+}
+
+.page-tabs button.active {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow:
+    inset 0 0 0 1px rgba(39, 53, 52, 0.18),
+    inset -1px 0 0 rgba(255, 255, 255, 0.52);
+  color: #273534;
+}
+
+.page-tabs button.active:last-child {
+  box-shadow: inset 0 0 0 1px rgba(39, 53, 52, 0.18);
+}
+
+.booklet-page {
+  --booklet-page-color: rgb(252, 252, 252);
+  --booklet-line-height: 1.72;
+  --booklet-padding-top: clamp(28px, 5vw, 58px);
+  --booklet-padding-right: clamp(26px, 5vw, 58px);
+  --booklet-padding-bottom: clamp(34px, 5vw, 62px);
+  --booklet-padding-left: clamp(26px, 5vw, 58px);
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  padding: var(--booklet-padding-top) var(--booklet-padding-right) var(--booklet-padding-bottom)
+    var(--booklet-padding-left);
+  background: var(--booklet-page-color);
+  color: #111;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  font-size: 0.98rem;
+  line-height: var(--booklet-line-height);
+  border-radius: 0;
+}
+
+.booklet-page:not(.exact-page) {
+  box-shadow: 0 12px 28px rgba(20, 24, 27, 0.22);
+}
+
+.booklet-page.exact-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.exact-page-frame {
+  position: relative;
+  flex: 0 0 auto;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: 1247 / 1772;
+  background: white;
+  box-shadow: 0 12px 28px rgba(20, 24, 27, 0.22);
+  border-radius: 0;
+}
+
+.exact-page-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  background: white;
+  border-radius: 0;
+}
+
+.page-image-mark-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.page-image-mark {
+  position: absolute;
+  top: var(--mark-y);
+  left: var(--mark-x);
+  width: var(--mark-width);
+  height: var(--mark-height);
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+}
+
+.page-image-mark::after {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  content: "";
+}
+
+.page-image-mark.selected::after {
+  background: #111;
+}
+
+.page-image-mark.review-correct::after {
+  background: #c73228;
+}
+
+.page-image-mark:focus-visible {
+  outline: 2px solid #1f6f5b;
+  outline-offset: 3px;
+}
+
+.page-number {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  margin-bottom: 14px;
+  color: #111;
+  font-family: "Times New Roman", serif;
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.booklet-page h2 {
+  display: inline-block;
+  border: 0;
+  margin: 0 0 0.7em;
+  padding: 0;
+  color: #111;
+  font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 900;
+}
+
+.booklet-page h3 {
+  margin: 1.4em 0 0.45em;
+  color: #111;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.booklet-page p {
+  margin: 0.35em 0;
+  color: #111;
+  font-size: 0.98rem;
+}
+
+.formula-block {
+  margin: 12px auto;
+  overflow-x: auto;
+  text-align: center;
+}
+
+.question-block {
+  border-top: 0;
+  margin-top: 0.8em;
+  padding-top: 0;
+}
+
+.question-block h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  margin: 0.4em 0 0.65em;
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
+.mark-label,
+.latex-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.3em;
+  height: 1.35em;
+  border: 2px solid #111;
+  margin-right: 0.4em;
+  background: var(--booklet-page-color);
+  color: #111;
+  font-family: "Times New Roman", serif;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.question-grade-anchor {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.question-grade-anchor .mark-label {
+  margin-right: 0;
+}
+
+.grade-stamp {
+  width: 44px;
+  height: 44px;
+  stroke: #c73228;
+  stroke-width: 7;
+  fill: transparent;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.question-grade-anchor .grade-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  transform: translate(-50%, -50%);
+}
+
+.page-image-grade-stamp {
+  position: absolute;
+  top: var(--grade-y);
+  left: var(--grade-x);
+  z-index: 4;
+  width: max(4.4%, var(--grade-size));
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.page-image-grade-stamp .grade-stamp {
+  width: 100%;
+  height: 100%;
+}
+
+.choice-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0;
+  border: 1.4px solid #111;
+  margin: 0.65em 0 0.9em;
+}
+
+.choice-button {
+  display: grid;
+  grid-template-columns: 1.9em 1fr;
+  align-items: center;
+  gap: 0.45em;
+  border: 0;
+  border-right: 1px solid #111;
+  border-radius: 0;
+  background: var(--booklet-page-color);
+  color: #111;
+  padding: 0.42em 0.55em;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  text-align: left;
+}
+
+.choice-button:last-child {
+  border-right: 0;
+}
+
+.choice-button.selected {
+  border-color: #222;
+  background: #222;
+  color: #fff;
+}
+
+.choice-button.selected .choice-index {
+  border-color: #fff;
+  background: #fff;
+  color: #222;
+}
+
+.choice-button.correct-choice {
+  border-color: #c73228;
+  background: #c73228;
+  color: #c73228;
+}
+
+.choice-button.wrong-choice {
+  border-color: #222;
+  background: #222;
+  color: #222;
+}
+
+.choice-button.selected.wrong-choice,
+.choice-button.selected.correct-choice {
+  border-color: #222;
+  background: #222;
+  color: #fff;
+}
+
+.choice-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35em;
+  height: 1.35em;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 900;
+}
+
+.problem-figure {
+  border: 0;
+  margin: 1em 0;
+  padding: 0;
+  text-align: center;
+}
+
+.problem-figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.problem-figure pre {
+  overflow-x: auto;
+  margin: 0;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.86rem;
+}
+
+.problem-figure figcaption {
+  margin-top: 0.35em;
+  color: #333;
+  font-size: 0.75rem;
+}
+
+.booklet-note,
+.explanation {
+  border-left: 4px solid #b77d2d;
+  margin: 12px 0 0;
+  background: #fff6df;
+  padding: 10px 12px;
+}
+
+.exam-layout .exam-toolbar {
+  position: relative;
+  align-items: flex-start;
+  flex-shrink: 0;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.exam-mode-background .toolbar-metrics {
+  position: absolute;
+  top: 12px;
+  right: 10px;
+}
+
+.exam-mode-background .stopwatch-timer {
+  transform: translateY(-10px);
+}
+
+.exam-mode-background .mark-sheet {
+  height: calc(100% - 118px);
+  margin-top: 118px;
+}
