@@ -214,8 +214,10 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     return () => {
       window.removeEventListener("resize", resizeCanvas);
       resizeObserver?.disconnect();
-      if (animationFrameRef.current !== null && typeof window.cancelAnimationFrame === "function") {
-        window.cancelAnimationFrame(animationFrameRef.current);
+      const frameId = animationFrameRef.current;
+      animationFrameRef.current = null;
+      if (frameId !== null && typeof window.cancelAnimationFrame === "function") {
+        window.cancelAnimationFrame(frameId);
       }
     };
   }, [resizeCanvas]);

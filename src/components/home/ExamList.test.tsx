@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../../data/sampleExam";
 import { useHomePencilDrawing } from "../../hooks/useHomePencilDrawing";
@@ -64,6 +65,90 @@ function PencilExclusionHarness() {
 }
 
 describe("ExamList", () => {
+  it("continues scheduling and painting animation frames in StrictMode", () => {
+    const scheduledFrames = new Map<number, FrameRequestCallback>();
+    let nextFrameId = 0;
+    const requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+      const frameId = ++nextFrameId;
+      scheduledFrames.set(frameId, callback);
+      return frameId;
+    });
+    const cancelAnimationFrame = vi.fn((frameId: number) => {
+      scheduledFrames.delete(frameId);
+    });
+    vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
+    vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
+
+    let unmount: (() => void) | undefined;
+
+    try {
+      const { stroke } = installCanvasContext();
+      ({ unmount } = render(
+        <StrictMode>
+          <ExamList
+            exams={sampleExams}
+            onDelete={vi.fn()}
+            onEdit={vi.fn()}
+            onOpenEditor={vi.fn()}
+            onSelect={vi.fn()}
+          />
+        </StrictMode>
+      ));
+
+      const surface = screen.getByRole("main").parentElement;
+      if (!surface) {
+        throw new Error("home pencil surface was not rendered");
+      }
+
+      const runNextAnimationFrame = () => {
+        const nextFrame = scheduledFrames.entries().next().value as [number, FrameRequestCallback] | undefined;
+        if (!nextFrame) {
+          throw new Error("no animation frame was scheduled");
+        }
+
+        const [frameId, callback] = nextFrame;
+        scheduledFrames.delete(frameId);
+        callback(performance.now());
+      };
+
+      expect(requestAnimationFrame).toHaveBeenCalledTimes(2);
+      expect(cancelAnimationFrame).toHaveBeenCalledTimes(1);
+      expect(scheduledFrames.size).toBe(1);
+
+      act(runNextAnimationFrame);
+      installPointerCapture(surface);
+
+      fireEvent.pointerDown(surface, {
+        button: 0,
+        clientX: 20,
+        clientY: 20,
+        pointerId: 41,
+        pointerType: "mouse"
+      });
+      fireEvent.pointerMove(surface, {
+        buttons: 1,
+        clientX: 25,
+        clientY: 22,
+        pointerId: 41,
+        pointerType: "mouse"
+      });
+
+      expect(scheduledFrames.size).toBe(1);
+      act(runNextAnimationFrame);
+      expect(stroke).toHaveBeenCalled();
+
+      const strokeCountBeforePointerUp = stroke.mock.calls.length;
+      fireEvent.pointerUp(surface, { clientX: 25, clientY: 22, pointerId: 41, pointerType: "mouse" });
+
+      expect(scheduledFrames.size).toBe(1);
+      act(runNextAnimationFrame);
+      expect(stroke.mock.calls.length).toBeGreaterThan(strokeCountBeforePointerUp);
+    } finally {
+      unmount?.();
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("uses a full-page surface and preserves the threshold, capture, and clear behavior", async () => {
     const { clearRect, stroke } = installCanvasContext();
     render(
