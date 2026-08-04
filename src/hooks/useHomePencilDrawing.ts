@@ -1,7 +1,16 @@
-import { useCallback, useEffect, useRef, useState, type PointerEventHandler, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type DragEventHandler,
+  type PointerEventHandler,
+  type RefObject
+} from "react";
 
 const DRAG_START_DISTANCE = 3;
 const GRAPHITE_COLOR = "58, 63, 61";
+const PENCIL_DRAGGING_CLASS = "is-pencil-dragging";
 const DRAWING_EXCLUSION_SELECTOR = [
   "a",
   "button",
@@ -42,6 +51,7 @@ interface HomePencilDrawing {
   clearDrawing: () => void;
   hasDrawing: boolean;
   pointerHandlers: {
+    onDragStart: DragEventHandler<HTMLElement>;
     onLostPointerCapture: PointerEventHandler<HTMLElement>;
     onPointerCancel: PointerEventHandler<HTMLElement>;
     onPointerDown: PointerEventHandler<HTMLElement>;
@@ -207,13 +217,15 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     resizeCanvas();
     window.addEventListener("resize", resizeCanvas);
     const resizeObserver = typeof ResizeObserver === "function" ? new ResizeObserver(resizeCanvas) : null;
-    if (rootRef.current) {
-      resizeObserver?.observe(rootRef.current);
+    const root = rootRef.current;
+    if (root) {
+      resizeObserver?.observe(root);
     }
 
     return () => {
       window.removeEventListener("resize", resizeCanvas);
       resizeObserver?.disconnect();
+      root?.classList.remove(PENCIL_DRAGGING_CLASS);
       const frameId = animationFrameRef.current;
       animationFrameRef.current = null;
       if (frameId !== null && typeof window.cancelAnimationFrame === "function") {
@@ -229,6 +241,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
         return;
       }
 
+      root.classList.remove(PENCIL_DRAGGING_CLASS);
       if (activeStroke.drawing && activeStroke.points.length > 1) {
         strokesRef.current.push({ points: activeStroke.points, seed: activeStroke.seed });
       }
@@ -251,6 +264,9 @@ export function useHomePencilDrawing(): HomePencilDrawing {
       return;
     }
 
+    event.preventDefault();
+    window.getSelection()?.removeAllRanges();
+    event.currentTarget.classList.add(PENCIL_DRAGGING_CLASS);
     const bounds = event.currentTarget.getBoundingClientRect();
     const startPoint: PencilPoint = {
       x: event.clientX - bounds.left,
@@ -327,9 +343,14 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     [finishStroke]
   );
 
+  const onDragStart = useCallback<DragEventHandler<HTMLElement>>((event) => {
+    event.preventDefault();
+  }, []);
+
   const clearDrawing = useCallback(() => {
     strokesRef.current = [];
     activeStrokeRef.current = null;
+    rootRef.current?.classList.remove(PENCIL_DRAGGING_CLASS);
     setHasDrawing(false);
     scheduleDrawing();
   }, [scheduleDrawing]);
@@ -339,6 +360,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     clearDrawing,
     hasDrawing,
     pointerHandlers: {
+      onDragStart,
       onLostPointerCapture,
       onPointerCancel,
       onPointerDown,

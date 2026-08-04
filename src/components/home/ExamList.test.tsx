@@ -47,6 +47,12 @@ function dragFrom(target: Element, surface: HTMLElement, pointerId: number, poin
   fireEvent.pointerUp(surface, { clientX: 25, clientY: 22, pointerId, pointerType });
 }
 
+function dispatchPointerEvent(target: Element, type: string, init: PointerEventInit) {
+  const event = new PointerEvent(type, { bubbles: true, cancelable: true, ...init });
+  fireEvent(target, event);
+  return event;
+}
+
 function PencilExclusionHarness() {
   const { canvasRef, hasDrawing, pointerHandlers, rootRef } = useHomePencilDrawing();
 
@@ -206,6 +212,97 @@ describe("ExamList", () => {
     expect(stroke).not.toHaveBeenCalled();
   });
 
+  it("prevents selection on pointerdown and clears the dragging class on every finish path", () => {
+    const { unmount } = render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const surface = screen.getByRole("main").parentElement;
+    if (!surface) {
+      throw new Error("home pencil surface was not rendered");
+    }
+
+    installPointerCapture(surface);
+    ["pointerup", "pointercancel", "lostpointercapture"].forEach((finishEvent, index) => {
+      const pointerId = index + 51;
+      const pointerDown = dispatchPointerEvent(surface, "pointerdown", {
+        button: 0,
+        clientX: 20,
+        clientY: 20,
+        pointerId,
+        pointerType: "mouse"
+      });
+
+      expect(pointerDown.defaultPrevented).toBe(true);
+      expect(surface).toHaveClass("is-pencil-dragging");
+
+      dispatchPointerEvent(surface, finishEvent, {
+        clientX: 20,
+        clientY: 20,
+        pointerId,
+        pointerType: "mouse"
+      });
+
+      expect(surface).not.toHaveClass("is-pencil-dragging");
+    });
+
+    const pointerDown = dispatchPointerEvent(surface, "pointerdown", {
+      button: 0,
+      clientX: 20,
+      clientY: 20,
+      pointerId: 54,
+      pointerType: "mouse"
+    });
+    expect(pointerDown.defaultPrevented).toBe(true);
+    expect(surface).toHaveClass("is-pencil-dragging");
+
+    unmount();
+    expect(surface).not.toHaveClass("is-pencil-dragging");
+  });
+
+  it("clears the dragging class when the drawing is cleared", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const surface = screen.getByRole("main").parentElement;
+    if (!surface) {
+      throw new Error("home pencil surface was not rendered");
+    }
+
+    installPointerCapture(surface);
+    dispatchPointerEvent(surface, "pointerdown", {
+      button: 0,
+      clientX: 20,
+      clientY: 20,
+      pointerId: 55,
+      pointerType: "mouse"
+    });
+    fireEvent.pointerMove(surface, {
+      buttons: 1,
+      clientX: 25,
+      clientY: 22,
+      pointerId: 55,
+      pointerType: "mouse"
+    });
+
+    expect(surface).toHaveClass("is-pencil-dragging");
+    fireEvent.click(screen.getByRole("button", { name: "書き込みを消す" }));
+    expect(surface).not.toHaveClass("is-pencil-dragging");
+  });
+
   it("draws from the outer margin, an exam-grid gap, and a non-action part of an article", () => {
     render(
       <ExamList
@@ -295,6 +392,19 @@ describe("ExamList", () => {
       screen.getByText("明示的な除外領域")
     ];
 
+    excludedTargets.slice(0, 2).forEach((target, index) => {
+      const pointerDown = dispatchPointerEvent(target, "pointerdown", {
+        button: 0,
+        clientX: 20,
+        clientY: 20,
+        pointerId: index + 18,
+        pointerType: "mouse"
+      });
+
+      expect(pointerDown.defaultPrevented).toBe(false);
+      expect(surface).not.toHaveClass("is-pencil-dragging");
+    });
+
     excludedTargets.forEach((target, index) => {
       dragFrom(target, surface, index + 20);
       expect(state).toHaveTextContent("empty");
@@ -303,6 +413,27 @@ describe("ExamList", () => {
     dragFrom(surface, surface, 30, "touch");
     expect(state).toHaveTextContent("empty");
     expect(setPointerCapture).not.toHaveBeenCalled();
+  });
+
+  it("prevents native dragstart and marks cover images as non-draggable", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const cover = screen.getByLabelText(`${sampleExams[0].title}の表紙`);
+    const coverImage = cover.querySelector("img");
+    expect(coverImage).not.toBeNull();
+    expect(coverImage).toHaveAttribute("draggable", "false");
+
+    const dragStart = new Event("dragstart", { bubbles: true, cancelable: true });
+    fireEvent(coverImage!, dragStart);
+    expect(dragStart.defaultPrevented).toBe(true);
   });
 
   it("shows the revised card layout and starts the exam", async () => {
