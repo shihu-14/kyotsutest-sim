@@ -1,3 +1,37 @@
+.home-pencil-screen {
+  position: relative;
+  isolation: isolate;
+}
+
+.home-pencil-screen > :not(.home-pencil-canvas) {
+  position: relative;
+  z-index: 1;
+}
+
+.home-pencil-canvas {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.home-actions .home-pencil-clear {
+  flex: 0 0 auto;
+  border-radius: 0;
+  color: rgba(54, 75, 71, 0.78);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding-inline: 3px;
+  text-decoration: underline;
+  text-decoration-color: rgba(54, 75, 71, 0.28);
+  text-underline-offset: 3px;
+}
+
+.home-actions .home-pencil-clear:disabled {
+  opacity: 0.42;
+}
+
 .exam-tile,
 .cover-sheet,
 .booklet-page,

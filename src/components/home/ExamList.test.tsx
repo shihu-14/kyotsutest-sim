@@ -1,10 +1,124 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../../data/sampleExam";
 import { ExamList } from "./ExamList";
 
 describe("ExamList", () => {
+  it("draws only after a three-pixel mouse drag and clears the writing", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const root = screen.getByRole("main");
+    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
+    const capturedPointers = new Set<number>();
+    const setPointerCapture = vi.fn((pointerId: number) => capturedPointers.add(pointerId));
+    const releasePointerCapture = vi.fn((pointerId: number) => capturedPointers.delete(pointerId));
+    Object.defineProperties(root, {
+      hasPointerCapture: { configurable: true, value: (pointerId: number) => capturedPointers.has(pointerId) },
+      releasePointerCapture: { configurable: true, value: releasePointerCapture },
+      setPointerCapture: { configurable: true, value: setPointerCapture }
+    });
+
+    expect(root.querySelector(".home-pencil-canvas")).toHaveAttribute("aria-hidden", "true");
+    expect(clearButton).toBeDisabled();
+
+    fireEvent.pointerDown(root, { button: 0, clientX: 20, clientY: 20, pointerId: 7, pointerType: "mouse" });
+    fireEvent.pointerUp(root, { clientX: 20, clientY: 20, pointerId: 7, pointerType: "mouse" });
+    expect(clearButton).toBeDisabled();
+
+    fireEvent.pointerDown(root, { button: 0, clientX: 20, clientY: 20, pointerId: 8, pointerType: "mouse" });
+    fireEvent.pointerMove(root, { buttons: 1, clientX: 22, clientY: 20, pointerId: 8, pointerType: "mouse" });
+    expect(clearButton).toBeDisabled();
+
+    fireEvent.pointerMove(root, { buttons: 1, clientX: 24, clientY: 20, pointerId: 8, pointerType: "mouse" });
+    expect(clearButton).toBeEnabled();
+    expect(setPointerCapture).toHaveBeenCalledWith(8);
+
+    fireEvent.pointerUp(root, { clientX: 24, clientY: 20, pointerId: 8, pointerType: "mouse" });
+    expect(releasePointerCapture).toHaveBeenCalledWith(8);
+
+    fireEvent.click(clearButton);
+    expect(clearButton).toBeDisabled();
+  });
+
+  it("accepts pen input and captures it after the drag threshold", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const root = screen.getByRole("main");
+    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
+    const setPointerCapture = vi.fn();
+    Object.defineProperty(root, "setPointerCapture", { configurable: true, value: setPointerCapture });
+
+    fireEvent.pointerDown(root, {
+      button: 0,
+      clientX: 10,
+      clientY: 10,
+      pointerId: 5,
+      pointerType: "pen",
+      pressure: 0.2
+    });
+    fireEvent.pointerMove(root, {
+      buttons: 1,
+      clientX: 14,
+      clientY: 12,
+      pointerId: 5,
+      pointerType: "pen",
+      pressure: 0.8
+    });
+
+    expect(clearButton).toBeEnabled();
+    expect(setPointerCapture).toHaveBeenCalledWith(5);
+  });
+
+  it("ignores drawing gestures that start on cards or use touch input", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const root = screen.getByRole("main");
+    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
+    const card = screen.getByRole("heading", { name: sampleExams[0].title }).closest("article");
+    expect(card).not.toBeNull();
+    const startButton = within(card!).getByRole("button", { name: "試験を始める" });
+
+    fireEvent.pointerDown(startButton, { button: 0, clientX: 20, clientY: 20, pointerId: 2, pointerType: "mouse" });
+    fireEvent.pointerMove(root, { buttons: 1, clientX: 40, clientY: 40, pointerId: 2, pointerType: "mouse" });
+    fireEvent.pointerUp(root, { clientX: 40, clientY: 40, pointerId: 2, pointerType: "mouse" });
+    expect(clearButton).toBeDisabled();
+
+    fireEvent.pointerDown(card!, { button: 0, clientX: 20, clientY: 20, pointerId: 3, pointerType: "mouse" });
+    fireEvent.pointerMove(root, { buttons: 1, clientX: 40, clientY: 40, pointerId: 3, pointerType: "mouse" });
+    fireEvent.pointerUp(root, { clientX: 40, clientY: 40, pointerId: 3, pointerType: "mouse" });
+    expect(clearButton).toBeDisabled();
+
+    fireEvent.pointerDown(root, { button: 0, clientX: 20, clientY: 20, pointerId: 4, pointerType: "touch" });
+    fireEvent.pointerMove(root, { buttons: 1, clientX: 40, clientY: 40, pointerId: 4, pointerType: "touch" });
+    fireEvent.pointerUp(root, { clientX: 40, clientY: 40, pointerId: 4, pointerType: "touch" });
+    expect(clearButton).toBeDisabled();
+  });
+
   it("shows the revised card layout and starts the exam", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();

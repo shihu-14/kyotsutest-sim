@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useHomePencilDrawing } from "../../hooks/useHomePencilDrawing";
 import type { Exam } from "../../types";
 import { EditorDesignPreview } from "../design-previews/EditorDesignPreview";
 import { ExamDesignPreview } from "../design-previews/ExamDesignPreview";
@@ -21,14 +22,24 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
   >("exams");
   const authoringDisabled = true;
   const previewExam = exams.find((exam) => exam.pages.some((page) => page.pageImageUrl)) ?? exams[0];
+  const { canvasRef, clearDrawing, hasDrawing, pointerHandlers, rootRef } = useHomePencilDrawing();
 
   return (
-    <main className="screen screen-narrow">
-      <header className="screen-heading">
+    <main className="screen screen-narrow home-pencil-screen" ref={rootRef} {...pointerHandlers}>
+      <canvas aria-hidden="true" className="home-pencil-canvas" ref={canvasRef} />
+      <header className="screen-heading" data-pencil-drawing-exclusion>
         <div>
           <h1>共通テスト形式 ウェブ模試</h1>
         </div>
         <div className="home-actions">
+          <button
+            className="text-button home-pencil-clear"
+            disabled={!hasDrawing}
+            type="button"
+            onClick={clearDrawing}
+          >
+            書き込みを消す
+          </button>
           {homeMode !== "exams" ? (
             <button className="secondary-button" type="button" onClick={() => setHomeMode("exams")}>
               試験一覧
