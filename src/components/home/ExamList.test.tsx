@@ -1,55 +1,71 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../../data/sampleExam";
+import { useHomePencilDrawing } from "../../hooks/useHomePencilDrawing";
 import { ExamList } from "./ExamList";
 
-describe("ExamList", () => {
-  it("draws only after a three-pixel mouse drag and clears the writing", () => {
-    render(
-      <ExamList
-        exams={sampleExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
-
-    const root = screen.getByRole("main");
-    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
-    const capturedPointers = new Set<number>();
-    const setPointerCapture = vi.fn((pointerId: number) => capturedPointers.add(pointerId));
-    const releasePointerCapture = vi.fn((pointerId: number) => capturedPointers.delete(pointerId));
-    Object.defineProperties(root, {
-      hasPointerCapture: { configurable: true, value: (pointerId: number) => capturedPointers.has(pointerId) },
-      releasePointerCapture: { configurable: true, value: releasePointerCapture },
-      setPointerCapture: { configurable: true, value: setPointerCapture }
-    });
-
-    expect(root.querySelector(".home-pencil-canvas")).toHaveAttribute("aria-hidden", "true");
-    expect(clearButton).toBeDisabled();
-
-    fireEvent.pointerDown(root, { button: 0, clientX: 20, clientY: 20, pointerId: 7, pointerType: "mouse" });
-    fireEvent.pointerUp(root, { clientX: 20, clientY: 20, pointerId: 7, pointerType: "mouse" });
-    expect(clearButton).toBeDisabled();
-
-    fireEvent.pointerDown(root, { button: 0, clientX: 20, clientY: 20, pointerId: 8, pointerType: "mouse" });
-    fireEvent.pointerMove(root, { buttons: 1, clientX: 22, clientY: 20, pointerId: 8, pointerType: "mouse" });
-    expect(clearButton).toBeDisabled();
-
-    fireEvent.pointerMove(root, { buttons: 1, clientX: 24, clientY: 20, pointerId: 8, pointerType: "mouse" });
-    expect(clearButton).toBeEnabled();
-    expect(setPointerCapture).toHaveBeenCalledWith(8);
-
-    fireEvent.pointerUp(root, { clientX: 24, clientY: 20, pointerId: 8, pointerType: "mouse" });
-    expect(releasePointerCapture).toHaveBeenCalledWith(8);
-
-    fireEvent.click(clearButton);
-    expect(clearButton).toBeDisabled();
+function installPointerCapture(element: HTMLElement) {
+  const capturedPointers = new Set<number>();
+  const setPointerCapture = vi.fn((pointerId: number) => capturedPointers.add(pointerId));
+  const releasePointerCapture = vi.fn((pointerId: number) => capturedPointers.delete(pointerId));
+  Object.defineProperties(element, {
+    hasPointerCapture: { configurable: true, value: (pointerId: number) => capturedPointers.has(pointerId) },
+    releasePointerCapture: { configurable: true, value: releasePointerCapture },
+    setPointerCapture: { configurable: true, value: setPointerCapture }
   });
 
-  it("accepts pen input and captures it after the drag threshold", () => {
+  return { releasePointerCapture, setPointerCapture };
+}
+
+function installCanvasContext() {
+  const clearRect = vi.fn();
+  const stroke = vi.fn();
+  const context = {
+    beginPath: vi.fn(),
+    clearRect,
+    lineCap: "butt",
+    lineDashOffset: 0,
+    lineJoin: "miter",
+    lineTo: vi.fn(),
+    lineWidth: 1,
+    moveTo: vi.fn(),
+    setLineDash: vi.fn(),
+    setTransform: vi.fn(),
+    stroke,
+    strokeStyle: "#000"
+  } as unknown as CanvasRenderingContext2D;
+  vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValue(context);
+
+  return { clearRect, stroke };
+}
+
+function dragFrom(target: Element, surface: HTMLElement, pointerId: number, pointerType = "mouse") {
+  fireEvent.pointerDown(target, { button: 0, clientX: 20, clientY: 20, pointerId, pointerType });
+  fireEvent.pointerMove(surface, { buttons: 1, clientX: 25, clientY: 22, pointerId, pointerType });
+  fireEvent.pointerUp(surface, { clientX: 25, clientY: 22, pointerId, pointerType });
+}
+
+function PencilExclusionHarness() {
+  const { canvasRef, hasDrawing, pointerHandlers, rootRef } = useHomePencilDrawing();
+
+  return (
+    <div className="pencil-exclusion-harness" ref={rootRef} {...pointerHandlers}>
+      <canvas ref={canvasRef} />
+      <a href="#pencil-link">リンク</a>
+      <button type="button">ボタン</button>
+      <details>
+        <summary>設定</summary>
+      </details>
+      <div data-pencil-drawing-exclusion>明示的な除外領域</div>
+      <span data-testid="drawing-state">{hasDrawing ? "drawing" : "empty"}</span>
+    </div>
+  );
+}
+
+describe("ExamList", () => {
+  it("uses a full-page surface and preserves the threshold, capture, and clear behavior", async () => {
+    const { clearRect, stroke } = installCanvasContext();
     render(
       <ExamList
         exams={sampleExams}
@@ -60,12 +76,101 @@ describe("ExamList", () => {
       />
     );
 
-    const root = screen.getByRole("main");
-    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
-    const setPointerCapture = vi.fn();
-    Object.defineProperty(root, "setPointerCapture", { configurable: true, value: setPointerCapture });
+    const main = screen.getByRole("main");
+    const surface = main.parentElement;
+    expect(surface).toHaveClass("home-pencil-surface");
+    if (!surface) {
+      throw new Error("home pencil surface was not rendered");
+    }
 
-    fireEvent.pointerDown(root, {
+    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
+    const { releasePointerCapture, setPointerCapture } = installPointerCapture(surface);
+
+    expect(surface.querySelector(":scope > .home-pencil-canvas")).toHaveAttribute("aria-hidden", "true");
+    expect(surface.querySelector(":scope > main")).toBe(main);
+    expect(clearButton).toBeDisabled();
+
+    fireEvent.pointerDown(surface, { button: 0, clientX: 20, clientY: 20, pointerId: 7, pointerType: "mouse" });
+    expect(setPointerCapture).toHaveBeenCalledWith(7);
+    fireEvent.pointerMove(surface, { buttons: 1, clientX: 22, clientY: 20, pointerId: 7, pointerType: "mouse" });
+    expect(clearButton).toBeDisabled();
+    fireEvent.pointerUp(surface, { clientX: 22, clientY: 20, pointerId: 7, pointerType: "mouse" });
+    expect(releasePointerCapture).toHaveBeenCalledWith(7);
+
+    fireEvent.pointerDown(surface, { button: 0, clientX: 20, clientY: 20, pointerId: 8, pointerType: "mouse" });
+    expect(setPointerCapture).toHaveBeenCalledWith(8);
+    fireEvent.pointerMove(surface, { buttons: 1, clientX: 24, clientY: 20, pointerId: 8, pointerType: "mouse" });
+    expect(clearButton).toBeEnabled();
+    await waitFor(() => expect(stroke).toHaveBeenCalled());
+
+    const strokeCountBeforePointerUp = stroke.mock.calls.length;
+    fireEvent.pointerUp(surface, { clientX: 24, clientY: 20, pointerId: 8, pointerType: "mouse" });
+    expect(releasePointerCapture).toHaveBeenCalledWith(8);
+    await waitFor(() => expect(stroke.mock.calls.length).toBeGreaterThan(strokeCountBeforePointerUp));
+
+    clearRect.mockClear();
+    stroke.mockClear();
+    fireEvent.click(clearButton);
+    expect(clearButton).toBeDisabled();
+    await waitFor(() => expect(clearRect).toHaveBeenCalled());
+    expect(stroke).not.toHaveBeenCalled();
+
+    const clearCountBeforeResize = clearRect.mock.calls.length;
+    fireEvent(window, new Event("resize"));
+    await waitFor(() => expect(clearRect.mock.calls.length).toBeGreaterThan(clearCountBeforeResize));
+    expect(stroke).not.toHaveBeenCalled();
+  });
+
+  it("draws from the outer margin, an exam-grid gap, and a non-action part of an article", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const surface = screen.getByRole("main").parentElement;
+    if (!surface) {
+      throw new Error("home pencil surface was not rendered");
+    }
+
+    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
+    installPointerCapture(surface);
+    const grid = screen.getByRole("region", { name: "公開中の試験一覧" });
+    const article = screen.getByRole("heading", { name: sampleExams[0].title }).closest("article");
+    expect(article).not.toBeNull();
+
+    [surface, grid, article!].forEach((target, index) => {
+      dragFrom(target, surface, index + 10);
+      expect(clearButton).toBeEnabled();
+      fireEvent.click(clearButton);
+      expect(clearButton).toBeDisabled();
+    });
+  });
+
+  it("captures pen input on pointerdown and draws only after the threshold", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const surface = screen.getByRole("main").parentElement;
+    if (!surface) {
+      throw new Error("home pencil surface was not rendered");
+    }
+
+    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
+    const { setPointerCapture } = installPointerCapture(surface);
+
+    fireEvent.pointerDown(surface, {
       button: 0,
       clientX: 10,
       clientY: 10,
@@ -73,7 +178,10 @@ describe("ExamList", () => {
       pointerType: "pen",
       pressure: 0.2
     });
-    fireEvent.pointerMove(root, {
+    expect(setPointerCapture).toHaveBeenCalledWith(5);
+    expect(clearButton).toBeDisabled();
+
+    fireEvent.pointerMove(surface, {
       buttons: 1,
       clientX: 14,
       clientY: 12,
@@ -83,40 +191,33 @@ describe("ExamList", () => {
     });
 
     expect(clearButton).toBeEnabled();
-    expect(setPointerCapture).toHaveBeenCalledWith(5);
   });
 
-  it("ignores drawing gestures that start on cards or use touch input", () => {
-    render(
-      <ExamList
-        exams={sampleExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+  it("does not capture or draw from buttons, links, summaries, explicit exclusions, or touch", () => {
+    render(<PencilExclusionHarness />);
 
-    const root = screen.getByRole("main");
-    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
-    const card = screen.getByRole("heading", { name: sampleExams[0].title }).closest("article");
-    expect(card).not.toBeNull();
-    const startButton = within(card!).getByRole("button", { name: "試験を始める" });
+    const surface = document.querySelector<HTMLElement>(".pencil-exclusion-harness");
+    if (!surface) {
+      throw new Error("pencil exclusion harness was not rendered");
+    }
 
-    fireEvent.pointerDown(startButton, { button: 0, clientX: 20, clientY: 20, pointerId: 2, pointerType: "mouse" });
-    fireEvent.pointerMove(root, { buttons: 1, clientX: 40, clientY: 40, pointerId: 2, pointerType: "mouse" });
-    fireEvent.pointerUp(root, { clientX: 40, clientY: 40, pointerId: 2, pointerType: "mouse" });
-    expect(clearButton).toBeDisabled();
+    const { setPointerCapture } = installPointerCapture(surface);
+    const state = screen.getByTestId("drawing-state");
+    const excludedTargets = [
+      screen.getByRole("button", { name: "ボタン" }),
+      screen.getByRole("link", { name: "リンク" }),
+      screen.getByText("設定"),
+      screen.getByText("明示的な除外領域")
+    ];
 
-    fireEvent.pointerDown(card!, { button: 0, clientX: 20, clientY: 20, pointerId: 3, pointerType: "mouse" });
-    fireEvent.pointerMove(root, { buttons: 1, clientX: 40, clientY: 40, pointerId: 3, pointerType: "mouse" });
-    fireEvent.pointerUp(root, { clientX: 40, clientY: 40, pointerId: 3, pointerType: "mouse" });
-    expect(clearButton).toBeDisabled();
+    excludedTargets.forEach((target, index) => {
+      dragFrom(target, surface, index + 20);
+      expect(state).toHaveTextContent("empty");
+    });
 
-    fireEvent.pointerDown(root, { button: 0, clientX: 20, clientY: 20, pointerId: 4, pointerType: "touch" });
-    fireEvent.pointerMove(root, { buttons: 1, clientX: 40, clientY: 40, pointerId: 4, pointerType: "touch" });
-    fireEvent.pointerUp(root, { clientX: 40, clientY: 40, pointerId: 4, pointerType: "touch" });
-    expect(clearButton).toBeDisabled();
+    dragFrom(surface, surface, 30, "touch");
+    expect(state).toHaveTextContent("empty");
+    expect(setPointerCapture).not.toHaveBeenCalled();
   });
 
   it("shows the revised card layout and starts the exam", async () => {

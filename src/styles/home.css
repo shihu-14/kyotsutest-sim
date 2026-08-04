@@ -1,9 +1,11 @@
-.home-pencil-screen {
+.home-pencil-surface {
   position: relative;
+  width: 100%;
+  min-height: 100vh;
   isolation: isolate;
 }
 
-.home-pencil-screen > :not(.home-pencil-canvas) {
+.home-pencil-surface > .screen {
   position: relative;
   z-index: 1;
 }
