@@ -5,6 +5,12 @@
   isolation: isolate;
 }
 
+.home-pencil-surface.is-pencil-dragging,
+.home-pencil-surface.is-pencil-dragging * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .home-pencil-surface > .screen {
   position: relative;
   z-index: 1;

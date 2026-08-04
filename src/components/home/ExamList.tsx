@@ -166,7 +166,7 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
                     </div>
                     <div className="exam-cover-thumb" aria-label={`${exam.title}の表紙`}>
                       {exam.coverImageUrl ? (
-                        <img src={exam.coverImageUrl} alt="" />
+                        <img src={exam.coverImageUrl} alt="" draggable={false} />
                       ) : (
                         <div className="cover-placeholder" />
                       )}
