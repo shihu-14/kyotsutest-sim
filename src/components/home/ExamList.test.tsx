@@ -1,10 +1,11 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../../data/sampleExam";
 import { useHomePencilDrawing } from "../../hooks/useHomePencilDrawing";
 import { ExamList } from "./ExamList";
+import { HomeDrawingTools } from "./HomeDrawingTools";
 
 function installPointerCapture(element: HTMLElement) {
   const capturedPointers = new Set<number>();
@@ -21,24 +22,50 @@ function installPointerCapture(element: HTMLElement) {
 
 function installCanvasContext() {
   const clearRect = vi.fn();
-  const stroke = vi.fn();
+  const renderEvents: string[] = [];
+  const fillRect = vi.fn(() => renderEvents.push("erase"));
+  const stroke = vi.fn(() => renderEvents.push("stroke"));
+  let compositeOperation = "source-over";
   const context = {
     beginPath: vi.fn(),
     clearRect,
+    fillRect,
+    fillStyle: "#000",
     lineCap: "butt",
     lineDashOffset: 0,
     lineJoin: "miter",
     lineTo: vi.fn(),
     lineWidth: 1,
     moveTo: vi.fn(),
+    restore: vi.fn(),
+    rotate: vi.fn(),
+    save: vi.fn(),
     setLineDash: vi.fn(),
     setTransform: vi.fn(),
     stroke,
-    strokeStyle: "#000"
+    strokeStyle: "#000",
+    translate: vi.fn()
   } as unknown as CanvasRenderingContext2D;
+  Object.defineProperty(context, "globalCompositeOperation", {
+    configurable: true,
+    get: () => compositeOperation,
+    set: (value: string) => {
+      compositeOperation = value;
+      renderEvents.push(value);
+    }
+  });
   vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValue(context);
 
-  return { clearRect, stroke };
+  return { clearRect, context, fillRect, renderEvents, stroke };
+}
+
+function pickTool(kind: "pencil" | "eraser", pointerType = "mouse") {
+  const label = kind === "pencil" ? "鉛筆を拾う" : "消しゴムを拾う";
+  const tool = screen.getByRole("button", { name: label });
+  expect(tool).toBeEnabled();
+  fireEvent.pointerUp(tool, { clientX: 80, clientY: 80, pointerId: 1, pointerType });
+  expect(tool).toHaveAttribute("data-tool-phase", "held");
+  return tool;
 }
 
 function dragFrom(target: Element, surface: HTMLElement, pointerId: number, pointerType = "mouse") {
@@ -54,7 +81,15 @@ function dispatchPointerEvent(target: Element, type: string, init: PointerEventI
 }
 
 function PencilExclusionHarness() {
-  const { canvasRef, hasDrawing, pointerHandlers, rootRef } = useHomePencilDrawing();
+  const {
+    canvasRef,
+    hasDrawing,
+    pickUpTool,
+    pointerHandlers,
+    registerToolElement,
+    rootRef,
+    toolPhases
+  } = useHomePencilDrawing();
 
   return (
     <div className="pencil-exclusion-harness" ref={rootRef} {...pointerHandlers}>
@@ -64,13 +99,32 @@ function PencilExclusionHarness() {
       <details>
         <summary>設定</summary>
       </details>
+      <article>カードの非操作部分</article>
       <div data-pencil-drawing-exclusion>明示的な除外領域</div>
       <span data-testid="drawing-state">{hasDrawing ? "drawing" : "empty"}</span>
+      <HomeDrawingTools
+        onPickTool={pickUpTool}
+        phases={toolPhases}
+        registerToolElement={registerToolElement}
+      />
     </div>
   );
 }
 
 describe("ExamList", () => {
+  beforeEach(() => {
+    vi.stubGlobal("matchMedia", vi.fn(() => ({
+      addEventListener: vi.fn(),
+      matches: true,
+      media: "(prefers-reduced-motion: reduce)",
+      removeEventListener: vi.fn()
+    })));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("continues scheduling and painting animation frames in StrictMode", () => {
     const scheduledFrames = new Map<number, FrameRequestCallback>();
     let nextFrameId = 0;
@@ -84,6 +138,12 @@ describe("ExamList", () => {
     });
     vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
     vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
+    vi.stubGlobal("matchMedia", vi.fn(() => ({
+      addEventListener: vi.fn(),
+      matches: true,
+      media: "(prefers-reduced-motion: reduce)",
+      removeEventListener: vi.fn()
+    })));
 
     let unmount: (() => void) | undefined;
 
@@ -123,6 +183,7 @@ describe("ExamList", () => {
 
       act(runNextAnimationFrame);
       installPointerCapture(surface);
+      pickTool("pencil");
 
       fireEvent.pointerDown(surface, {
         button: 0,
@@ -155,6 +216,47 @@ describe("ExamList", () => {
     }
   });
 
+  it("rebooks both Canvas and physics frames after the first StrictMode cleanup", () => {
+    const scheduledFrames = new Map<number, FrameRequestCallback>();
+    let nextFrameId = 0;
+    const requestAnimationFrame = vi.fn((callback: FrameRequestCallback) => {
+      const frameId = ++nextFrameId;
+      scheduledFrames.set(frameId, callback);
+      return frameId;
+    });
+    const cancelAnimationFrame = vi.fn((frameId: number) => {
+      scheduledFrames.delete(frameId);
+    });
+    vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
+    vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
+    vi.stubGlobal("matchMedia", vi.fn(() => ({
+      addEventListener: vi.fn(),
+      matches: false,
+      media: "(prefers-reduced-motion: reduce)",
+      removeEventListener: vi.fn()
+    })));
+    installCanvasContext();
+
+    const { unmount } = render(
+      <StrictMode>
+        <ExamList
+          exams={sampleExams}
+          onDelete={vi.fn()}
+          onEdit={vi.fn()}
+          onOpenEditor={vi.fn()}
+          onSelect={vi.fn()}
+        />
+      </StrictMode>
+    );
+
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(4);
+    expect(cancelAnimationFrame).toHaveBeenCalledTimes(2);
+    expect(scheduledFrames.size).toBe(2);
+
+    unmount();
+    expect(scheduledFrames.size).toBe(0);
+  });
+
   it("uses a full-page surface and preserves the threshold, capture, and clear behavior", async () => {
     const { clearRect, stroke } = installCanvasContext();
     render(
@@ -179,8 +281,20 @@ describe("ExamList", () => {
 
     expect(surface.querySelector(":scope > .home-pencil-canvas")).toHaveAttribute("aria-hidden", "true");
     expect(surface.querySelector(":scope > main")).toBe(main);
+    expect(surface.querySelector(":scope > .home-drawing-tool-layer")).toBeInTheDocument();
     expect(clearButton).toBeDisabled();
 
+    const noToolPointerDown = dispatchPointerEvent(surface, "pointerdown", {
+      button: 0,
+      clientX: 20,
+      clientY: 20,
+      pointerId: 6,
+      pointerType: "mouse"
+    });
+    expect(noToolPointerDown.defaultPrevented).toBe(false);
+    expect(setPointerCapture).not.toHaveBeenCalled();
+
+    pickTool("pencil");
     fireEvent.pointerDown(surface, { button: 0, clientX: 20, clientY: 20, pointerId: 7, pointerType: "mouse" });
     expect(setPointerCapture).toHaveBeenCalledWith(7);
     fireEvent.pointerMove(surface, { buttons: 1, clientX: 22, clientY: 20, pointerId: 7, pointerType: "mouse" });
@@ -229,6 +343,7 @@ describe("ExamList", () => {
     }
 
     installPointerCapture(surface);
+    pickTool("pencil");
     ["pointerup", "pointercancel", "lostpointercapture"].forEach((finishEvent, index) => {
       const pointerId = index + 51;
       const pointerDown = dispatchPointerEvent(surface, "pointerdown", {
@@ -283,6 +398,7 @@ describe("ExamList", () => {
     }
 
     installPointerCapture(surface);
+    pickTool("pencil");
     dispatchPointerEvent(surface, "pointerdown", {
       button: 0,
       clientX: 20,
@@ -303,7 +419,57 @@ describe("ExamList", () => {
     expect(surface).not.toHaveClass("is-pencil-dragging");
   });
 
-  it("draws from the outer margin, an exam-grid gap, and a non-action part of an article", () => {
+  it("finishes an active gesture when reduced motion is enabled", () => {
+    let handleMotionChange: ((event: MediaQueryListEvent) => void) | undefined;
+    vi.stubGlobal("matchMedia", vi.fn(() => ({
+      addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+        handleMotionChange = listener;
+      },
+      matches: true,
+      media: "(prefers-reduced-motion: reduce)",
+      removeEventListener: vi.fn()
+    })));
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const surface = screen.getByRole("main").parentElement;
+    if (!surface) {
+      throw new Error("home pencil surface was not rendered");
+    }
+    const { releasePointerCapture } = installPointerCapture(surface);
+    pickTool("pencil");
+    dragFrom(surface, surface, 56);
+    fireEvent.pointerDown(surface, {
+      button: 0,
+      clientX: 30,
+      clientY: 30,
+      pointerId: 57,
+      pointerType: "mouse"
+    });
+    fireEvent.pointerMove(surface, {
+      buttons: 1,
+      clientX: 36,
+      clientY: 32,
+      pointerId: 57,
+      pointerType: "mouse"
+    });
+    expect(surface).toHaveClass("is-pencil-dragging");
+
+    act(() => handleMotionChange?.({ matches: true } as MediaQueryListEvent));
+
+    expect(releasePointerCapture).toHaveBeenCalledWith(57);
+    expect(surface).not.toHaveClass("is-pencil-dragging");
+    expect(screen.getByRole("button", { name: "鉛筆を拾う" })).toHaveAttribute("data-tool-phase", "resting");
+  });
+
+  it("draws from page and grid gaps, then drops the held tool on a card", () => {
     render(
       <ExamList
         exams={sampleExams}
@@ -325,12 +491,31 @@ describe("ExamList", () => {
     const article = screen.getByRole("heading", { name: sampleExams[0].title }).closest("article");
     expect(article).not.toBeNull();
 
-    [surface, grid, article!].forEach((target, index) => {
+    pickTool("pencil");
+    [surface, grid].forEach((target, index) => {
       dragFrom(target, surface, index + 10);
       expect(clearButton).toBeEnabled();
       fireEvent.click(clearButton);
       expect(clearButton).toBeDisabled();
     });
+
+    const articlePointerDown = dispatchPointerEvent(article!, "pointerdown", {
+      button: 0,
+      clientX: 20,
+      clientY: 20,
+      pointerId: 12,
+      pointerType: "mouse"
+    });
+    expect(articlePointerDown.defaultPrevented).toBe(false);
+    fireEvent.pointerMove(surface, {
+      buttons: 1,
+      clientX: 25,
+      clientY: 22,
+      pointerId: 12,
+      pointerType: "mouse"
+    });
+    expect(clearButton).toBeDisabled();
+    expect(screen.getByRole("button", { name: "鉛筆を拾う" })).not.toHaveAttribute("data-tool-phase", "held");
   });
 
   it("captures pen input on pointerdown and draws only after the threshold", () => {
@@ -351,6 +536,7 @@ describe("ExamList", () => {
 
     const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
     const { setPointerCapture } = installPointerCapture(surface);
+    pickTool("pencil", "pen");
 
     fireEvent.pointerDown(surface, {
       button: 0,
@@ -375,6 +561,84 @@ describe("ExamList", () => {
     expect(clearButton).toBeEnabled();
   });
 
+  it("replays pencil and eraser operations in order after a resize", async () => {
+    const { context, fillRect, renderEvents, stroke } = installCanvasContext();
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const surface = screen.getByRole("main").parentElement;
+    if (!surface) {
+      throw new Error("home pencil surface was not rendered");
+    }
+    installPointerCapture(surface);
+
+    pickTool("pencil");
+    dragFrom(surface, surface, 61);
+    await waitFor(() => expect(stroke).toHaveBeenCalled());
+
+    pickTool("eraser");
+    dragFrom(surface, surface, 62);
+    await waitFor(() => expect(fillRect).toHaveBeenCalled());
+
+    const strokeCountBeforeSecondLine = stroke.mock.calls.length;
+    pickTool("pencil");
+    dragFrom(surface, surface, 63);
+    await waitFor(() => expect(stroke.mock.calls.length).toBeGreaterThan(strokeCountBeforeSecondLine));
+
+    renderEvents.splice(0);
+    fireEvent(window, new Event("resize"));
+    await waitFor(() => expect(renderEvents).toContain("destination-out"));
+
+    const eraserIndex = renderEvents.indexOf("destination-out");
+    expect(renderEvents.indexOf("stroke")).toBeGreaterThanOrEqual(0);
+    expect(renderEvents.indexOf("stroke")).toBeLessThan(eraserIndex);
+    expect(renderEvents.lastIndexOf("stroke")).toBeGreaterThan(eraserIndex);
+    expect(fillRect).toHaveBeenCalled();
+    expect(context.globalCompositeOperation).toBe("source-over");
+
+    const fillCountBeforeClear = fillRect.mock.calls.length;
+    const strokeCountBeforeClear = stroke.mock.calls.length;
+    fireEvent.click(screen.getByRole("button", { name: "書き込みを消す" }));
+    await waitFor(() => expect(screen.getByRole("button", { name: "書き込みを消す" })).toBeDisabled());
+    expect(fillRect).toHaveBeenCalledTimes(fillCountBeforeClear);
+    expect(stroke).toHaveBeenCalledTimes(strokeCountBeforeClear);
+  });
+
+  it("drops a held tool without preventing the original UI click", () => {
+    const onSelect = vi.fn();
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={onSelect}
+      />
+    );
+
+    pickTool("pencil");
+    const startButton = screen.getAllByRole("button", { name: "試験を始める" })[0];
+    const pointerDown = dispatchPointerEvent(startButton, "pointerdown", {
+      button: 0,
+      clientX: 300,
+      clientY: 300,
+      pointerId: 70,
+      pointerType: "mouse"
+    });
+
+    expect(pointerDown.defaultPrevented).toBe(false);
+    expect(screen.getByRole("button", { name: "鉛筆を拾う" })).toHaveAttribute("data-tool-phase", "resting");
+    fireEvent.click(startButton);
+    expect(onSelect).toHaveBeenCalledWith(sampleExams[0]);
+  });
+
   it("does not capture or draw from buttons, links, summaries, explicit exclusions, or touch", () => {
     render(<PencilExclusionHarness />);
 
@@ -389,10 +653,12 @@ describe("ExamList", () => {
       screen.getByRole("button", { name: "ボタン" }),
       screen.getByRole("link", { name: "リンク" }),
       screen.getByText("設定"),
+      screen.getByText("カードの非操作部分"),
       screen.getByText("明示的な除外領域")
     ];
 
-    excludedTargets.slice(0, 2).forEach((target, index) => {
+    excludedTargets.forEach((target, index) => {
+      pickTool("pencil");
       const pointerDown = dispatchPointerEvent(target, "pointerdown", {
         button: 0,
         clientX: 20,
@@ -403,10 +669,14 @@ describe("ExamList", () => {
 
       expect(pointerDown.defaultPrevented).toBe(false);
       expect(surface).not.toHaveClass("is-pencil-dragging");
-    });
-
-    excludedTargets.forEach((target, index) => {
-      dragFrom(target, surface, index + 20);
+      fireEvent.pointerMove(surface, {
+        buttons: 1,
+        clientX: 25,
+        clientY: 22,
+        pointerId: index + 18,
+        pointerType: "mouse"
+      });
+      fireEvent.pointerUp(surface, { pointerId: index + 18, pointerType: "mouse" });
       expect(state).toHaveTextContent("empty");
     });
 

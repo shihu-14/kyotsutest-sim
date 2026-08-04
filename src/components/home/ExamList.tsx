@@ -7,6 +7,7 @@ import { HomeDesignPreview } from "../design-previews/HomeDesignPreview";
 import { PageNavDesignPreview } from "../design-previews/PageNavDesignPreview";
 import { ScoringDesignPreview } from "../design-previews/ScoringDesignPreview";
 import { TimerDesignPreview } from "../design-previews/TimerDesignPreview";
+import { HomeDrawingTools } from "./HomeDrawingTools";
 
 interface ExamListProps {
   exams: Exam[];
@@ -22,7 +23,16 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
   >("exams");
   const authoringDisabled = true;
   const previewExam = exams.find((exam) => exam.pages.some((page) => page.pageImageUrl)) ?? exams[0];
-  const { canvasRef, clearDrawing, hasDrawing, pointerHandlers, rootRef } = useHomePencilDrawing();
+  const {
+    canvasRef,
+    clearDrawing,
+    hasDrawing,
+    pickUpTool,
+    pointerHandlers,
+    registerToolElement,
+    rootRef,
+    toolPhases,
+  } = useHomePencilDrawing();
 
   return (
     <div className="home-pencil-surface" ref={rootRef} {...pointerHandlers}>
@@ -177,6 +187,11 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
           </section>
         )}
       </main>
+      <HomeDrawingTools
+        onPickTool={pickUpTool}
+        phases={toolPhases}
+        registerToolElement={registerToolElement}
+      />
     </div>
   );
 }

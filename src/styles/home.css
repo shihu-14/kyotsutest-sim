@@ -14,6 +14,7 @@
 .home-pencil-surface > .screen {
   position: relative;
   z-index: 1;
+  padding-bottom: 88px;
 }
 
 .home-pencil-canvas {
@@ -22,6 +23,81 @@
   inset: 0;
   display: block;
   pointer-events: none;
+}
+
+.home-drawing-tool-layer {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.home-drawing-tool {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  filter: drop-shadow(0 7px 5px rgba(52, 41, 22, 0.2));
+  opacity: 1;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.home-drawing-tool:disabled {
+  opacity: 1;
+}
+
+.home-drawing-tool[data-tool-phase="resting"] {
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.home-drawing-tool[data-tool-phase="resting"]:active {
+  cursor: grabbing;
+}
+
+.home-drawing-tool:focus-visible {
+  outline: 2px solid rgba(31, 111, 91, 0.82);
+  outline-offset: 5px;
+}
+
+.home-drawing-tool-pencil {
+  width: clamp(128px, 15vw, 156px);
+  height: 22px;
+}
+
+.home-drawing-tool-eraser {
+  width: clamp(54px, 6vw, 64px);
+  height: 34px;
+}
+
+.home-drawing-tool-graphic {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.home-drawing-tool[data-tool-phase="held"] {
+  filter: drop-shadow(0 9px 6px rgba(52, 41, 22, 0.18));
+}
+
+.home-drawing-tool[data-tool-phase="contact"] {
+  filter: drop-shadow(0 2px 2px rgba(52, 41, 22, 0.22));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-drawing-tool {
+    transition: none;
+  }
 }
 
 .home-actions .home-pencil-clear {
