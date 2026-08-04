@@ -12,7 +12,6 @@ const DRAWING_EXCLUSION_SELECTOR = [
   "label",
   "summary",
   "details",
-  "article",
   "[role='button']",
   "[role='link']",
   "[contenteditable='true']",
@@ -46,11 +45,10 @@ interface HomePencilDrawing {
     onLostPointerCapture: PointerEventHandler<HTMLElement>;
     onPointerCancel: PointerEventHandler<HTMLElement>;
     onPointerDown: PointerEventHandler<HTMLElement>;
-    onPointerLeave: PointerEventHandler<HTMLElement>;
     onPointerMove: PointerEventHandler<HTMLElement>;
     onPointerUp: PointerEventHandler<HTMLElement>;
   };
-  rootRef: RefObject<HTMLElement | null>;
+  rootRef: RefObject<HTMLDivElement | null>;
 }
 
 function clamp(value: number, minimum: number, maximum: number) {
@@ -83,7 +81,7 @@ function drawStroke(context: CanvasRenderingContext2D, stroke: PencilStroke) {
   }
 
   const passes = [
-    { alpha: 0.34, offset: 0.14, width: 0.82, dashed: false },
+    { alpha: 0.48, offset: 0.14, width: 0.82, dashed: false },
     { alpha: 0.12, offset: 0.42, width: 1.08, dashed: false },
     { alpha: 0.09, offset: 0.3, width: 0.72, dashed: true }
   ];
@@ -138,7 +136,7 @@ function isDrawingExcluded(target: EventTarget | null) {
 }
 
 export function useHomePencilDrawing(): HomePencilDrawing {
-  const rootRef = useRef<HTMLElement>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<PencilStroke[]>([]);
   const activeStrokeRef = useRef<ActiveStroke | null>(null);
@@ -268,6 +266,9 @@ export function useHomePencilDrawing(): HomePencilDrawing {
       startPoint
     };
     seedRef.current += 1;
+    if (typeof event.currentTarget.setPointerCapture === "function") {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    }
   }, []);
 
   const onPointerMove = useCallback<PointerEventHandler<HTMLElement>>(
@@ -294,9 +295,6 @@ export function useHomePencilDrawing(): HomePencilDrawing {
       if (!activeStroke.drawing) {
         activeStroke.drawing = true;
         setHasDrawing(true);
-        if (typeof event.currentTarget.setPointerCapture === "function") {
-          event.currentTarget.setPointerCapture(event.pointerId);
-        }
       }
 
       event.preventDefault();
@@ -327,13 +325,6 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     [finishStroke]
   );
 
-  const onPointerLeave = useCallback<PointerEventHandler<HTMLElement>>((event) => {
-    const activeStroke = activeStrokeRef.current;
-    if (activeStroke && activeStroke.pointerId === event.pointerId && !activeStroke.drawing) {
-      activeStrokeRef.current = null;
-    }
-  }, []);
-
   const clearDrawing = useCallback(() => {
     strokesRef.current = [];
     activeStrokeRef.current = null;
@@ -349,7 +340,6 @@ export function useHomePencilDrawing(): HomePencilDrawing {
       onLostPointerCapture,
       onPointerCancel,
       onPointerDown,
-      onPointerLeave,
       onPointerMove,
       onPointerUp
     },
