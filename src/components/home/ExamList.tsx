@@ -8,6 +8,7 @@ import { PageNavDesignPreview } from "../design-previews/PageNavDesignPreview";
 import { ScoringDesignPreview } from "../design-previews/ScoringDesignPreview";
 import { TimerDesignPreview } from "../design-previews/TimerDesignPreview";
 import { HomeDrawingTools } from "./HomeDrawingTools";
+import { SteamCapsuleCard } from "./SteamCapsuleCard";
 
 interface ExamListProps {
   exams: Exam[];
@@ -132,57 +133,33 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
             {exams
               .filter((exam) => exam.published)
               .map((exam) => (
-                <article className="exam-tile" key={exam.id}>
-                  <div className="exam-card-main">
-                    <div className="exam-card-copy">
-                      <div className="exam-title-row">
-                        <div>
-                          <h2>{exam.title}</h2>
-                        </div>
-                        <details className="exam-actions">
-                          <summary aria-label={`${exam.title}の設定`}>⋮</summary>
-                          <div className="exam-action-menu">
-                            <button
-                              className="authoring-disabled-button"
-                              disabled={authoringDisabled}
-                              type="button"
-                              onClick={authoringDisabled ? undefined : () => onEdit(exam)}
-                            >
-                              編集する
-                            </button>
-                            <button type="button" onClick={() => onDelete(exam.id)}>
-                              削除する
-                            </button>
-                          </div>
-                        </details>
+                <SteamCapsuleCard
+                  exam={exam}
+                  key={exam.id}
+                  settingsControl={
+                    <details className="exam-actions">
+                      <summary aria-label={`${exam.title}の設定`}>⋮</summary>
+                      <div className="exam-action-menu">
+                        <button
+                          className="authoring-disabled-button"
+                          disabled={authoringDisabled}
+                          type="button"
+                          onClick={authoringDisabled ? undefined : () => onEdit(exam)}
+                        >
+                          編集する
+                        </button>
+                        <button type="button" onClick={() => onDelete(exam.id)}>
+                          削除する
+                        </button>
                       </div>
-                      <dl className="exam-meta">
-                        <div>
-                          <dt>時間</dt>
-                          <dd>{exam.durationMinutes}分</dd>
-                        </div>
-                        <div>
-                          <dt>設問</dt>
-                          <dd>{exam.questions.length}問</dd>
-                        </div>
-                        <div>
-                          <dt>配点</dt>
-                          <dd>{exam.totalPoints}点</dd>
-                        </div>
-                      </dl>
-                      <button className="primary-button" type="button" onClick={() => onSelect(exam)}>
-                        試験を始める
-                      </button>
-                    </div>
-                    <div className="exam-cover-thumb" aria-label={`${exam.title}の表紙`}>
-                      {exam.coverImageUrl ? (
-                        <img src={exam.coverImageUrl} alt="" draggable={false} />
-                      ) : (
-                        <div className="cover-placeholder" />
-                      )}
-                    </div>
-                  </div>
-                </article>
+                    </details>
+                  }
+                  startControl={
+                    <button type="button" onClick={() => onSelect(exam)}>
+                      試験を始める
+                    </button>
+                  }
+                />
               ))}
           </section>
         )}

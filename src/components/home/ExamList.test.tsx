@@ -809,7 +809,7 @@ describe("ExamList", () => {
     expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
   });
 
-  it("opens the timer design candidate mode and switches stopwatch candidates", async () => {
+  it("opens the timer design candidate mode and switches structural candidates", async () => {
     const user = userEvent.setup();
 
     render(
@@ -825,17 +825,19 @@ describe("ExamList", () => {
     await user.click(screen.getByRole("button", { name: "時間候補" }));
 
     expect(screen.getByRole("heading", { name: "制限時間デザイン候補" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "02 Exam Sealのプレビュー" })).toBeInTheDocument();
+    expect(screen.getAllByRole("tab")).toHaveLength(15);
+    expect(
+      screen.getByRole("article", { name: "01 Exam Seal Stopwatchのプレビュー" })
+    ).toBeInTheDocument();
     expect(screen.getAllByRole("timer", { name: /残り時間/ })).toHaveLength(4);
 
-    await user.click(screen.getByRole("tab", { name: /09 Stadium Alert/ }));
+    await user.click(screen.getByRole("tab", { name: /15 Live Activity Pill/ }));
 
-    const preview = screen.getByRole("article", { name: "09 Stadium Alertのプレビュー" });
+    const preview = screen.getByRole("article", { name: "15 Live Activity Pillのプレビュー" });
     expect(preview).toBeInTheDocument();
-    expect(within(preview).getAllByRole("timer", { name: /残り時間/ })[0]).toHaveClass(
-      "timer-exam-seal",
-      "timer-color-stadium-alert"
+    expect(within(preview).getAllByRole("timer", { name: /残り時間/ })[0]).toHaveAttribute(
+      "data-timer-layout",
+      "live-activity"
     );
   });
 
@@ -856,11 +858,11 @@ describe("ExamList", () => {
 
     expect(screen.getByRole("heading", { name: "ホーム画面デザイン候補" })).toBeInTheDocument();
     expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "06 Rail Forestのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "01 Official Bookletのプレビュー" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("tab", { name: /10 Rail Wood/ }));
+    await user.click(screen.getByRole("tab", { name: /10 Material Bento/ }));
 
-    expect(screen.getByRole("article", { name: "10 Rail Woodのプレビュー" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "10 Material Bentoのプレビュー" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
   });
 
