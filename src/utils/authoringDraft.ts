@@ -1,4 +1,5 @@
 import type { AuthoringMeta } from "../types";
+import { parseAuthoringAttributes, positiveChoiceCount } from "./authoringSyntax";
 
 export interface DraftMark {
   id: string;
@@ -45,10 +46,6 @@ export interface DraftMarkEntry {
 const markPattern = /\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g;
 const choicePattern = /^\\choice\{([^}]*)\}\{([^}]*)\}\{([^}]*)\}$/;
 
-function positiveChoiceCount(count: number): number {
-  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 1;
-}
-
 export function createDefaultChoices(count: number): DraftChoice[] {
   return Array.from({ length: positiveChoiceCount(count) }, (_item, index) => {
     const value = String(index + 1);
@@ -62,23 +59,6 @@ export function normalizeMarkChoices(mark: DraftMark): DraftChoice[] {
     const value = String(index + 1);
     return existingByValue.get(value) ?? { value, content: value };
   });
-}
-
-function parseAttributes(input: string | undefined): Record<string, string> {
-  if (!input) {
-    return {};
-  }
-
-  return input.split(",").reduce<Record<string, string>>((attrs, pair) => {
-    const [rawKey, ...rawValue] = pair.split("=");
-    const key = rawKey?.trim();
-    if (!key) {
-      return attrs;
-    }
-
-    attrs[key] = rawValue.join("=").trim();
-    return attrs;
-  }, {});
 }
 
 function serializeMark(mark: DraftMark): string {
@@ -142,7 +122,7 @@ function createSubsection(
 }
 
 function parseMark(attrsRaw: string | undefined, label: string, index: number): DraftMark {
-  const attrs = parseAttributes(attrsRaw);
+  const attrs = parseAuthoringAttributes(attrsRaw);
   const points = Number(attrs.points ?? 0);
   const choices = Number(attrs.choices ?? 4);
   const answer = attrs.answer ?? "";

@@ -8,6 +8,7 @@ import animeFigure06 from "../assets/exams/anime-onlymark-2026/crops/page-06-fig
 import animeFigure07 from "../assets/exams/anime-onlymark-2026/crops/page-07-figure.jpg";
 import animeFigure09 from "../assets/exams/anime-onlymark-2026/crops/page-09-figures.jpg";
 import animeFigure10 from "../assets/exams/anime-onlymark-2026/crops/page-10-figure.jpg";
+import { parseAuthoringAttributes } from "./authoringSyntax";
 
 export interface ParsedMark {
   id: string;
@@ -110,23 +111,6 @@ export function escapeHtml(value: string): string {
     .replaceAll("'", "&#039;");
 }
 
-function parseAttributes(input: string | undefined): Record<string, string> {
-  if (!input) {
-    return {};
-  }
-
-  return input.split(",").reduce<Record<string, string>>((attrs, pair) => {
-    const [rawKey, ...rawValue] = pair.split("=");
-    const key = rawKey?.trim();
-    if (!key) {
-      return attrs;
-    }
-
-    attrs[key] = rawValue.join("=").trim();
-    return attrs;
-  }, {});
-}
-
 function isPreviewSettingCommand(line: string): boolean {
   return /^\\(?:pagecolor|linespread|geometry|newgeometry|definecolor|setmainfont|setmainjfont|setsansjfont)\b/.test(line);
 }
@@ -160,7 +144,7 @@ function renderCommandAwareInlineHtml(line: string): string {
 
   const withPlaceholders = line
     .replace(/\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g, (_full, attrsRaw: string, label: string) => {
-      const attrs = parseAttributes(attrsRaw);
+      const attrs = parseAuthoringAttributes(attrsRaw);
       const points = Number(attrs.points ?? 0);
       const answer = attrs.answer ? attrs.answer.split("|").join(", ") : "未設定";
       return stash(
@@ -196,7 +180,7 @@ export function parseAuthoringLatex(source: string): ParsedAuthoringDocument {
   let markIndex = 1;
 
   while ((markMatch = markPattern.exec(source)) !== null) {
-    const attrs = parseAttributes(markMatch[1]);
+    const attrs = parseAuthoringAttributes(markMatch[1]);
     const points = Number(attrs.points ?? 0);
     const choices = Number(attrs.choices ?? 4);
     const label = markMatch[2];
