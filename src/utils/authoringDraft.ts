@@ -1,5 +1,13 @@
 import type { AuthoringMeta } from "../types";
-import { parseAuthoringAttributes, positiveChoiceCount } from "./authoringSyntax";
+import {
+  authoringBodyComment,
+  authoringLayoutCommentLines,
+  authoringMarkComment,
+  parseAuthoringAttributes,
+  positiveChoiceCount,
+  serializeChoiceCommand,
+  serializeMarkCommand
+} from "./authoringSyntax";
 
 export interface DraftMark {
   id: string;
@@ -61,41 +69,8 @@ export function normalizeMarkChoices(mark: DraftMark): DraftChoice[] {
   });
 }
 
-function serializeMark(mark: DraftMark): string {
-  const attrs = [
-    `answer=${mark.answer}`,
-    `points=${Math.max(0, mark.points)}`,
-    `choices=${positiveChoiceCount(mark.choices)}`,
-    mark.multi ? "multi=true" : ""
-  ].filter(Boolean);
-
-  return `\\mark[${attrs.join(",")}]{${mark.label}}`;
-}
-
-function serializeChoice(mark: DraftMark, choice: DraftChoice): string {
-  return `\\choice{${mark.label}}{${choice.value}}{${choice.content}}`;
-}
-
-function bodyComment(label: string, hasBody: boolean): string {
-  return hasBody ? `% === ${label} ===` : `% === ${label}: ここに問題文を記述 ===`;
-}
-
-function markComment(mark: DraftMark): string {
-  const answer = mark.answer.trim() || "未設定";
-  return `% --- 解答番号 ${mark.label}: 正解 ${answer} / 配点 ${Math.max(0, mark.points)} / 選択肢 ${positiveChoiceCount(mark.choices)} ---`;
-}
-
 export function shouldOmitSubsectionTitle(section: DraftSection, subsection: DraftSubsection): boolean {
   return section.marks.length === 0 && section.subsections.length === 1 && subsection.title.trim() === "問1";
-}
-
-function layoutCommentLines(): string[] {
-  return [
-    "% --- preview設定: 必要なら次の行を有効化して調整 ---",
-    "% \\pagecolor{beige}",
-    "% \\linespread{1.5}",
-    "% \\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}"
-  ];
 }
 
 function createSection(index: number, title = `第${index + 1}問`): DraftSection {
@@ -288,15 +263,15 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
 
   draft.sections.forEach((section) => {
     lines.push("", `\\sectiontitle{${section.title}}`);
-    lines.push(bodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
-    lines.push(...layoutCommentLines());
+    lines.push(authoringBodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
+    lines.push(...authoringLayoutCommentLines());
     if (section.body.trim()) {
       lines.push(...section.body.trim().split("\n"));
     }
     section.marks.forEach((mark) => {
-      lines.push(markComment(mark));
-      lines.push(serializeMark(mark));
-      normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
+      lines.push(authoringMarkComment(mark));
+      lines.push(serializeMarkCommand(mark));
+      normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceCommand(mark, choice)));
     });
     section.subsections.forEach((subsection) => {
       const omitSubsectionTitle = shouldOmitSubsectionTitle(section, subsection);
@@ -305,7 +280,7 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
         lines.push(`\\subsectiontitle{${subsection.title}}`);
       }
       lines.push(
-        bodyComment(
+        authoringBodyComment(
           omitSubsectionTitle ? `小問本文: ${section.title}` : `小問本文: ${section.title} ${subsection.title}`,
           Boolean(subsection.body.trim())
         )
@@ -314,9 +289,9 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
         lines.push(...subsection.body.trim().split("\n"));
       }
       subsection.marks.forEach((mark) => {
-        lines.push(markComment(mark));
-        lines.push(serializeMark(mark));
-        normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
+        lines.push(authoringMarkComment(mark));
+        lines.push(serializeMarkCommand(mark));
+        normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceCommand(mark, choice)));
       });
     });
   });
