@@ -62,26 +62,34 @@
   padding: clamp(28px, 5vw, 52px);
   text-align: center;
   box-shadow: 0 24px 60px rgba(43, 30, 15, 0.24);
+  min-width: 500px;
+  min-height: 280px;
 }
 
 .scoring-final-content p {
   margin: 0;
   color: #111;
   font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
-  font-size: 1.125rem;
+  font-size: 3.5rem;
   font-weight: 900;
+  transform: translate(0px, -25px);
 }
 
 .scoring-final-content strong {
   display: block;
   color: #111;
   font-family: Inter, system-ui, sans-serif;
-  font-size: clamp(4rem, 10vw, 7.8rem);
+  font-size: clamp(4rem, 8vw, 10rem);
+  /* display: inline-block; */
   line-height: 1.02;
+  transform: translate(15px, 0px);
 }
 
 .scoring-final-content small {
+  font-size: 0.65em;
   color: #111;
+  display: inline-block;
+  transform: translate(30px, 10px);
 }
 
 .scoring-score-value {

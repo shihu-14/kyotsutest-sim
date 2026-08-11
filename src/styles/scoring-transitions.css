@@ -22,7 +22,7 @@
 
 .review-score-badge {
   display: grid;
-  min-width: 128px;
+  width: 165px;
   border: 2px solid #f07825;
   border-radius: 8px;
   background: #fffaf1;
@@ -36,10 +36,11 @@
 .review-score-badge span {
   justify-self: start;
   color: #1b1b1b;
-  font-size: 0.72rem;
-  font-weight: 900;
-  line-height: 1;
+  font-size: 1.1rem;
+  font-weight: 800;
+  line-height: 2;
   text-align: left;
+  transform: translate(0px, -7px);
 }
 
 .review-score-badge strong {
@@ -55,8 +56,8 @@
 
 @media (min-width: 981px) {
   .exam-mode-background.exam-review-mode .toolbar-metrics {
-    min-height: 75px;
-    align-items: flex-end;
+    min-height: 90px;
+    /* align-items: flex-end; */
   }
 }
 

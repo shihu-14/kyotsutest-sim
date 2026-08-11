@@ -100,7 +100,7 @@ describe("App", () => {
     expect(window.localStorage.getItem("kyotsu-test-sim:deadline:anime-onlymark-2026")).toBeNull();
   });
 
-  it("pauses on the score pop instead of entering review in debug mode", async () => {
+  it("keeps the select to review session transitions intact", async () => {
     vi.useFakeTimers();
 
     render(<App />);
@@ -117,16 +117,22 @@ describe("App", () => {
     fireEvent.click(within(finishDialog).getByRole("button", { name: "採点へ進む" }));
     expect(screen.getByLabelText("問題用紙への採点")).toBeInTheDocument();
 
-    for (let step = 0; step < 100 && !document.querySelector(".auto-review-score-pop"); step += 1) {
+    for (let step = 0; step < 100 && !document.querySelector(".review-mode-fade-in-settled"); step += 1) {
       await act(async () => {
         await vi.runOnlyPendingTimersAsync();
       });
     }
 
-    expect(screen.getByRole("main")).toHaveClass("scoring-screen");
-    expect(screen.getByLabelText("採点結果")).toHaveClass("auto-review-score-pop");
-    expect(document.querySelector(".review-mode-fade-in-settled")).not.toBeInTheDocument();
-    expect(document.querySelector(".review-score-badge")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "ホームに戻る" })).not.toBeInTheDocument();
+    expect(screen.getByRole("main")).toHaveClass(
+      "review-mode-fade-in",
+      "review-mode-fade-in-ready",
+      "review-mode-fade-in-settled"
+    );
+    expect(document.querySelector(".review-score-badge")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "ホームに戻る" }));
+    expect(screen.getByRole("heading", { name: "共通テスト形式 ウェブ模試" })).toBeInTheDocument();
+    expect(window.localStorage.getItem("kyotsu-test-sim:answers:anime-onlymark-2026")).toBeNull();
+    expect(window.localStorage.getItem("kyotsu-test-sim:deadline:anime-onlymark-2026")).toBeNull();
   });
 });

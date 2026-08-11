@@ -18,7 +18,6 @@ const pageTurnDelayMs = 760;
 const emptyPageTurnDelayMs = 260;
 const resultDelayMs = 620;
 const autoReviewDelayMs = 2000;
-const pauseOnScorePopForDebug = true;
 
 export function ScoringScreen({ exam, answers, startComplete = false, onReview }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);
@@ -96,7 +95,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
   }, [currentPageIndex, exam.pages, questionPageIds, showResult, startComplete, summary.gradedQuestions, visibleCount]);
 
   useEffect(() => {
-    if (startComplete || !showResult || pauseOnScorePopForDebug) {
+    if (startComplete || !showResult) {
       return undefined;
     }
 
@@ -151,14 +150,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
           aria-label="採点結果"
           aria-live="polite"
         >
-          <div
-            className="scoring-final-content"
-            style={
-              pauseOnScorePopForDebug && !startComplete
-                ? { animation: "scoring-score-pop-in 420ms cubic-bezier(0.2, 0.9, 0.25, 1.16) both" }
-                : undefined
-            }
-          >
+          <div className="scoring-final-content">
             <p>得点</p>
             <strong className="scoring-score-value">
               {summary.totalScore}
