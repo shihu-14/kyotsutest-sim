@@ -1,16 +1,7 @@
 import { useCallback, useEffect, useReducer } from "react";
 import type { AnswerValue, Exam, QuestionSlot } from "../types";
-import {
-  examSessionReducer,
-  initialExamSessionState
-} from "../utils/examSession";
-import {
-  clearAnswers,
-  clearDeadline,
-  loadAnswers,
-  saveAnswers,
-  saveDeadline
-} from "../utils/examStorage";
+import { examSessionReducer, initialExamSessionState } from "../utils/examSession";
+import { clearAnswers, clearDeadline, loadAnswers, saveAnswers, saveDeadline } from "../utils/examStorage";
 
 export function useExamSession() {
   const [state, dispatch] = useReducer(examSessionReducer, initialExamSessionState);
@@ -53,8 +44,6 @@ export function useExamSession() {
   }, [state.selectedExam]);
 
   const enterReview = useCallback(() => dispatch({ type: "ENTER_REVIEW" }), []);
-  const openExamEditor = useCallback((exam: Exam) => dispatch({ type: "OPEN_EDITOR", exam }), []);
-  const closeEditor = useCallback(() => dispatch({ type: "CLOSE_EDITOR" }), []);
   const changePage = useCallback((pageId: string) => dispatch({ type: "CHANGE_PAGE", pageId }), []);
   const toggleSessionAnswer = useCallback(
     (question: QuestionSlot, value: AnswerValue) => dispatch({ type: "TOGGLE_ANSWER", question, value }),
@@ -69,12 +58,10 @@ export function useExamSession() {
 
   return {
     changePage,
-    closeEditor,
     discardExamAndReturnHome,
     enterReview,
     finishExam,
     openCover,
-    openExamEditor,
     resetToList,
     startExam,
     state,

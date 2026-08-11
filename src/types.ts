@@ -1,6 +1,6 @@
 export type AnswerValue = string;
 
-export type ExamPhase = "select" | "cover" | "exam" | "scoring" | "review" | "editor";
+export type ExamPhase = "select" | "cover" | "exam" | "scoring" | "review";
 
 export type ProblemBlock =
   | {

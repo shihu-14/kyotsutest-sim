@@ -91,14 +91,7 @@ function rotationFromTransform(element: HTMLElement) {
 }
 
 function PencilExclusionHarness() {
-  const {
-    canvasRef,
-    pickUpTool,
-    pointerHandlers,
-    registerToolElement,
-    rootRef,
-    toolPhases
-  } = useHomeDrawingSurface();
+  const { canvasRef, pickUpTool, pointerHandlers, registerToolElement, rootRef, toolPhases } = useHomeDrawingSurface();
 
   return (
     <div className="pencil-exclusion-harness" ref={rootRef} {...pointerHandlers}>
@@ -122,12 +115,15 @@ function PencilExclusionHarness() {
 
 describe("useHomeDrawingSurface", () => {
   beforeEach(() => {
-    vi.stubGlobal("matchMedia", vi.fn(() => ({
-      addEventListener: vi.fn(),
-      matches: true,
-      media: "(prefers-reduced-motion: reduce)",
-      removeEventListener: vi.fn()
-    })));
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        addEventListener: vi.fn(),
+        matches: true,
+        media: "(prefers-reduced-motion: reduce)",
+        removeEventListener: vi.fn()
+      }))
+    );
   });
 
   afterEach(() => {
@@ -135,14 +131,7 @@ describe("useHomeDrawingSurface", () => {
   });
 
   it("preserves each resting angle when tool images load and the floor is remeasured", () => {
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     ["鉛筆を拾う", "消しゴムを拾う"].forEach((label) => {
       const tool = screen.getByRole("button", { name: label });
@@ -167,28 +156,40 @@ describe("useHomeDrawingSurface", () => {
     let timestamp = 0;
     const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
 
-    vi.stubGlobal("matchMedia", vi.fn(() => ({
-      addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
-        motionChange = listener;
-      },
-      matches: true,
-      media: "(prefers-reduced-motion: reduce)",
-      removeEventListener: vi.fn()
-    })));
-    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
-      const frameId = ++nextFrameId;
-      scheduledFrames.set(frameId, callback);
-      return frameId;
-    }));
-    vi.stubGlobal("cancelAnimationFrame", vi.fn((frameId: number) => scheduledFrames.delete(frameId)));
-    vi.stubGlobal("ResizeObserver", class {
-      constructor(callback: ResizeObserverCallback) {
-        resizeCallback = callback;
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+          motionChange = listener;
+        },
+        matches: true,
+        media: "(prefers-reduced-motion: reduce)",
+        removeEventListener: vi.fn()
+      }))
+    );
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn((callback: FrameRequestCallback) => {
+        const frameId = ++nextFrameId;
+        scheduledFrames.set(frameId, callback);
+        return frameId;
+      })
+    );
+    vi.stubGlobal(
+      "cancelAnimationFrame",
+      vi.fn((frameId: number) => scheduledFrames.delete(frameId))
+    );
+    vi.stubGlobal(
+      "ResizeObserver",
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          resizeCallback = callback;
+        }
+        disconnect() {}
+        observe() {}
+        unobserve() {}
       }
-      disconnect() {}
-      observe() {}
-      unobserve() {}
-    });
+    );
     const getBoundingClientRectSpy = vi
       .spyOn(HTMLElement.prototype, "getBoundingClientRect")
       .mockImplementation(function (this: HTMLElement) {
@@ -208,14 +209,7 @@ describe("useHomeDrawingSurface", () => {
         return originalGetBoundingClientRect.call(this);
       });
 
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const pencil = screen.getByRole("button", { name: "鉛筆を拾う" });
     const eraser = screen.getByRole("button", { name: "消しゴムを拾う" });
@@ -252,14 +246,7 @@ describe("useHomeDrawingSurface", () => {
   it.each(["pencil", "eraser"] as const)(
     "uses one right-handed angle for held and contact %s poses, separated only by height",
     (kind) => {
-      render(
-        <ExamList
-          exams={initialExams}
-          onDelete={vi.fn()}
-          onEdit={vi.fn()}
-          onSelect={vi.fn()}
-        />
-      );
+      render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
       const surface = screen.getByRole("main").parentElement;
       if (!surface) {
@@ -352,12 +339,15 @@ describe("useHomeDrawingSurface", () => {
     });
     vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
     vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
-    vi.stubGlobal("matchMedia", vi.fn(() => ({
-      addEventListener: vi.fn(),
-      matches: true,
-      media: "(prefers-reduced-motion: reduce)",
-      removeEventListener: vi.fn()
-    })));
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        addEventListener: vi.fn(),
+        matches: true,
+        media: "(prefers-reduced-motion: reduce)",
+        removeEventListener: vi.fn()
+      }))
+    );
 
     let unmount: (() => void) | undefined;
 
@@ -365,12 +355,7 @@ describe("useHomeDrawingSurface", () => {
       const { stroke } = installCanvasContext();
       ({ unmount } = render(
         <StrictMode>
-          <ExamList
-            exams={initialExams}
-            onDelete={vi.fn()}
-            onEdit={vi.fn()}
-            onSelect={vi.fn()}
-          />
+          <ExamList exams={initialExams} onSelect={vi.fn()} />
         </StrictMode>
       ));
 
@@ -442,22 +427,20 @@ describe("useHomeDrawingSurface", () => {
     });
     vi.stubGlobal("requestAnimationFrame", requestAnimationFrame);
     vi.stubGlobal("cancelAnimationFrame", cancelAnimationFrame);
-    vi.stubGlobal("matchMedia", vi.fn(() => ({
-      addEventListener: vi.fn(),
-      matches: false,
-      media: "(prefers-reduced-motion: reduce)",
-      removeEventListener: vi.fn()
-    })));
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        addEventListener: vi.fn(),
+        matches: false,
+        media: "(prefers-reduced-motion: reduce)",
+        removeEventListener: vi.fn()
+      }))
+    );
     installCanvasContext();
 
     const { unmount } = render(
       <StrictMode>
-        <ExamList
-          exams={initialExams}
-          onDelete={vi.fn()}
-          onEdit={vi.fn()}
-          onSelect={vi.fn()}
-        />
+        <ExamList exams={initialExams} onSelect={vi.fn()} />
       </StrictMode>
     );
 
@@ -471,14 +454,7 @@ describe("useHomeDrawingSurface", () => {
 
   it("uses a full-page surface and preserves the threshold and capture behavior", async () => {
     const { clearRect, stroke } = installCanvasContext();
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const main = screen.getByRole("main");
     const surface = main.parentElement;
@@ -530,14 +506,7 @@ describe("useHomeDrawingSurface", () => {
   });
 
   it("prevents selection on pointerdown and clears the dragging class on every finish path", () => {
-    const { unmount } = render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    const { unmount } = render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const surface = screen.getByRole("main").parentElement;
     if (!surface) {
@@ -585,22 +554,18 @@ describe("useHomeDrawingSurface", () => {
 
   it("finishes an active gesture when reduced motion is enabled", () => {
     let handleMotionChange: ((event: MediaQueryListEvent) => void) | undefined;
-    vi.stubGlobal("matchMedia", vi.fn(() => ({
-      addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
-        handleMotionChange = listener;
-      },
-      matches: true,
-      media: "(prefers-reduced-motion: reduce)",
-      removeEventListener: vi.fn()
-    })));
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
+    vi.stubGlobal(
+      "matchMedia",
+      vi.fn(() => ({
+        addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+          handleMotionChange = listener;
+        },
+        matches: true,
+        media: "(prefers-reduced-motion: reduce)",
+        removeEventListener: vi.fn()
+      }))
     );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const surface = screen.getByRole("main").parentElement;
     if (!surface) {
@@ -633,14 +598,7 @@ describe("useHomeDrawingSurface", () => {
   });
 
   it("draws from page and grid gaps, then drops the held tool on a card", () => {
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const surface = screen.getByRole("main").parentElement;
     if (!surface) {
@@ -676,14 +634,7 @@ describe("useHomeDrawingSurface", () => {
   });
 
   it("captures pen input on pointerdown and draws only after the threshold", async () => {
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const surface = screen.getByRole("main").parentElement;
     if (!surface) {
@@ -719,14 +670,7 @@ describe("useHomeDrawingSurface", () => {
 
   it("replays pencil and eraser operations in order after a resize", async () => {
     const { context, fillRect, renderEvents, stroke } = installCanvasContext();
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const surface = screen.getByRole("main").parentElement;
     if (!surface) {
@@ -758,19 +702,11 @@ describe("useHomeDrawingSurface", () => {
     expect(renderEvents.lastIndexOf("stroke")).toBeGreaterThan(eraserIndex);
     expect(fillRect).toHaveBeenCalled();
     expect(context.globalCompositeOperation).toBe("source-over");
-
   });
 
   it("drops a held tool without preventing the original UI click", () => {
     const onSelect = vi.fn();
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={onSelect}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={onSelect} />);
 
     pickTool("pencil");
     const selectButton = screen.getByRole("button", { name: `${initialExams[0].title}を選択` });
@@ -835,14 +771,7 @@ describe("useHomeDrawingSurface", () => {
   });
 
   it("prevents native dragstart and marks cover images as non-draggable", () => {
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const cover = screen.getByLabelText(`${initialExams[0].title}の表紙`);
     const coverImage = cover.querySelector("img");
@@ -853,5 +782,4 @@ describe("useHomeDrawingSurface", () => {
     fireEvent(coverImage!, dragStart);
     expect(dragStart.defaultPrevented).toBe(true);
   });
-
 });

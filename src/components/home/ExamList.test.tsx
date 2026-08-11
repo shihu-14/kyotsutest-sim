@@ -24,14 +24,7 @@ describe("ExamList", () => {
     const onSelect = vi.fn();
     const exam = initialExams[0];
 
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={onSelect}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={onSelect} />);
 
     expect(screen.getByRole("button", { name: "問題の新規作成" })).toBeDisabled();
     expect(screen.getByLabelText(`${exam.title}の表紙`)).toBeInTheDocument();
@@ -57,20 +50,13 @@ describe("ExamList", () => {
   it("keeps only problem creation in the home action row", async () => {
     const user = userEvent.setup();
     const exam = initialExams[0];
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     expect(screen.queryByText("カード暗さ調整")).not.toBeInTheDocument();
     const card = screen.getByRole("article", { name: exam.title });
     await user.click(within(card).getByLabelText(`${exam.title}の設定`));
-    expect(within(card).getByRole("button", { name: "編集する" })).toBeEnabled();
-    expect(within(card).getByRole("button", { name: "削除する" })).toBeEnabled();
+    expect(within(card).getByRole("button", { name: "編集する" })).toBeDisabled();
+    expect(within(card).getByRole("button", { name: "削除する" })).toBeDisabled();
     expect(screen.queryByLabelText("試験を始めるボタンの色")).not.toBeInTheDocument();
     [
       "書き込みを消す",
@@ -83,9 +69,7 @@ describe("ExamList", () => {
       "得点候補",
       "得点ポップ候補",
       "試験一覧"
-    ].forEach(
-      (name) => expect(screen.queryByRole("button", { name })).not.toBeInTheDocument()
-    );
+    ].forEach((name) => expect(screen.queryByRole("button", { name })).not.toBeInTheDocument());
     const homeActions = document.querySelector(".home-actions");
     expect(homeActions).not.toBeNull();
     expect(within(homeActions as HTMLElement).getAllByRole("button")).toEqual([
@@ -101,14 +85,7 @@ describe("ExamList", () => {
       coverImageUrl: undefined
     };
 
-    render(
-      <ExamList
-        exams={[examWithoutCover]}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={[examWithoutCover]} onSelect={vi.fn()} />);
 
     const card = screen.getByRole("article", { name: examWithoutCover.title });
     expect(within(card).getByRole("img", { name: `${examWithoutCover.title}の表紙画像なし` })).toBeInTheDocument();
@@ -138,43 +115,33 @@ describe("ExamList", () => {
     expect(animeExam?.questions.reduce((sum, question) => sum + question.points, 0)).toBe(100);
   });
 
-  it("runs edit and delete actions without selecting the exam", async () => {
+  it("keeps edit and delete actions disabled without selecting the exam", async () => {
     const user = userEvent.setup();
-    const onDelete = vi.fn();
-    const onEdit = vi.fn();
     const onSelect = vi.fn();
     const exam = initialExams[0];
 
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={onDelete}
-        onEdit={onEdit}
-        onSelect={onSelect}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={onSelect} />);
 
     const card = screen.getByRole("article", { name: exam.title });
     await user.click(within(card).getByLabelText(`${exam.title}の設定`));
-    await user.click(within(card).getByRole("button", { name: "編集する" }));
-    await user.click(within(card).getByRole("button", { name: "削除する" }));
+    const editButton = within(card).getByRole("button", { name: "編集する" });
+    const deleteButton = within(card).getByRole("button", { name: "削除する" });
+    expect(editButton).toBeDisabled();
+    expect(deleteButton).toBeDisabled();
+    await user.click(editButton);
+    await user.click(deleteButton);
+    editButton.focus();
+    expect(editButton).not.toHaveFocus();
+    await user.keyboard("{Enter}");
 
-    expect(onEdit).toHaveBeenCalledWith(exam);
-    expect(onDelete).toHaveBeenCalledWith(exam.id);
     expect(onSelect).not.toHaveBeenCalled();
+    expect(card).toBeInTheDocument();
   });
 
   it("closes a card action menu when another part of the page is clicked", async () => {
     const user = userEvent.setup();
     const exam = initialExams[0];
-    render(
-      <ExamList
-        exams={initialExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
+    render(<ExamList exams={initialExams} onSelect={vi.fn()} />);
 
     const settings = screen.getByLabelText(`${exam.title}の設定`);
     const menu = settings.closest("details");

@@ -5,7 +5,6 @@ export interface ExamSessionState {
   answers: UserAnswers;
   currentPageId: string;
   deadline: number | null;
-  editingExam: Exam | null;
   phase: ExamPhase;
   selectedExam: Exam | null;
   showCompletedScoring: boolean;
@@ -18,8 +17,6 @@ export type ExamSessionEvent =
   | { type: "ENTER_REVIEW" }
   | { type: "RESET_TO_LIST" }
   | { type: "DISCARD_TO_LIST" }
-  | { type: "OPEN_EDITOR"; exam: Exam }
-  | { type: "CLOSE_EDITOR" }
   | { type: "CHANGE_PAGE"; pageId: string }
   | { type: "TOGGLE_ANSWER"; question: QuestionSlot; value: AnswerValue };
 
@@ -27,7 +24,6 @@ export const initialExamSessionState: ExamSessionState = {
   answers: {},
   currentPageId: "",
   deadline: null,
-  editingExam: null,
   phase: "select",
   selectedExam: null,
   showCompletedScoring: false
@@ -88,10 +84,6 @@ export function examSessionReducer(state: ExamSessionState, event: ExamSessionEv
         selectedExam: null,
         showCompletedScoring: false
       };
-    case "OPEN_EDITOR":
-      return { ...state, editingExam: event.exam, phase: "editor" };
-    case "CLOSE_EDITOR":
-      return { ...state, editingExam: null, phase: "select" };
     case "CHANGE_PAGE":
       return { ...state, currentPageId: event.pageId };
     case "TOGGLE_ANSWER":
