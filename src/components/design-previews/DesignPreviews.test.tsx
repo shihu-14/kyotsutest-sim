@@ -3,8 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../../data/sampleExam";
 import { ExamList } from "../home/ExamList";
-import { HomeDesignPreview } from "./test-only/HomeDesignPreview";
-import { TimerDesignPreview } from "./test-only/TimerDesignPreview";
 
 function tagSignature(element: Element): string {
   return `${element.tagName.toLowerCase()}[${Array.from(element.children)
@@ -12,7 +10,7 @@ function tagSignature(element: Element): string {
     .join(",")}]`;
 }
 
-describe("timer and Steam Capsule design variants", () => {
+describe("production design previews", () => {
   beforeEach(() => {
     vi.stubGlobal(
       "matchMedia",
@@ -170,54 +168,4 @@ describe("timer and Steam Capsule design variants", () => {
     expect(screen.getByRole("article", { name: "漫画映画" })).toBeInTheDocument();
   });
 
-  it("renders fifteen genuinely different timer layouts with all three states", async () => {
-    const user = userEvent.setup();
-    render(<TimerDesignPreview exam={sampleExams[0]} />);
-
-    const tabs = screen.getAllByRole("tab");
-    const layouts = new Set<string>();
-    const structures = new Set<string>();
-    expect(tabs).toHaveLength(15);
-
-    for (const tab of tabs) {
-      await user.click(tab);
-      const panel = screen.getByRole("tabpanel");
-      const timers = within(panel).getAllByRole("timer", { name: /残り時間/ });
-      expect(timers).toHaveLength(4);
-      expect(panel).toHaveTextContent("通常・残り82%");
-      expect(panel).toHaveTextContent("注意・残り15%");
-      expect(panel).toHaveTextContent("危険・残り4%");
-      layouts.add(timers[0].getAttribute("data-timer-layout") ?? "");
-      structures.add(tagSignature(timers[0]));
-    }
-
-    expect(layouts.size).toBe(15);
-    expect(structures.size).toBe(15);
-  });
-
-  it("switches ten color systems without changing the Steam Capsule structure", async () => {
-    const user = userEvent.setup();
-    render(<HomeDesignPreview exams={sampleExams} />);
-
-    await user.click(screen.getByRole("button", { name: "Steam Capsule 配色候補" }));
-    const tabs = screen.getAllByRole("tab");
-    const themes = new Set<string>();
-    const structures = new Set<string>();
-    expect(tabs).toHaveLength(10);
-
-    for (const tab of tabs) {
-      await user.click(tab);
-      const panel = screen.getByRole("tabpanel");
-      const cards = within(panel).getAllByRole("article");
-      expect(cards).toHaveLength(3);
-      cards.forEach((card) => {
-        expect(card).toHaveAttribute("data-card-structure", "steam-capsule");
-      });
-      themes.add(cards[0].getAttribute("data-capsule-theme") ?? "");
-      structures.add(tagSignature(cards[0]));
-    }
-
-    expect(themes.size).toBe(10);
-    expect(structures.size).toBe(1);
-  });
 });
