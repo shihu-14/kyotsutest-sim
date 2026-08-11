@@ -105,7 +105,6 @@ function rotationFromTransform(element: HTMLElement) {
 function PencilExclusionHarness() {
   const {
     canvasRef,
-    hasDrawing,
     pickUpTool,
     pointerHandlers,
     registerToolElement,
@@ -123,7 +122,6 @@ function PencilExclusionHarness() {
       </details>
       <article>カードの非操作部分</article>
       <div data-pencil-drawing-exclusion>明示的な除外領域</div>
-      <span data-testid="drawing-state">{hasDrawing ? "drawing" : "empty"}</span>
       <HomeDrawingTools
         onPickTool={pickUpTool}
         onToolImageLoad={() => undefined}
@@ -854,6 +852,7 @@ describe("ExamList", () => {
   });
 
   it("does not capture or draw from buttons, links, summaries, explicit exclusions, or touch", () => {
+    const { stroke } = installCanvasContext();
     render(<PencilExclusionHarness />);
 
     const surface = document.querySelector<HTMLElement>(".pencil-exclusion-harness");
@@ -862,7 +861,6 @@ describe("ExamList", () => {
     }
 
     const { setPointerCapture } = installPointerCapture(surface);
-    const state = screen.getByTestId("drawing-state");
     const excludedTargets = [
       screen.getByRole("button", { name: "ボタン" }),
       screen.getByRole("link", { name: "リンク" }),
@@ -891,11 +889,11 @@ describe("ExamList", () => {
         pointerType: "mouse"
       });
       fireEvent.pointerUp(surface, { pointerId: index + 18, pointerType: "mouse" });
-      expect(state).toHaveTextContent("empty");
+      expect(stroke).not.toHaveBeenCalled();
     });
 
     dragFrom(surface, surface, 30, "touch");
-    expect(state).toHaveTextContent("empty");
+    expect(stroke).not.toHaveBeenCalled();
     expect(setPointerCapture).not.toHaveBeenCalled();
   });
 

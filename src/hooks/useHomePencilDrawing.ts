@@ -2,7 +2,6 @@ import {
   useCallback,
   useEffect,
   useRef,
-  useState,
   type DragEventHandler,
   type PointerEventHandler,
   type RefObject
@@ -54,8 +53,6 @@ interface ActiveGesture {
 
 interface HomePencilDrawing {
   canvasRef: RefObject<HTMLCanvasElement | null>;
-  clearDrawing: () => void;
-  hasDrawing: boolean;
   pickUpTool: (kind: HomeDrawingToolKind, point: Point2D) => void;
   pointerHandlers: {
     onDragStart: DragEventHandler<HTMLElement>;
@@ -83,7 +80,6 @@ export function useHomePencilDrawing(): HomePencilDrawing {
   const drawingAnimationFrameRef = useRef<number | null>(null);
   const seedRef = useRef(1);
   const hasDrawingRef = useRef(false);
-  const [hasDrawing, setHasDrawing] = useState(false);
   const {
     disposeToolWorld,
     dropHeldTool,
@@ -372,7 +368,6 @@ export function useHomePencilDrawing(): HomePencilDrawing {
         activeGesture.drawing = true;
         if (activeGesture.operation.kind === "pencil") {
           hasDrawingRef.current = true;
-          setHasDrawing(true);
         }
       }
 
@@ -425,30 +420,8 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     event.preventDefault();
   }, []);
 
-  const clearDrawing = useCallback(() => {
-    const activeGesture = activeGestureRef.current;
-    const root = rootRef.current;
-    if (
-      activeGesture &&
-      root &&
-      typeof root.hasPointerCapture === "function" &&
-      root.hasPointerCapture(activeGesture.pointerId)
-    ) {
-      root.releasePointerCapture(activeGesture.pointerId);
-    }
-    operationsRef.current = [];
-    activeGestureRef.current = null;
-    hasDrawingRef.current = false;
-    root?.classList.remove(PENCIL_DRAGGING_CLASS);
-    setHasDrawing(false);
-    setHeldToolContact(false);
-    scheduleDrawing();
-  }, [scheduleDrawing, setHeldToolContact]);
-
   return {
     canvasRef,
-    clearDrawing,
-    hasDrawing,
     pickUpTool,
     pointerHandlers: {
       onDragStart,
