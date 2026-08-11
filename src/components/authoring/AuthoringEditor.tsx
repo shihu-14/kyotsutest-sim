@@ -27,7 +27,7 @@ import {
   serializeSectionSource,
   sourceFromExam,
   validateAuthoring
-} from "../../utils/authoringExam";
+} from "../../utils/authoringPublish";
 import {
   coverSourceFromExam,
   environmentFromExam,

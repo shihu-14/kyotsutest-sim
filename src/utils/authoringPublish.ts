@@ -1,4 +1,10 @@
-import type { AuthoringMeta, Exam, ExamPage, ProblemBlock, QuestionSlot } from "../types";
+import type {
+  AuthoringMeta,
+  Exam,
+  ExamPage,
+  ProblemBlock,
+  QuestionSlot
+} from "../types";
 import {
   createDraftSection,
   createDraftSubsection,
