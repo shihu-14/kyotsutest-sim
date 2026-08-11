@@ -1,5 +1,4 @@
 import type { Exam } from "../../../types";
-import { animeOnlymarkExamId } from "./authoringSource";
 import { animeCoverMarkAreas, animePageGradeAnchors, animePageId, animePageMarkAreas } from "./markLayout";
 import { animeCoverPage, animePageImages, animePageTitles } from "./pageAssets";
 import { animeOnlymarkQuestions } from "./questions";
@@ -7,7 +6,7 @@ import { animeOnlymarkQuestions } from "./questions";
 export { animeOnlymarkAnswerKey } from "./answerKey";
 
 export const animeOnlymarkExam: Exam = {
-  id: animeOnlymarkExamId,
+  id: "anime-onlymark-2026",
   title: "漫画映画",
   subject: "漫画映画",
   durationMinutes: 40,

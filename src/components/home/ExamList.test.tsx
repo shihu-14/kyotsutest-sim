@@ -29,7 +29,6 @@ describe("ExamList", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={onSelect}
       />
     );
@@ -63,7 +62,6 @@ describe("ExamList", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -108,7 +106,6 @@ describe("ExamList", () => {
         exams={[examWithoutCover]}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -153,7 +150,6 @@ describe("ExamList", () => {
         exams={initialExams}
         onDelete={onDelete}
         onEdit={onEdit}
-        onOpenEditor={vi.fn()}
         onSelect={onSelect}
       />
     );
@@ -176,7 +172,6 @@ describe("ExamList", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );

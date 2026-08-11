@@ -7,8 +7,6 @@ import animeFigure07 from "../../../assets/exams/anime-onlymark-2026/crops/page-
 import animeFigure09 from "../../../assets/exams/anime-onlymark-2026/crops/page-09-figures.jpg";
 import animeFigure10 from "../../../assets/exams/anime-onlymark-2026/crops/page-10-figure.jpg";
 
-export const animeOnlymarkExamId = "anime-onlymark-2026";
-
 export const animeOnlymarkAuthoringMeta: AuthoringMeta = {
   title: "漫画映画",
   subject: "漫画映画",
@@ -226,14 +224,7 @@ Sora and dreadless Siro overwhelmed driven native executing gods since enemies _
 \choice{21}{4}{underestimate}
 `;
 
-export interface ExamAuthoringData {
-  meta: AuthoringMeta;
-  source: string;
-  environmentSource: string;
-  coverSource: string;
-}
-
-export const animeOnlymarkAuthoringData: ExamAuthoringData = {
+export const animeOnlymarkAuthoringData = {
   meta: animeOnlymarkAuthoringMeta,
   source: animeOnlymarkAuthoringSource,
   environmentSource: animeOnlymarkEnvironmentSource,

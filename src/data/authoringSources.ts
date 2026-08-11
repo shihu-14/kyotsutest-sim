@@ -1,12 +1,16 @@
-import type { Exam } from "../types";
-import {
-  animeOnlymarkAuthoringData,
-  animeOnlymarkExamId,
-  type ExamAuthoringData
-} from "./exams/animeOnlymark2026/authoringSource";
+import type { AuthoringMeta, Exam } from "../types";
+import { animeOnlymarkExam } from "./exams/animeOnlymark2026";
+import { animeOnlymarkAuthoringData } from "./exams/animeOnlymark2026/authoringSource";
+
+interface ExamAuthoringData {
+  meta: AuthoringMeta;
+  source: string;
+  environmentSource: string;
+  coverSource: string;
+}
 
 const authoringDataByExamId: ReadonlyMap<string, ExamAuthoringData> = new Map([
-  [animeOnlymarkExamId, animeOnlymarkAuthoringData]
+  [animeOnlymarkExam.id, animeOnlymarkAuthoringData]
 ]);
 
 export function resolveAuthoringData(exam: Exam | null | undefined) {

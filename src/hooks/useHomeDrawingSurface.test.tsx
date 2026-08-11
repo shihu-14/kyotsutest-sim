@@ -140,7 +140,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -214,7 +213,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -259,7 +257,6 @@ describe("useHomeDrawingSurface", () => {
           exams={initialExams}
           onDelete={vi.fn()}
           onEdit={vi.fn()}
-          onOpenEditor={vi.fn()}
           onSelect={vi.fn()}
         />
       );
@@ -372,7 +369,6 @@ describe("useHomeDrawingSurface", () => {
             exams={initialExams}
             onDelete={vi.fn()}
             onEdit={vi.fn()}
-            onOpenEditor={vi.fn()}
             onSelect={vi.fn()}
           />
         </StrictMode>
@@ -460,7 +456,6 @@ describe("useHomeDrawingSurface", () => {
           exams={initialExams}
           onDelete={vi.fn()}
           onEdit={vi.fn()}
-          onOpenEditor={vi.fn()}
           onSelect={vi.fn()}
         />
       </StrictMode>
@@ -481,7 +476,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -541,7 +535,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -605,7 +598,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -646,7 +638,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -690,7 +681,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -734,7 +724,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );
@@ -779,7 +768,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={onSelect}
       />
     );
@@ -852,7 +840,6 @@ describe("useHomeDrawingSurface", () => {
         exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
         onSelect={vi.fn()}
       />
     );

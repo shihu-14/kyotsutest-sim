@@ -3,7 +3,6 @@ import { structuredExamFixture } from "../test/examFixtures";
 import {
   examSessionReducer,
   initialExamSessionState,
-  type ExamSessionEvent,
   type ExamSessionState
 } from "./examSession";
 
@@ -59,13 +58,15 @@ describe("examSessionReducer", () => {
   });
 
   it("keeps editor, page, and answer updates explicit", () => {
-    const events: ExamSessionEvent[] = [
-      { type: "OPEN_EDITOR", exam: structuredExamFixture },
-      { type: "CLOSE_EDITOR" },
-      { type: "OPEN_NEW_EDITOR" }
-    ];
-    const editorState = events.reduce(examSessionReducer, initialExamSessionState);
-    expect(editorState).toMatchObject({ editingExam: null, phase: "editor" });
+    const editorState = examSessionReducer(initialExamSessionState, {
+      type: "OPEN_EDITOR",
+      exam: structuredExamFixture
+    });
+    expect(editorState).toMatchObject({ editingExam: structuredExamFixture, phase: "editor" });
+    expect(examSessionReducer(editorState, { type: "CLOSE_EDITOR" })).toMatchObject({
+      editingExam: null,
+      phase: "select"
+    });
 
     const examState: ExamSessionState = {
       ...initialExamSessionState,

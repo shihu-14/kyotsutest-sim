@@ -18,7 +18,6 @@ export type ExamSessionEvent =
   | { type: "ENTER_REVIEW" }
   | { type: "RESET_TO_LIST" }
   | { type: "DISCARD_TO_LIST" }
-  | { type: "OPEN_NEW_EDITOR" }
   | { type: "OPEN_EDITOR"; exam: Exam }
   | { type: "CLOSE_EDITOR" }
   | { type: "CHANGE_PAGE"; pageId: string }
@@ -89,8 +88,6 @@ export function examSessionReducer(state: ExamSessionState, event: ExamSessionEv
         selectedExam: null,
         showCompletedScoring: false
       };
-    case "OPEN_NEW_EDITOR":
-      return { ...state, editingExam: null, phase: "editor" };
     case "OPEN_EDITOR":
       return { ...state, editingExam: event.exam, phase: "editor" };
     case "CLOSE_EDITOR":
