@@ -22,6 +22,8 @@ export default defineConfig([
       "react-refresh": reactRefresh
     },
     rules: {
+      "no-undef": "off",
+      "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
         {
