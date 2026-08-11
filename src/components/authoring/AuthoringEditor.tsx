@@ -10,7 +10,13 @@ import { SectionNavigator } from "./SectionNavigator";
 import { EnvironmentTexEditor, PublishedSectionPreview, SectionTexEditor } from "./TexEditors";
 import {
   countDraftMarks,
+  cloneDraft,
+  createDraftSection,
+  normalizeFormDraft,
+  normalizeSourceDraft,
   parseAuthoringDraft,
+  sectionMarkCount,
+  sectionPointTotal,
   serializeAuthoringDraft,
   sumDraftPoints,
   type ExamDraft
@@ -18,17 +24,11 @@ import {
 import {
   buildPublishedExam,
   buildSectionCompileSource,
-  cloneDraft,
   coverSourceFromExam,
-  createDraftSection,
   environmentFromExam,
   metaFromExam,
-  normalizeFormDraft,
-  normalizeSourceDraft,
   parseEnvironmentEditorSource,
   sameMeta,
-  sectionMarkCount,
-  sectionPointTotal,
   serializeEnvironmentEditorSource,
   serializeSectionSource,
   sourceFromExam,
