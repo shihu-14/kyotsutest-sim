@@ -15,7 +15,6 @@ import {
   contactPointFromHeldCenter
 } from "../../utils/homeToolPhysics";
 import { ExamList } from "./ExamList";
-import { HomeDesignPreview } from "../design-previews/HomeDesignPreview";
 import { HomeDrawingTools } from "./HomeDrawingTools";
 
 function installPointerCapture(element: HTMLElement) {
@@ -101,17 +100,6 @@ function pngDimensions(path: string) {
 
 function rotationFromTransform(element: HTMLElement) {
   return Number(element.style.transform.match(/rotate\((-?[\d.]+)deg\)/)?.[1]);
-}
-
-function domStructureSignature(element: Element): string {
-  const className = element.getAttribute("class") ?? "";
-  const children = Array.from(element.children).map(domStructureSignature).join(",");
-  return `${element.tagName.toLowerCase()}.${className}[${children}]`;
-}
-
-function domTagSignature(element: Element): string {
-  const children = Array.from(element.children).map(domTagSignature).join(",");
-  return `${element.tagName.toLowerCase()}[${children}]`;
 }
 
 function PencilExclusionHarness() {

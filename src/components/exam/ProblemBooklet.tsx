@@ -3,8 +3,6 @@ import type {
   AnswerValue,
   ExamPage,
   GradedQuestion,
-  PageGradeAnchor,
-  PageMarkArea,
   QuestionSlot,
   UserAnswers
 } from "../../types";
