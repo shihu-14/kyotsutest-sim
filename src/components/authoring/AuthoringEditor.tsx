@@ -20,14 +20,14 @@ import {
   serializeAuthoringDraft,
   sumDraftPoints,
   type ExamDraft
-} from "../../utils/authoringDraft";
+} from "../../utils/authoring/authoringDraft";
 import {
   buildPublishedExam,
   buildSectionCompileSource,
   serializeSectionSource,
   sourceFromExam,
   validateAuthoring
-} from "../../utils/authoringPublish";
+} from "../../utils/authoring/authoringPublish";
 import {
   coverSourceFromExam,
   environmentFromExam,
@@ -35,14 +35,14 @@ import {
   parseEnvironmentEditorSource,
   sameMeta,
   serializeEnvironmentEditorSource
-} from "../../utils/authoringEnvironment";
-import { parseAuthoringLatex } from "../../utils/authoringPreview";
+} from "../../utils/authoring/authoringEnvironment";
+import { parseAuthoringLatex } from "../../utils/authoring/authoringPreview";
 import {
   saveAuthorCover,
   saveAuthorEnvironment,
   saveAuthorMeta,
   saveAuthorSource
-} from "../../utils/authoringStorage";
+} from "../../utils/authoring/authoringStorage";
 
 interface AuthoringEditorProps {
   initialExam?: Exam | null;

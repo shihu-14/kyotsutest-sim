@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 
-export type ReviewTransitionPhase = "idle" | "entering" | "visible" | "settled";
+type ReviewTransitionPhase = "idle" | "entering" | "visible" | "settled";
 
 export function useReviewTransition() {
   const [transitionPhase, setTransitionPhase] = useState<ReviewTransitionPhase>("idle");

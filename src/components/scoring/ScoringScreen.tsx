@@ -139,7 +139,6 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
         <ScoringReviewBackdrop
           answers={answers}
           exam={exam}
-          startComplete={startComplete}
         />
       ) : null}
 

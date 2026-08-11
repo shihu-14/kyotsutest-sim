@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, ty
 
 const minimumZoom = 1;
 const maximumZoom = 1.6;
-export const BOOKLET_ZOOM_STEP = 0.03;
+const BOOKLET_ZOOM_STEP = 0.03;
 
 function clampZoom(value: number) {
   return Math.round(Math.min(maximumZoom, Math.max(minimumZoom, value)) * 1000) / 1000;

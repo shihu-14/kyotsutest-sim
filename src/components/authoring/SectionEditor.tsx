@@ -8,7 +8,7 @@ import {
   type DraftMark,
   type DraftSection,
   type DraftSubsection
-} from "../../utils/authoringDraft";
+} from "../../utils/authoring/authoringDraft";
 
 interface SectionEditorProps {
   section: DraftSection;

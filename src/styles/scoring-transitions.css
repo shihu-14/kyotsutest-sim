@@ -111,11 +111,6 @@
   animation: none;
 }
 
-.scoring-review-layout {
-  height: 100%;
-  min-height: 0;
-}
-
 .scoring-review-backdrop .booklet-shell {
   opacity: 0;
   animation: scoring-review-ui-fade-in 560ms ease-out 2000ms forwards;

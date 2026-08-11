@@ -1,9 +1,9 @@
-import type { AuthoringMeta, Exam } from "../types";
+import type { AuthoringMeta, Exam } from "../../types";
 import {
   defaultAuthoringMeta,
   defaultCoverSource,
   defaultEnvironmentSource
-} from "./authoringDefaults";
+} from "../../data/authoringDefaults";
 import { normalizePreviewText } from "./authoringPreview";
 import { loadAuthorCover, loadAuthorEnvironment, loadAuthorMeta } from "./authoringStorage";
 

@@ -16,13 +16,6 @@
   }
 }
 
-@keyframes scoring-booklet-out {
-  to {
-    opacity: 0;
-    transform: translateY(-12px) scale(0.97);
-  }
-}
-
 @keyframes scoring-page-turn {
   from {
     opacity: 0;
@@ -88,15 +81,6 @@
     overflow: visible;
   }
 
-  .scoring-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .scoring-board {
-    max-height: none;
-    overflow: visible;
-  }
-
   .home-actions {
     justify-content: stretch;
   }
@@ -107,10 +91,6 @@
 
   .exam-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .author-grid {
-    grid-template-columns: 1fr;
   }
 
   .author-topbar,
@@ -133,21 +113,8 @@
     flex-direction: column;
   }
 
-  .structure-section-head {
-    align-items: stretch;
-    flex-wrap: wrap;
-  }
-
   .structure-mark-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .common-test-preview {
-    max-height: none;
-  }
-
-  .grading-row {
-    grid-template-columns: 1fr;
   }
 
   .red-pen {
@@ -160,24 +127,8 @@
 }
 
 @media (max-width: 560px) {
-  .cover-meta {
-    grid-template-columns: 1fr;
-  }
-
-  .cover-layout {
-    grid-template-columns: 1fr;
-  }
-
   .exam-grid {
     grid-template-columns: 1fr;
-  }
-
-  .exam-tile {
-    height: 390px;
-  }
-
-  .exam-card-main {
-    grid-template-rows: minmax(0, 1fr);
   }
 
   .meta-form {
@@ -188,11 +139,4 @@
     padding: 20px;
   }
 
-  .result-actions {
-    flex-direction: column;
-  }
-
-  .slot-row {
-    grid-template-columns: 1fr 1fr;
-  }
 }

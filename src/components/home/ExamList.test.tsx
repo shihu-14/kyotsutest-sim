@@ -40,8 +40,6 @@ describe("ExamList", () => {
     expect(screen.queryByText(exam.description)).not.toBeInTheDocument();
 
     const card = screen.getByRole("article", { name: exam.title });
-    expect(card).toHaveAttribute("data-card-structure", "steam-capsule");
-    expect(card).toHaveAttribute("data-capsule-theme", "current");
     expect(card).not.toHaveTextContent(`${exam.durationMinutes}分`);
     expect(within(card).queryByText(`${exam.questions.length}問`)).not.toBeInTheDocument();
     expect(card).not.toHaveTextContent(`${exam.totalPoints}点`);

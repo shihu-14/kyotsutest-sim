@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-export interface CountdownState {
+interface CountdownState {
   remainingMs: number;
   formatted: string;
   isExpired: boolean;
