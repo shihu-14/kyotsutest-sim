@@ -1,11 +1,15 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "./App";
 
 describe("App", () => {
   beforeEach(() => {
     window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("shows the pre-start confirmation before starting a fresh exam", async () => {
@@ -93,5 +97,42 @@ describe("App", () => {
 
     expect(screen.getByRole("heading", { name: "共通テスト形式 ウェブ模試" })).toBeInTheDocument();
     expect(window.localStorage.getItem("kyotsu-test-sim:answers:anime-onlymark-2026")).toBeNull();
+    expect(window.localStorage.getItem("kyotsu-test-sim:deadline:anime-onlymark-2026")).toBeNull();
+  });
+
+  it("keeps the select to review session transitions intact", async () => {
+    vi.useFakeTimers();
+
+    render(<App />);
+
+    const animeCard = screen.getByRole("article", { name: "漫画映画" });
+    fireEvent.click(within(animeCard).getByRole("button", { name: "漫画映画を選択" }));
+    expect(screen.queryByRole("timer")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    expect(screen.getByRole("timer")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "採点へ進む" }));
+    const finishDialog = screen.getByRole("dialog", { name: "採点へ進む確認" });
+    fireEvent.click(within(finishDialog).getByRole("button", { name: "採点へ進む" }));
+    expect(screen.getByLabelText("問題用紙への採点")).toBeInTheDocument();
+
+    for (let step = 0; step < 100 && !document.querySelector(".review-mode-fade-in-settled"); step += 1) {
+      await act(async () => {
+        await vi.runOnlyPendingTimersAsync();
+      });
+    }
+
+    expect(screen.getByRole("main")).toHaveClass(
+      "review-mode-fade-in",
+      "review-mode-fade-in-ready",
+      "review-mode-fade-in-settled"
+    );
+    expect(document.querySelector(".review-score-badge")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "ホームに戻る" }));
+    expect(screen.getByRole("heading", { name: "共通テスト形式 ウェブ模試" })).toBeInTheDocument();
+    expect(window.localStorage.getItem("kyotsu-test-sim:answers:anime-onlymark-2026")).toBeNull();
+    expect(window.localStorage.getItem("kyotsu-test-sim:deadline:anime-onlymark-2026")).toBeNull();
   });
 });
