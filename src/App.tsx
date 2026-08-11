@@ -5,6 +5,7 @@ import { ExamList } from "./components/home/ExamList";
 import { ExamRunner } from "./components/exam/ExamRunner";
 import { ScoringScreen } from "./components/scoring/ScoringScreen";
 import { sampleExams } from "./data/sampleExam";
+import { useReviewTransition } from "./hooks/useReviewTransition";
 import type { AnswerValue, Exam, ExamPhase, QuestionSlot, UserAnswers } from "./types";
 import { clearAnswers, clearDeadline, loadAnswers, saveAnswers, saveDeadline } from "./utils/storage";
 import { toggleAnswer } from "./utils/answer";
@@ -18,18 +19,15 @@ export function App() {
   const [deadline, setDeadline] = useState<number | null>(null);
   const [currentPageId, setCurrentPageId] = useState<string>("");
   const [showCompletedScoring, setShowCompletedScoring] = useState(false);
-  const [reviewFadeIn, setReviewFadeIn] = useState(false);
-  const [reviewUiVisible, setReviewUiVisible] = useState(false);
-  const [reviewUiSettled, setReviewUiSettled] = useState(false);
+  const { className: reviewTransitionClassName, resetReviewTransition, startReviewTransition } =
+    useReviewTransition();
 
   const openCover = (exam: Exam) => {
     setSelectedExam(exam);
     setAnswers(loadAnswers(exam.id));
     setDeadline(null);
     setCurrentPageId(exam.pages[0]?.id ?? "");
-    setReviewFadeIn(false);
-    setReviewUiVisible(false);
-    setReviewUiSettled(false);
+    resetReviewTransition();
     setPhase("cover");
   };
 
@@ -44,9 +42,7 @@ export function App() {
     setDeadline(nextDeadline);
     saveDeadline(selectedExam.id, nextDeadline);
     setCurrentPageId(selectedExam.pages[0]?.id ?? "");
-    setReviewFadeIn(false);
-    setReviewUiVisible(false);
-    setReviewUiSettled(false);
+    resetReviewTransition();
     setPhase("exam");
   };
 
@@ -58,9 +54,7 @@ export function App() {
     setDeadline(null);
     setCurrentPageId("");
     setShowCompletedScoring(false);
-    setReviewFadeIn(false);
-    setReviewUiVisible(false);
-    setReviewUiSettled(false);
+    resetReviewTransition();
     setPhase("select");
   };
 
@@ -74,11 +68,9 @@ export function App() {
     setDeadline(null);
     setCurrentPageId("");
     setShowCompletedScoring(false);
-    setReviewFadeIn(false);
-    setReviewUiVisible(false);
-    setReviewUiSettled(false);
+    resetReviewTransition();
     setPhase("select");
-  }, [selectedExam]);
+  }, [resetReviewTransition, selectedExam]);
 
   const deleteExam = (examId: string) => {
     setExams((current) => current.filter((exam) => exam.id !== examId));
@@ -93,25 +85,19 @@ export function App() {
     }
     setDeadline(null);
     setShowCompletedScoring(false);
-    setReviewFadeIn(false);
-    setReviewUiVisible(false);
-    setReviewUiSettled(false);
+    resetReviewTransition();
     setPhase("scoring");
-  }, [selectedExam]);
+  }, [resetReviewTransition, selectedExam]);
 
   const openNewEditor = () => {
     setEditingExam(null);
-    setReviewFadeIn(false);
-    setReviewUiVisible(false);
-    setReviewUiSettled(false);
+    resetReviewTransition();
     setPhase("editor");
   };
 
   const openExamEditor = (exam: Exam) => {
     setEditingExam(exam);
-    setReviewFadeIn(false);
-    setReviewUiVisible(false);
-    setReviewUiSettled(false);
+    resetReviewTransition();
     setPhase("editor");
   };
 
@@ -125,9 +111,7 @@ export function App() {
       return current.map((item) => (item.id === exam.id ? exam : item));
     });
     setEditingExam(null);
-    setReviewFadeIn(false);
-    setReviewUiVisible(false);
-    setReviewUiSettled(false);
+    resetReviewTransition();
     setPhase("select");
   };
 
@@ -143,21 +127,6 @@ export function App() {
       saveAnswers(selectedExam.id, answers);
     }
   }, [answers, selectedExam]);
-
-  useEffect(() => {
-    if (phase !== "review" || !reviewFadeIn) {
-      setReviewUiVisible(false);
-      setReviewUiSettled(false);
-      return undefined;
-    }
-
-    const showTimeoutId = window.setTimeout(() => setReviewUiVisible(true), 0);
-    const settleTimeoutId = window.setTimeout(() => setReviewUiSettled(true), 620);
-    return () => {
-      window.clearTimeout(showTimeoutId);
-      window.clearTimeout(settleTimeoutId);
-    };
-  }, [phase, reviewFadeIn]);
 
   if (phase === "editor") {
     return (
@@ -198,9 +167,7 @@ export function App() {
         onReview={() => {
           setShowCompletedScoring(true);
           setCurrentPageId(selectedExam.pages[0]?.id ?? "");
-          setReviewFadeIn(true);
-          setReviewUiVisible(false);
-          setReviewUiSettled(false);
+          startReviewTransition();
           setPhase("review");
         }}
       />
@@ -213,15 +180,7 @@ export function App() {
       currentPageId={currentPageId}
       deadline={deadline}
       exam={selectedExam}
-      className={
-        [
-          reviewFadeIn ? "review-mode-fade-in" : "",
-          reviewFadeIn && reviewUiVisible ? "review-mode-fade-in-ready" : "",
-          reviewFadeIn && reviewUiSettled ? "review-mode-fade-in-settled" : ""
-        ]
-          .filter(Boolean)
-          .join(" ") || undefined
-      }
+      className={reviewTransitionClassName}
       reviewMode={phase === "review"}
       onChangePage={setCurrentPageId}
       onExitReview={discardExamAndReturnHome}
