@@ -18,6 +18,7 @@ const pageTurnDelayMs = 760;
 const emptyPageTurnDelayMs = 260;
 const resultDelayMs = 620;
 const autoReviewDelayMs = 2000;
+const pauseOnScorePopForDebug = true;
 
 export function ScoringScreen({ exam, answers, startComplete = false, onReview }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);
@@ -95,7 +96,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
   }, [currentPageIndex, exam.pages, questionPageIds, showResult, startComplete, summary.gradedQuestions, visibleCount]);
 
   useEffect(() => {
-    if (startComplete || !showResult) {
+    if (startComplete || !showResult || pauseOnScorePopForDebug) {
       return undefined;
     }
 
