@@ -151,7 +151,14 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
           aria-label="採点結果"
           aria-live="polite"
         >
-          <div className="scoring-final-content">
+          <div
+            className="scoring-final-content"
+            style={
+              pauseOnScorePopForDebug && !startComplete
+                ? { animation: "scoring-score-pop-in 420ms cubic-bezier(0.2, 0.9, 0.25, 1.16) both" }
+                : undefined
+            }
+          >
             <p>得点</p>
             <strong className="scoring-score-value">
               {summary.totalScore}

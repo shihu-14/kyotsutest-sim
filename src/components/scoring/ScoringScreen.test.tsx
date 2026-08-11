@@ -164,6 +164,9 @@ describe("ScoringScreen", () => {
     });
 
     expect(screen.getByLabelText("採点結果")).toHaveClass("auto-review-score-pop");
+    expect(document.querySelector(".scoring-final-content")).toHaveStyle({
+      animation: "scoring-score-pop-in 420ms cubic-bezier(0.2, 0.9, 0.25, 1.16) both"
+    });
     expect(onReview).not.toHaveBeenCalled();
   });
 
