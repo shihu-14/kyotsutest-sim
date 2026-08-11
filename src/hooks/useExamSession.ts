@@ -10,7 +10,7 @@ import {
   loadAnswers,
   saveAnswers,
   saveDeadline
-} from "../utils/storage";
+} from "../utils/examStorage";
 
 export function useExamSession() {
   const [state, dispatch] = useReducer(examSessionReducer, initialExamSessionState);

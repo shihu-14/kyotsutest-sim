@@ -5,7 +5,7 @@ import {
   defaultEnvironmentSource
 } from "./authoringDefaults";
 import { normalizePreviewText } from "./authoringPreview";
-import { loadAuthorCover, loadAuthorEnvironment, loadAuthorMeta } from "./storage";
+import { loadAuthorCover, loadAuthorEnvironment, loadAuthorMeta } from "./authoringStorage";
 
 const animeSampleExamId = "anime-onlymark-2026";
 const coverInstructionsBlockPattern = /\\begin\{coverinstructions\}([\s\S]*?)\\end\{coverinstructions\}/;

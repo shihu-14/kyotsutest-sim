@@ -37,7 +37,12 @@ import {
   serializeEnvironmentEditorSource
 } from "../../utils/authoringEnvironment";
 import { parseAuthoringLatex } from "../../utils/authoringPreview";
-import { saveAuthorCover, saveAuthorEnvironment, saveAuthorMeta, saveAuthorSource } from "../../utils/storage";
+import {
+  saveAuthorCover,
+  saveAuthorEnvironment,
+  saveAuthorMeta,
+  saveAuthorSource
+} from "../../utils/authoringStorage";
 
 interface AuthoringEditorProps {
   initialExam?: Exam | null;
