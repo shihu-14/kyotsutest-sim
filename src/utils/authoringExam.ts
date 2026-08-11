@@ -1,14 +1,15 @@
 import type { AuthoringMeta, Exam, ExamPage, ProblemBlock, QuestionSlot } from "../types";
 import {
-  createDefaultChoices,
+  createDraftSection,
+  createDraftSubsection,
   getDraftMarkEntries,
   normalizeMarkChoices,
+  normalizeSourceDraft,
   parseAuthoringDraft,
   serializeAuthoringDraft,
   shouldOmitSubsectionTitle,
   type DraftMark,
   type DraftSection,
-  type DraftSubsection,
   type ExamDraft
 } from "./authoringDraft";
 import {
@@ -63,53 +64,6 @@ export function metaFromExam(exam: Exam | null | undefined): AuthoringMeta {
     questionCount: exam.questions.length,
     totalPoints: exam.totalPoints,
     durationMinutes: exam.durationMinutes
-  };
-}
-
-export function createDraftMark(label: string, points = 1): DraftMark {
-  return {
-    id: `mark-${label}`,
-    label,
-    answer: "1",
-    points,
-    choices: 4,
-    multi: false,
-    optionContents: createDefaultChoices(4)
-  };
-}
-
-export function createDraftSection(index: number): DraftSection {
-  return {
-    id: `section-${index + 1}`,
-    title: `第${index + 1}問`,
-    body: "",
-    marks: [],
-    subsections: []
-  };
-}
-
-export function createDraftSubsection(sectionIndex: number, subsectionIndex: number): DraftSubsection {
-  return {
-    id: `section-${sectionIndex + 1}-subsection-${subsectionIndex + 1}`,
-    title: `問${subsectionIndex + 1}`,
-    body: "",
-    marks: []
-  };
-}
-
-export function cloneDraft(draft: ExamDraft): ExamDraft {
-  return {
-    sections: draft.sections.map((section) => ({
-      ...section,
-      marks: section.marks.map((mark) => ({ ...mark, optionContents: mark.optionContents.map((choice) => ({ ...choice })) })),
-      subsections: section.subsections.map((subsection) => ({
-        ...subsection,
-        marks: subsection.marks.map((mark) => ({
-          ...mark,
-          optionContents: mark.optionContents.map((choice) => ({ ...choice }))
-        }))
-      }))
-    }))
   };
 }
 
@@ -215,50 +169,6 @@ function texColorMap(body: string): Map<string, string> {
   return colors;
 }
 
-export function normalizeFormDraft(draft: ExamDraft): ExamDraft {
-  let nextMarkNumber = 1;
-
-  return {
-    sections: draft.sections.map((section, sectionIndex) => ({
-      ...section,
-      title: `第${sectionIndex + 1}問`,
-      marks: section.marks.map((mark) => ({
-        ...mark,
-        label: String(nextMarkNumber++)
-      })),
-      subsections: section.subsections.map((subsection, subsectionIndex) => ({
-        ...subsection,
-        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
-        marks: subsection.marks.map((mark) => ({
-          ...mark,
-          label: String(nextMarkNumber++)
-        }))
-      }))
-    }))
-  };
-}
-
-export function normalizeSourceDraft(draft: ExamDraft): ExamDraft {
-  return {
-    sections: draft.sections.map((section, sectionIndex) => ({
-      ...section,
-      title: section.title.trim() || `第${sectionIndex + 1}問`,
-      marks: section.marks.map((mark, markIndex) => ({
-        ...mark,
-        label: mark.label.trim() || String(markIndex + 1)
-      })),
-      subsections: section.subsections.map((subsection, subsectionIndex) => ({
-        ...subsection,
-        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
-        marks: subsection.marks.map((mark, markIndex) => ({
-          ...mark,
-          label: mark.label.trim() || String(markIndex + 1)
-        }))
-      }))
-    }))
-  };
-}
-
 export function serializeSectionSource(section: DraftSection): string {
   const lines = [`\\sectiontitle{${section.title}}`];
 
@@ -301,21 +211,6 @@ export function serializeSectionSource(section: DraftSection): string {
 
 export function buildSectionCompileSource(meta: AuthoringMeta, section: DraftSection, environmentSource: string): string {
   return `${authoringTexPreamble}\n${environmentSource}\n\\begin{document}\n\\examtitle{${meta.title}}\n${serializeSectionSource(section)}\\end{document}\n`;
-}
-
-function getSectionMarkEntries(section: DraftSection) {
-  return [
-    ...section.marks.map((mark) => ({ mark })),
-    ...section.subsections.flatMap((subsection) => subsection.marks.map((mark) => ({ mark })))
-  ];
-}
-
-export function sectionPointTotal(section: DraftSection): number {
-  return getSectionMarkEntries(section).reduce((sum, entry) => sum + entry.mark.points, 0);
-}
-
-export function sectionMarkCount(section: DraftSection): number {
-  return getSectionMarkEntries(section).length;
 }
 
 function draftBodyLineFromBlock(block: ProblemBlock): string | null {

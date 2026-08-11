@@ -1,12 +1,14 @@
 import { useState } from "react";
 import {
+  createDraftMark,
+  createDraftSubsection,
   normalizeMarkChoices,
+  sectionMarkCount,
   type DraftChoice,
   type DraftMark,
   type DraftSection,
   type DraftSubsection
 } from "../../utils/authoringDraft";
-import { createDraftMark, createDraftSubsection, sectionMarkCount } from "../../utils/authoringExam";
 
 interface SectionEditorProps {
   section: DraftSection;

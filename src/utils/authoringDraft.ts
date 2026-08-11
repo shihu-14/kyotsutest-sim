@@ -61,12 +61,106 @@ export function createDefaultChoices(count: number): DraftChoice[] {
   });
 }
 
+export function createDraftMark(label: string, points = 1): DraftMark {
+  return {
+    id: `mark-${label}`,
+    label,
+    answer: "1",
+    points,
+    choices: 4,
+    multi: false,
+    optionContents: createDefaultChoices(4)
+  };
+}
+
+export function createDraftSection(index: number): DraftSection {
+  return {
+    id: `section-${index + 1}`,
+    title: `第${index + 1}問`,
+    body: "",
+    marks: [],
+    subsections: []
+  };
+}
+
+export function createDraftSubsection(sectionIndex: number, subsectionIndex: number): DraftSubsection {
+  return {
+    id: `section-${sectionIndex + 1}-subsection-${subsectionIndex + 1}`,
+    title: `問${subsectionIndex + 1}`,
+    body: "",
+    marks: []
+  };
+}
+
+export function cloneDraft(draft: ExamDraft): ExamDraft {
+  return {
+    sections: draft.sections.map((section) => ({
+      ...section,
+      marks: section.marks.map((mark) => ({
+        ...mark,
+        optionContents: mark.optionContents.map((choice) => ({ ...choice }))
+      })),
+      subsections: section.subsections.map((subsection) => ({
+        ...subsection,
+        marks: subsection.marks.map((mark) => ({
+          ...mark,
+          optionContents: mark.optionContents.map((choice) => ({ ...choice }))
+        }))
+      }))
+    }))
+  };
+}
+
 export function normalizeMarkChoices(mark: DraftMark): DraftChoice[] {
   const existingByValue = new Map(mark.optionContents.map((choice) => [choice.value, choice]));
   return Array.from({ length: positiveChoiceCount(mark.choices) }, (_item, index) => {
     const value = String(index + 1);
     return existingByValue.get(value) ?? { value, content: value };
   });
+}
+
+export function normalizeFormDraft(draft: ExamDraft): ExamDraft {
+  let nextMarkNumber = 1;
+
+  return {
+    sections: draft.sections.map((section, sectionIndex) => ({
+      ...section,
+      title: `第${sectionIndex + 1}問`,
+      marks: section.marks.map((mark) => ({
+        ...mark,
+        label: String(nextMarkNumber++)
+      })),
+      subsections: section.subsections.map((subsection, subsectionIndex) => ({
+        ...subsection,
+        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
+        marks: subsection.marks.map((mark) => ({
+          ...mark,
+          label: String(nextMarkNumber++)
+        }))
+      }))
+    }))
+  };
+}
+
+export function normalizeSourceDraft(draft: ExamDraft): ExamDraft {
+  return {
+    sections: draft.sections.map((section, sectionIndex) => ({
+      ...section,
+      title: section.title.trim() || `第${sectionIndex + 1}問`,
+      marks: section.marks.map((mark, markIndex) => ({
+        ...mark,
+        label: mark.label.trim() || String(markIndex + 1)
+      })),
+      subsections: section.subsections.map((subsection, subsectionIndex) => ({
+        ...subsection,
+        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
+        marks: subsection.marks.map((mark, markIndex) => ({
+          ...mark,
+          label: mark.label.trim() || String(markIndex + 1)
+        }))
+      }))
+    }))
+  };
 }
 
 export function shouldOmitSubsectionTitle(section: DraftSection, subsection: DraftSubsection): boolean {
@@ -325,4 +419,15 @@ export function countDraftMarks(draft: ExamDraft): number {
 
 export function sumDraftPoints(draft: ExamDraft): number {
   return getDraftMarkEntries(draft).reduce((sum, entry) => sum + entry.mark.points, 0);
+}
+
+export function sectionPointTotal(section: DraftSection): number {
+  return [...section.marks, ...section.subsections.flatMap((subsection) => subsection.marks)].reduce(
+    (sum, mark) => sum + mark.points,
+    0
+  );
+}
+
+export function sectionMarkCount(section: DraftSection): number {
+  return section.marks.length + section.subsections.reduce((sum, subsection) => sum + subsection.marks.length, 0);
 }
