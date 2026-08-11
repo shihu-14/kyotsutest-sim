@@ -16,7 +16,7 @@ export const scoreDisplayCandidates = [
 
 export type ScoreDisplayVariant = (typeof scoreDisplayCandidates)[number]["id"];
 
-interface ScoreDisplayProps {
+interface ScoreDisplayCandidateProps {
   summary: GradeSummary;
   variant: ScoreDisplayVariant;
 }
@@ -43,7 +43,7 @@ function ScoreStatus({ children, className, summary, variant, style }: ScoreStat
   );
 }
 
-export function ScoreDisplay({ summary, variant }: ScoreDisplayProps) {
+export function ScoreDisplayCandidate({ summary, variant }: ScoreDisplayCandidateProps) {
   const ratio = summary.totalPoints > 0 ? summary.totalScore / summary.totalPoints : 0;
   const percentage = Math.round(Math.min(1, Math.max(0, ratio)) * 100);
   const activeSegments = Math.round(percentage / 10);

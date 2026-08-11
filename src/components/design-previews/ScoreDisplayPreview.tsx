@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Exam, UserAnswers } from "../../types";
 import { ExamRunner } from "../exam/ExamRunner";
-import { ScoreDisplay, scoreDisplayCandidates, type ScoreDisplayVariant } from "./ScoreDisplay";
+import {
+  ScoreDisplayCandidate,
+  scoreDisplayCandidates,
+  type ScoreDisplayVariant
+} from "./ScoreDisplayCandidate";
 
 interface ScoreDisplayPreviewProps {
   exam: Exam;
@@ -62,7 +66,7 @@ export function ScoreDisplayPreview({ exam, onExit }: ScoreDisplayPreviewProps) 
           onExpire={() => undefined}
           onFinish={() => undefined}
           onToggleAnswer={() => undefined}
-          renderReviewScore={(summary) => <ScoreDisplay summary={summary} variant={activeVariant} />}
+          renderReviewScore={(summary) => <ScoreDisplayCandidate summary={summary} variant={activeVariant} />}
         />
       </div>
     </section>
