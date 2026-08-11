@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { structuredExamFixture } from "../test/examFixtures";
-import {
-  examSessionReducer,
-  initialExamSessionState,
-  type ExamSessionState
-} from "./examSession";
+import { examSessionReducer, initialExamSessionState, type ExamSessionState } from "./examSession";
 
 describe("examSessionReducer", () => {
   it("models the select, cover, exam, scoring, review, and list transitions", () => {
@@ -57,17 +53,7 @@ describe("examSessionReducer", () => {
     expect(examSessionReducer(state, { type: "DISCARD_TO_LIST" }).answers).toEqual({});
   });
 
-  it("keeps editor, page, and answer updates explicit", () => {
-    const editorState = examSessionReducer(initialExamSessionState, {
-      type: "OPEN_EDITOR",
-      exam: structuredExamFixture
-    });
-    expect(editorState).toMatchObject({ editingExam: structuredExamFixture, phase: "editor" });
-    expect(examSessionReducer(editorState, { type: "CLOSE_EDITOR" })).toMatchObject({
-      editingExam: null,
-      phase: "select"
-    });
-
+  it("keeps page and answer updates explicit", () => {
     const examState: ExamSessionState = {
       ...initialExamSessionState,
       phase: "exam",

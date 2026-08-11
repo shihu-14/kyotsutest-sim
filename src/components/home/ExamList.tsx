@@ -6,18 +6,14 @@ import { ExamCard } from "./ExamCard";
 
 interface ExamListProps {
   exams: Exam[];
-  onDelete: (examId: string) => void;
-  onEdit: (exam: Exam) => void;
   onSelect: (exam: Exam) => void;
 }
 
 interface ExamCardActionsProps {
   exam: Exam;
-  onDelete: (examId: string) => void;
-  onEdit: (exam: Exam) => void;
 }
 
-function ExamCardActions({ exam, onDelete, onEdit }: ExamCardActionsProps) {
+function ExamCardActions({ exam }: ExamCardActionsProps) {
   const detailsRef = useRef<HTMLDetailsElement | null>(null);
 
   useEffect(() => {
@@ -36,10 +32,10 @@ function ExamCardActions({ exam, onDelete, onEdit }: ExamCardActionsProps) {
     <details className="exam-actions" ref={detailsRef}>
       <summary aria-label={`${exam.title}の設定`}>⋮</summary>
       <div className="exam-action-menu">
-        <button type="button" onClick={() => onEdit(exam)}>
+        <button disabled type="button">
           編集する
         </button>
-        <button type="button" onClick={() => onDelete(exam.id)}>
+        <button disabled type="button">
           削除する
         </button>
       </div>
@@ -47,17 +43,10 @@ function ExamCardActions({ exam, onDelete, onEdit }: ExamCardActionsProps) {
   );
 }
 
-export function ExamList({ exams, onDelete, onEdit, onSelect }: ExamListProps) {
+export function ExamList({ exams, onSelect }: ExamListProps) {
   const publishedExams = exams.filter((exam) => exam.published);
-  const {
-    canvasRef,
-    pickUpTool,
-    pointerHandlers,
-    registerToolElement,
-    remeasureToolWorld,
-    rootRef,
-    toolPhases,
-  } = useHomeDrawingSurface();
+  const { canvasRef, pickUpTool, pointerHandlers, registerToolElement, remeasureToolWorld, rootRef, toolPhases } =
+    useHomeDrawingSurface();
 
   return (
     <div className="home-pencil-surface" ref={rootRef} {...pointerHandlers}>
@@ -68,11 +57,7 @@ export function ExamList({ exams, onDelete, onEdit, onSelect }: ExamListProps) {
             <h1 className="home-screen-title">共通テスト形式 ウェブ模試</h1>
           </div>
           <div className="home-actions">
-            <button
-              className="secondary-button authoring-disabled-button"
-              disabled
-              type="button"
-            >
+            <button className="secondary-button authoring-disabled-button" disabled type="button">
               問題の新規作成
             </button>
           </div>
@@ -83,9 +68,7 @@ export function ExamList({ exams, onDelete, onEdit, onSelect }: ExamListProps) {
               exam={exam}
               key={exam.id}
               onSelect={() => onSelect(exam)}
-              settingsControl={
-                <ExamCardActions exam={exam} onDelete={onDelete} onEdit={onEdit} />
-              }
+              settingsControl={<ExamCardActions exam={exam} />}
             />
           ))}
         </section>

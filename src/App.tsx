@@ -1,5 +1,3 @@
-import { useState } from "react";
-import { AuthoringEditor } from "./components/authoring/AuthoringEditor";
 import { ExamRunner } from "./components/exam/ExamRunner";
 import { CoverPage } from "./components/home/CoverPage";
 import { ExamList } from "./components/home/ExamList";
@@ -10,30 +8,18 @@ import { useReviewTransition } from "./hooks/useReviewTransition";
 import type { Exam } from "./types";
 
 export function App() {
-  const [exams, setExams] = useState<Exam[]>(initialExams);
   const {
     changePage,
-    closeEditor,
     discardExamAndReturnHome: discardSession,
     enterReview,
     finishExam: finishSession,
     openCover: openSessionCover,
-    openExamEditor: openSessionEditor,
     resetToList: resetSessionToList,
     startExam: startSessionExam,
-    state: {
-      answers,
-      currentPageId,
-      deadline,
-      editingExam,
-      phase,
-      selectedExam,
-      showCompletedScoring
-    },
+    state: { answers, currentPageId, deadline, phase, selectedExam, showCompletedScoring },
     toggleAnswer
   } = useExamSession();
-  const { className: reviewTransitionClassName, resetReviewTransition, startReviewTransition } =
-    useReviewTransition();
+  const { className: reviewTransitionClassName, resetReviewTransition, startReviewTransition } = useReviewTransition();
 
   const openCover = (exam: Exam) => {
     resetReviewTransition();
@@ -60,51 +46,8 @@ export function App() {
     finishSession();
   };
 
-  const openExamEditor = (exam: Exam) => {
-    resetReviewTransition();
-    openSessionEditor(exam);
-  };
-
-  const publishExam = (exam: Exam) => {
-    setExams((current) => {
-      const existingIndex = current.findIndex((item) => item.id === exam.id);
-      if (existingIndex === -1) {
-        return [...current, exam];
-      }
-
-      return current.map((item) => (item.id === exam.id ? exam : item));
-    });
-    resetReviewTransition();
-    closeEditor();
-  };
-
-  const deleteExam = (examId: string) => {
-    setExams((current) => current.filter((exam) => exam.id !== examId));
-    if (selectedExam?.id === examId) {
-      resetToList();
-    }
-  };
-
-  if (phase === "editor") {
-    return (
-      <AuthoringEditor
-        initialExam={editingExam}
-        key={editingExam?.id ?? "new"}
-        onBack={closeEditor}
-        onPublish={publishExam}
-      />
-    );
-  }
-
   if (phase === "select" || !selectedExam) {
-    return (
-      <ExamList
-        exams={exams}
-        onDelete={deleteExam}
-        onEdit={openExamEditor}
-        onSelect={openCover}
-      />
-    );
+    return <ExamList exams={initialExams} onSelect={openCover} />;
   }
 
   if (phase === "cover") {

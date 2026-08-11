@@ -196,8 +196,8 @@
 }
 
 .exam-action-menu button:disabled:hover {
-  background: #202628;
-  color: #ffffff;
+  background: #4b5559;
+  color: #d3d9d8;
 }
 
 @media (max-width: 980px) {
