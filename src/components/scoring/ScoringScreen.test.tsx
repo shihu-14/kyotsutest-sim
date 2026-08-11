@@ -1,6 +1,8 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { sampleExams } from "../../data/sampleExam";
+import gradeCircleStamp from "../../assets/stamps/grade-circle.png";
+import gradeCrossStamp from "../../assets/stamps/grade-cross.png";
+import { structuredExamFixture } from "../../test/examFixtures";
 import type { Exam } from "../../types";
 import { ScoringScreen } from "./ScoringScreen";
 
@@ -11,7 +13,7 @@ describe("ScoringScreen", () => {
   });
 
   it("starts scoring on the booklet instead of the old scoring list", () => {
-    render(<ScoringScreen answers={{}} exam={sampleExams[0]} onReview={vi.fn()} />);
+    render(<ScoringScreen answers={{}} exam={structuredExamFixture} onReview={vi.fn()} />);
 
     expect(screen.queryByRole("heading", { name: "採点" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "自動採点" })).not.toBeInTheDocument();
@@ -26,7 +28,7 @@ describe("ScoringScreen", () => {
 
   it("can reopen directly in the completed scoring state", () => {
     render(
-      <ScoringScreen answers={{}} exam={sampleExams[0]} startComplete onReview={vi.fn()} />
+      <ScoringScreen answers={{}} exam={structuredExamFixture} startComplete onReview={vi.fn()} />
     );
 
     expect(screen.getByRole("main")).toHaveClass("scoring-static");
@@ -45,28 +47,78 @@ describe("ScoringScreen", () => {
   it("delays from the cover and then stamps answers on the problem booklet", () => {
     vi.useFakeTimers();
 
-    render(<ScoringScreen answers={{}} exam={sampleExams[0]} onReview={vi.fn()} />);
+    render(<ScoringScreen answers={{}} exam={structuredExamFixture} onReview={vi.fn()} />);
 
     expect(screen.queryByText("表紙")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
+    expect(document.querySelector(".choice-button.correct-choice")).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(1000);
     });
 
     expect(screen.queryByText("1ページ")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
+    expect(document.querySelector(".choice-button.correct-choice")).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(419);
+    });
+
+    expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
+    expect(document.querySelector(".choice-button.correct-choice")).not.toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+
+    const cross = screen.getAllByLabelText("不正解")[0];
+    expect(cross).toHaveClass("grade-stamp", "red-pen", "cross", "is-drawing");
+    expect(cross.querySelector("svg.stamp-drawing")).toHaveAttribute("viewBox", "0 0 970 1074");
+    expect(cross.querySelector("image.stamp-asset")).toHaveAttribute("href", gradeCrossStamp);
+    expect(cross.querySelectorAll("path.cross-reveal-stroke")).toHaveLength(2);
+    expect(cross.querySelector("path.cross-reveal-stroke.first")).not.toBeNull();
+    expect(cross.querySelector("path.cross-reveal-stroke.second")).not.toBeNull();
+    expect(document.querySelector(".choice-button.correct-choice")).toBeInTheDocument();
+  });
+
+  it("draws a correct stamp as one animated circle path", () => {
+    vi.useFakeTimers();
+    const exam = structuredExamFixture;
+    const firstQuestion = exam.questions[0];
+
+    render(
+      <ScoringScreen
+        answers={{ [firstQuestion.id]: firstQuestion.correct }}
+        exam={exam}
+        onReview={vi.fn()}
+      />
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
 
     act(() => {
       vi.advanceTimersByTime(420);
     });
 
-    expect(screen.getAllByLabelText("不正解")[0].querySelector("img.stamp-image-source")).not.toBeNull();
+    const circle = screen.getAllByLabelText("正解")[0];
+    expect(circle).toHaveClass("grade-stamp", "red-pen", "circle", "is-drawing");
+    expect(circle.querySelector("svg.stamp-drawing")).toHaveAttribute("viewBox", "0 0 450 332");
+    expect(circle.querySelector("image.stamp-asset")).toHaveAttribute("href", gradeCircleStamp);
+    expect(circle.querySelectorAll("path.circle-reveal-stroke")).toHaveLength(1);
+    expect(circle.querySelector("path.circle-reveal-stroke")).toHaveAttribute("pathLength", "1");
+    expect(circle.querySelector("path.circle-reveal-stroke")).toHaveAttribute(
+      "d",
+      expect.stringMatching(/^M218 280/)
+    );
   });
 
   it("shows only the score pop and then forces review mode", () => {
     vi.useFakeTimers();
     const onReview = vi.fn();
-    const baseExam = sampleExams[0];
+    const baseExam = structuredExamFixture;
     const [firstQuestion] = baseExam.questions;
     const quickExam: Exam = {
       ...baseExam,
@@ -122,7 +174,7 @@ describe("ScoringScreen", () => {
   it("turns pages without grading targets faster than graded pages", () => {
     vi.useFakeTimers();
 
-    const baseExam = sampleExams[0];
+    const baseExam = structuredExamFixture;
     const [firstQuestion, secondQuestion] = baseExam.questions;
     const examWithEmptyPage: Exam = {
       ...baseExam,

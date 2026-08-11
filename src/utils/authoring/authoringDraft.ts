@@ -1,4 +1,13 @@
-import type { AuthoringMeta } from "../types";
+import type { AuthoringMeta } from "../../types";
+import {
+  authoringBodyComment,
+  authoringLayoutCommentLines,
+  authoringMarkComment,
+  parseMarkCommand,
+  positiveChoiceCount,
+  serializeChoiceCommand,
+  serializeMarkCommand
+} from "./authoringSyntax";
 
 export interface DraftMark {
   id: string;
@@ -45,15 +54,61 @@ export interface DraftMarkEntry {
 const markPattern = /\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g;
 const choicePattern = /^\\choice\{([^}]*)\}\{([^}]*)\}\{([^}]*)\}$/;
 
-function positiveChoiceCount(count: number): number {
-  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 1;
-}
-
 export function createDefaultChoices(count: number): DraftChoice[] {
   return Array.from({ length: positiveChoiceCount(count) }, (_item, index) => {
     const value = String(index + 1);
     return { value, content: value };
   });
+}
+
+export function createDraftMark(label: string, points = 1): DraftMark {
+  return {
+    id: `mark-${label}`,
+    label,
+    answer: "1",
+    points,
+    choices: 4,
+    multi: false,
+    optionContents: createDefaultChoices(4)
+  };
+}
+
+export function createDraftSection(index: number): DraftSection {
+  return {
+    id: `section-${index + 1}`,
+    title: `第${index + 1}問`,
+    body: "",
+    marks: [],
+    subsections: []
+  };
+}
+
+export function createDraftSubsection(sectionIndex: number, subsectionIndex: number): DraftSubsection {
+  return {
+    id: `section-${sectionIndex + 1}-subsection-${subsectionIndex + 1}`,
+    title: `問${subsectionIndex + 1}`,
+    body: "",
+    marks: []
+  };
+}
+
+export function cloneDraft(draft: ExamDraft): ExamDraft {
+  return {
+    sections: draft.sections.map((section) => ({
+      ...section,
+      marks: section.marks.map((mark) => ({
+        ...mark,
+        optionContents: mark.optionContents.map((choice) => ({ ...choice }))
+      })),
+      subsections: section.subsections.map((subsection) => ({
+        ...subsection,
+        marks: subsection.marks.map((mark) => ({
+          ...mark,
+          optionContents: mark.optionContents.map((choice) => ({ ...choice }))
+        }))
+      }))
+    }))
+  };
 }
 
 export function normalizeMarkChoices(mark: DraftMark): DraftChoice[] {
@@ -64,58 +119,52 @@ export function normalizeMarkChoices(mark: DraftMark): DraftChoice[] {
   });
 }
 
-function parseAttributes(input: string | undefined): Record<string, string> {
-  if (!input) {
-    return {};
-  }
+export function normalizeFormDraft(draft: ExamDraft): ExamDraft {
+  let nextMarkNumber = 1;
 
-  return input.split(",").reduce<Record<string, string>>((attrs, pair) => {
-    const [rawKey, ...rawValue] = pair.split("=");
-    const key = rawKey?.trim();
-    if (!key) {
-      return attrs;
-    }
-
-    attrs[key] = rawValue.join("=").trim();
-    return attrs;
-  }, {});
+  return {
+    sections: draft.sections.map((section, sectionIndex) => ({
+      ...section,
+      title: `第${sectionIndex + 1}問`,
+      marks: section.marks.map((mark) => ({
+        ...mark,
+        label: String(nextMarkNumber++)
+      })),
+      subsections: section.subsections.map((subsection, subsectionIndex) => ({
+        ...subsection,
+        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
+        marks: subsection.marks.map((mark) => ({
+          ...mark,
+          label: String(nextMarkNumber++)
+        }))
+      }))
+    }))
+  };
 }
 
-function serializeMark(mark: DraftMark): string {
-  const attrs = [
-    `answer=${mark.answer}`,
-    `points=${Math.max(0, mark.points)}`,
-    `choices=${positiveChoiceCount(mark.choices)}`,
-    mark.multi ? "multi=true" : ""
-  ].filter(Boolean);
-
-  return `\\mark[${attrs.join(",")}]{${mark.label}}`;
-}
-
-function serializeChoice(mark: DraftMark, choice: DraftChoice): string {
-  return `\\choice{${mark.label}}{${choice.value}}{${choice.content}}`;
-}
-
-function bodyComment(label: string, hasBody: boolean): string {
-  return hasBody ? `% === ${label} ===` : `% === ${label}: ここに問題文を記述 ===`;
-}
-
-function markComment(mark: DraftMark): string {
-  const answer = mark.answer.trim() || "未設定";
-  return `% --- 解答番号 ${mark.label}: 正解 ${answer} / 配点 ${Math.max(0, mark.points)} / 選択肢 ${positiveChoiceCount(mark.choices)} ---`;
+export function normalizeSourceDraft(draft: ExamDraft): ExamDraft {
+  return {
+    sections: draft.sections.map((section, sectionIndex) => ({
+      ...section,
+      title: section.title.trim() || `第${sectionIndex + 1}問`,
+      marks: section.marks.map((mark, markIndex) => ({
+        ...mark,
+        label: mark.label.trim() || String(markIndex + 1)
+      })),
+      subsections: section.subsections.map((subsection, subsectionIndex) => ({
+        ...subsection,
+        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
+        marks: subsection.marks.map((mark, markIndex) => ({
+          ...mark,
+          label: mark.label.trim() || String(markIndex + 1)
+        }))
+      }))
+    }))
+  };
 }
 
 export function shouldOmitSubsectionTitle(section: DraftSection, subsection: DraftSubsection): boolean {
   return section.marks.length === 0 && section.subsections.length === 1 && subsection.title.trim() === "問1";
-}
-
-function layoutCommentLines(): string[] {
-  return [
-    "% --- preview設定: 必要なら次の行を有効化して調整 ---",
-    "% \\pagecolor{beige}",
-    "% \\linespread{1.5}",
-    "% \\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}"
-  ];
 }
 
 function createSection(index: number, title = `第${index + 1}問`): DraftSection {
@@ -142,19 +191,16 @@ function createSubsection(
 }
 
 function parseMark(attrsRaw: string | undefined, label: string, index: number): DraftMark {
-  const attrs = parseAttributes(attrsRaw);
-  const points = Number(attrs.points ?? 0);
-  const choices = Number(attrs.choices ?? 4);
-  const answer = attrs.answer ?? "";
+  const parsed = parseMarkCommand(attrsRaw, label);
 
   return {
     id: `mark-${index + 1}`,
-    label,
-    answer,
-    points: Number.isFinite(points) ? points : 0,
-    choices: Number.isInteger(choices) && choices > 0 ? choices : 4,
-    multi: attrs.multi === "true" || answer.includes("|"),
-    optionContents: createDefaultChoices(Number.isInteger(choices) && choices > 0 ? choices : 4)
+    label: parsed.label,
+    answer: parsed.answerSource,
+    points: parsed.points,
+    choices: parsed.choices,
+    multi: parsed.multi,
+    optionContents: createDefaultChoices(parsed.choices)
   };
 }
 
@@ -308,15 +354,15 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
 
   draft.sections.forEach((section) => {
     lines.push("", `\\sectiontitle{${section.title}}`);
-    lines.push(bodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
-    lines.push(...layoutCommentLines());
+    lines.push(authoringBodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
+    lines.push(...authoringLayoutCommentLines());
     if (section.body.trim()) {
       lines.push(...section.body.trim().split("\n"));
     }
     section.marks.forEach((mark) => {
-      lines.push(markComment(mark));
-      lines.push(serializeMark(mark));
-      normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
+      lines.push(authoringMarkComment(mark));
+      lines.push(serializeMarkCommand(mark));
+      normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceCommand(mark, choice)));
     });
     section.subsections.forEach((subsection) => {
       const omitSubsectionTitle = shouldOmitSubsectionTitle(section, subsection);
@@ -325,7 +371,7 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
         lines.push(`\\subsectiontitle{${subsection.title}}`);
       }
       lines.push(
-        bodyComment(
+        authoringBodyComment(
           omitSubsectionTitle ? `小問本文: ${section.title}` : `小問本文: ${section.title} ${subsection.title}`,
           Boolean(subsection.body.trim())
         )
@@ -334,9 +380,9 @@ export function serializeAuthoringDraft(meta: AuthoringMeta, draft: ExamDraft): 
         lines.push(...subsection.body.trim().split("\n"));
       }
       subsection.marks.forEach((mark) => {
-        lines.push(markComment(mark));
-        lines.push(serializeMark(mark));
-        normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoice(mark, choice)));
+        lines.push(authoringMarkComment(mark));
+        lines.push(serializeMarkCommand(mark));
+        normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceCommand(mark, choice)));
       });
     });
   });
@@ -373,4 +419,15 @@ export function countDraftMarks(draft: ExamDraft): number {
 
 export function sumDraftPoints(draft: ExamDraft): number {
   return getDraftMarkEntries(draft).reduce((sum, entry) => sum + entry.mark.points, 0);
+}
+
+export function sectionPointTotal(section: DraftSection): number {
+  return [...section.marks, ...section.subsections.flatMap((subsection) => subsection.marks)].reduce(
+    (sum, mark) => sum + mark.points,
+    0
+  );
+}
+
+export function sectionMarkCount(section: DraftSection): number {
+  return section.marks.length + section.subsections.reduce((sum, subsection) => sum + subsection.marks.length, 0);
 }

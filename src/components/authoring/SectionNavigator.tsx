@@ -1,4 +1,4 @@
-import type { ExamDraft } from "../../utils/authoringDraft";
+import type { ExamDraft } from "../../utils/authoring/authoringDraft";
 
 type EditorSelection = "environment" | "section";
 
