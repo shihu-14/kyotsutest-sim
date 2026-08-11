@@ -57,7 +57,7 @@ describe("ExamList", () => {
     expect(onSelect).toHaveBeenCalledWith(exam);
   });
 
-  it("omits card darkening controls while keeping the card action menu", async () => {
+  it("keeps only problem creation in the home action row", async () => {
     const user = userEvent.setup();
     const exam = sampleExams[0];
     render(
@@ -77,9 +77,25 @@ describe("ExamList", () => {
     expect(within(card).getByRole("button", { name: "編集する" })).toBeEnabled();
     expect(within(card).getByRole("button", { name: "削除する" })).toBeEnabled();
     expect(screen.queryByLabelText("試験を始めるボタンの色")).not.toBeInTheDocument();
-    ["書き込みを消す", "画面候補", "ホーム候補", "時間候補", "ページ候補", "採点候補", "編集候補"].forEach(
+    [
+      "書き込みを消す",
+      "画面候補",
+      "ホーム候補",
+      "時間候補",
+      "ページ候補",
+      "採点候補",
+      "編集候補",
+      "得点候補",
+      "得点ポップ候補",
+      "試験一覧"
+    ].forEach(
       (name) => expect(screen.queryByRole("button", { name })).not.toBeInTheDocument()
     );
+    const homeActions = document.querySelector(".home-actions");
+    expect(homeActions).not.toBeNull();
+    expect(within(homeActions as HTMLElement).getAllByRole("button")).toEqual([
+      screen.getByRole("button", { name: "問題の新規作成" })
+    ]);
   });
 
   it("keeps the adopted Steam Capsule card usable without a cover image", () => {
