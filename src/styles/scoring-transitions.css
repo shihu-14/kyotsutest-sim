@@ -33,6 +33,15 @@
   box-shadow: 0 12px 24px rgba(84, 46, 5, 0.14);
 }
 
+.review-score-badge span {
+  justify-self: start;
+  color: #1b1b1b;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: left;
+}
+
 .review-score-badge strong {
   font-size: 2rem;
   font-weight: 950;
