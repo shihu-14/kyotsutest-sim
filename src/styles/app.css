@@ -1,6 +1,5 @@
 @import "./base.css";
 @import "./buttons.css";
-@import "./home-layout.css";
 @import "./design-previews.css";
 @import "./home.css";
 @import "./exam.css";
@@ -14,3 +13,4 @@
 @import "./score-pop-variants.css";
 @import "./authoring.css";
 @import "./animations-responsive.css";
+@import "./scoring-transitions.css";
