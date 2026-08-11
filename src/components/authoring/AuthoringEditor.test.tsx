@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { sampleExams } from "../../data/sampleExam";
+import { animeOnlymarkExam } from "../../data/exams/animeOnlymark2026";
 import type { AuthoringMeta } from "../../types";
 import { AuthoringEditor } from "./AuthoringEditor";
 
@@ -61,7 +61,7 @@ describe("AuthoringEditor", () => {
   it("edits metadata in the center panel and publishes edits for the selected exam", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
-    const exam = sampleExams[1];
+    const exam = animeOnlymarkExam;
 
     render(<AuthoringEditor initialExam={exam} onBack={vi.fn()} onPublish={onPublish} />);
 
@@ -92,7 +92,7 @@ describe("AuthoringEditor", () => {
   it("previews the selected exam from the editable TeX and writes guided comments", async () => {
     const user = userEvent.setup();
     const onPublish = vi.fn();
-    const exam = sampleExams[1];
+    const exam = animeOnlymarkExam;
 
     render(<AuthoringEditor initialExam={exam} onBack={vi.fn()} onPublish={onPublish} />);
 

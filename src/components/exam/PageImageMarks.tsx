@@ -3,6 +3,7 @@ import type { AnswerValue, GradedQuestion, PageGradeAnchor, PageMarkArea, Questi
 import { GradeStamp } from "./GradeStamp";
 
 interface PageImageMarksProps {
+  animateGradeStamps?: boolean;
   areas: PageMarkArea[];
   gradeAnchors: PageGradeAnchor[];
   questionsById: Map<string, QuestionSlot>;
@@ -13,6 +14,7 @@ interface PageImageMarksProps {
 }
 
 export function PageImageMarks({
+  animateGradeStamps = false,
   areas,
   gradeAnchors,
   questionsById,
@@ -39,7 +41,8 @@ export function PageImageMarks({
 
         const selected = answers[question.id] ?? [];
         const checked = selected.includes(area.value);
-        const correct = reviewMode && question.correct.includes(area.value);
+        const gradeRevealed = !gradeStates || gradeStates.has(question.id);
+        const correct = reviewMode && gradeRevealed && question.correct.includes(area.value);
         const option = question.options.find((candidate) => candidate.value === area.value);
         const widthPercent = area.widthPercent ?? 3.2;
         const heightPercent = area.heightPercent ?? 2.6;
@@ -79,7 +82,7 @@ export function PageImageMarks({
 
         return (
           <div className="page-image-grade-stamp" key={`${anchor.questionId}-grade`} style={style}>
-            <GradeStamp isCorrect={gradeState.isCorrect} />
+            <GradeStamp animate={animateGradeStamps} isCorrect={gradeState.isCorrect} />
           </div>
         );
       })}

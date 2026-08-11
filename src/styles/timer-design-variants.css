@@ -98,18 +98,19 @@
 }
 
 .timer-visual-apple-ring {
+  --visual-accent: #ff4d00;
   --ring-size: calc(258px * var(--visual-scale));
-  display: grid;
+  display: block;
   width: var(--ring-size);
-  height: var(--ring-size);
-  place-items: center;
+  height: calc(var(--ring-size) + 30px);
 }
 
 .timer-apple-ring {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  top: 0;
+  left: 0;
+  width: var(--ring-size);
+  height: var(--ring-size);
   transform: rotate(-90deg);
 }
 
@@ -125,21 +126,29 @@
 }
 
 .timer-apple-copy {
+  position: absolute;
+  top: 0;
+  left: 0;
   z-index: 1;
   display: grid;
-  max-width: 76%;
+  width: var(--ring-size);
+  height: var(--ring-size);
+  place-items: center;
   text-align: center;
 }
 
-.timer-apple-copy small,
-.timer-apple-copy span {
+.timer-apple-status {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
   color: var(--visual-muted);
   font-size: calc(0.72rem * var(--visual-scale) + 0.2rem);
   font-weight: 800;
+  text-align: center;
 }
 
 .timer-apple-copy strong {
-  margin: calc(8px * var(--visual-scale)) 0;
   font-size: calc(2.35rem * var(--visual-scale) + 0.3rem);
 }
 

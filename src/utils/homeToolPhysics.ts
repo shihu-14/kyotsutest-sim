@@ -26,28 +26,60 @@ export interface ToolBounds {
 }
 
 export const MAX_PHYSICS_DELTA_SECONDS = 0.032;
-export const HOME_TOOL_GAP = 16;
+export const HOME_TOOL_GAP = 18;
 
 export const DEFAULT_TOOL_SIZES: Record<HomeDrawingToolKind, ToolSize> = {
-  pencil: { width: 156, height: 22 },
-  eraser: { width: 64, height: 34 }
+  pencil: { width: 92, height: (92 * 606) / 289 },
+  eraser: { width: 76, height: (76 * 230) / 181 }
 };
 
-export const RESTING_ROTATIONS: Record<HomeDrawingToolKind, number> = {
-  pencil: 6,
-  eraser: -8
+export const REDUCED_MOTION_INITIAL_ROTATIONS: Record<HomeDrawingToolKind, number> = {
+  pencil: 68.27,
+  eraser: 90
+};
+
+export const HELD_TOOL_ROTATIONS: Record<HomeDrawingToolKind, number> = {
+  pencil: 180,
+  eraser: -148
+};
+
+export const HELD_TOOL_LIFT = 8;
+
+export const TOOL_CURSOR_OFFSETS: Record<HomeDrawingToolKind, Point2D> = {
+  pencil: { x: 9, y: -10 },
+  eraser: { x: 0, y: 0 }
+};
+
+export const TOOL_CONTACT_ANCHORS: Record<HomeDrawingToolKind, Point2D> = {
+  pencil: { x: 260 / 289, y: 29 / 606 },
+  eraser: { x: 88 / 181, y: 10 / 230 }
 };
 
 const PHYSICS_CONFIG: Record<
   HomeDrawingToolKind,
-  { angularDamping: number; restitution: number; settleRotation: number }
+  { angularDamping: number; groundAngularDamping: number; groundTorque: number; restitution: number }
 > = {
-  pencil: { angularDamping: 0.55, restitution: 0.28, settleRotation: RESTING_ROTATIONS.pencil },
-  eraser: { angularDamping: 0.55, restitution: 0.34, settleRotation: RESTING_ROTATIONS.eraser }
+  pencil: { angularDamping: 0.55, groundAngularDamping: 0.9, groundTorque: 600, restitution: 0.28 },
+  eraser: { angularDamping: 0.55, groundAngularDamping: 0.88, groundTorque: 420, restitution: 0.34 }
+};
+
+const TOOL_COLLISION_SHAPES: Record<
+  HomeDrawingToolKind,
+  { axisOffset: number; halfSegmentSource: number; radiusSource: number; sourceWidth: number }
+> = {
+  pencil: {
+    axisOffset: -68.27021020073764,
+    halfSegmentSource: 262,
+    radiusSource: 35,
+    sourceWidth: 289
+  },
+  eraser: { axisOffset: 90, halfSegmentSource: 25, radiusSource: 90, sourceWidth: 181 }
 };
 
 const GRAVITY = 1800;
-const RESTING_ANGULAR_VELOCITY = 12;
+const GROUND_CONTACT_TOLERANCE = 2;
+const RESTING_ANGLE_SINE = 0.02;
+const RESTING_ANGULAR_VELOCITY = 9;
 const RESTING_VERTICAL_VELOCITY = 36;
 
 function clamp(value: number, minimum: number, maximum: number) {
@@ -58,8 +90,12 @@ function degreesToRadians(degrees: number) {
   return (degrees * Math.PI) / 180;
 }
 
-function shortestAngleDistance(from: number, to: number) {
+export function shortestAngleDistance(from: number, to: number) {
   return ((to - from + 540) % 360) - 180;
+}
+
+export function interpolateAngleShortest(from: number, to: number, progress: number) {
+  return from + shortestAngleDistance(from, to) * progress;
 }
 
 export function physicsDeltaSeconds(previousTimestamp: number | null, timestamp: number) {
@@ -78,6 +114,19 @@ export function rotatedHalfExtents(size: ToolSize, rotation: number) {
   return {
     x: (size.width * cosine + size.height * sine) / 2,
     y: (size.width * sine + size.height * cosine) / 2
+  };
+}
+
+export function toolCollisionHalfExtents(kind: HomeDrawingToolKind, size: ToolSize, rotation: number) {
+  const shape = TOOL_COLLISION_SHAPES[kind];
+  const scale = size.width / shape.sourceWidth;
+  const halfSegment = shape.halfSegmentSource * scale;
+  const radius = shape.radiusSource * scale;
+  const radians = degreesToRadians(rotation + shape.axisOffset);
+
+  return {
+    x: Math.abs(Math.cos(radians)) * halfSegment + radius,
+    y: Math.abs(Math.sin(radians)) * halfSegment + radius
   };
 }
 
@@ -106,10 +155,11 @@ export function heldCenterFromContact(
   rotation: number,
   size: ToolSize
 ): Point2D {
-  const localOffset =
-    kind === "pencil"
-      ? { x: size.width / 2 - 2, y: 0 }
-      : { x: 0, y: size.height / 2 - 2 };
+  const anchor = TOOL_CONTACT_ANCHORS[kind];
+  const localOffset = {
+    x: (anchor.x - 0.5) * size.width,
+    y: (anchor.y - 0.5) * size.height
+  };
   const radians = degreesToRadians(rotation);
   const rotatedOffset = {
     x: localOffset.x * Math.cos(radians) - localOffset.y * Math.sin(radians),
@@ -122,17 +172,48 @@ export function heldCenterFromContact(
   };
 }
 
-export function restingToolY(floorY: number, size: ToolSize, rotation: number) {
-  return floorY - rotatedHalfExtents(size, rotation).y;
+export function contactPointFromHeldCenter(
+  kind: HomeDrawingToolKind,
+  center: Point2D,
+  rotation: number,
+  size: ToolSize
+): Point2D {
+  const anchor = TOOL_CONTACT_ANCHORS[kind];
+  const localOffset = {
+    x: (anchor.x - 0.5) * size.width,
+    y: (anchor.y - 0.5) * size.height
+  };
+  const radians = degreesToRadians(rotation);
+
+  return {
+    x: center.x + localOffset.x * Math.cos(radians) - localOffset.y * Math.sin(radians),
+    y: center.y + localOffset.x * Math.sin(radians) + localOffset.y * Math.cos(radians)
+  };
+}
+
+export function droppedToolPhysicsState(center: Point2D, rotation: number): ToolPhysicsState {
+  return {
+    ...center,
+    vx: 0,
+    vy: 0,
+    rotation,
+    angularVelocity: 0,
+    restingFrames: 0
+  };
+}
+
+export function restingToolY(kind: HomeDrawingToolKind, floorY: number, size: ToolSize, rotation: number) {
+  return floorY - toolCollisionHalfExtents(kind, size, rotation).y;
 }
 
 export function initialLandingCenters(
   rootWidth: number,
-  sizes: Record<HomeDrawingToolKind, ToolSize> = DEFAULT_TOOL_SIZES
+  sizes: Record<HomeDrawingToolKind, ToolSize> = DEFAULT_TOOL_SIZES,
+  rotations: Record<HomeDrawingToolKind, number> = REDUCED_MOTION_INITIAL_ROTATIONS
 ) {
   const margin = 16;
-  const pencilHalfWidth = rotatedHalfExtents(sizes.pencil, RESTING_ROTATIONS.pencil).x;
-  const eraserHalfWidth = rotatedHalfExtents(sizes.eraser, RESTING_ROTATIONS.eraser).x;
+  const pencilHalfWidth = rotatedHalfExtents(sizes.pencil, rotations.pencil).x;
+  const eraserHalfWidth = rotatedHalfExtents(sizes.eraser, rotations.eraser).x;
   const eraserX = clamp(rootWidth * 0.9, eraserHalfWidth + margin, rootWidth - eraserHalfWidth - margin);
   const desiredPencilX = clamp(
     rootWidth * 0.74,
@@ -203,10 +284,10 @@ export function stepToolPhysics(
     vy: state.vy + GRAVITY * deltaSeconds,
     rotation: state.rotation + state.angularVelocity * deltaSeconds
   };
-  const extents = rotatedHalfExtents(size, next.rotation);
+  const extents = toolCollisionHalfExtents(kind, size, next.rotation);
   next.x = clamp(next.x, extents.x, Math.max(extents.x, rootWidth - extents.x));
 
-  if (next.y + extents.y < floorY) {
+  if (next.y + extents.y < floorY - GROUND_CONTACT_TOLERANCE) {
     return { resting: false, state: { ...next, restingFrames: 0 } };
   }
 
@@ -224,24 +305,30 @@ export function stepToolPhysics(
     };
   }
 
-  const rotationDistance = shortestAngleDistance(next.rotation, config.settleRotation);
-  const settledRotation = next.rotation + rotationDistance * Math.min(1, deltaSeconds * 18);
-  const angularVelocity = next.angularVelocity * config.angularDamping;
+  const shape = TOOL_COLLISION_SHAPES[kind];
+  const axisRadians = degreesToRadians(next.rotation + shape.axisOffset);
+  const axisSine = Math.sin(axisRadians);
+  const gravitationalTorque =
+    Math.abs(axisSine) < Number.EPSILON
+      ? 0
+      : -Math.sign(axisSine) * Math.cos(axisRadians) * config.groundTorque;
+  const groundedAngularVelocity =
+    (next.angularVelocity + gravitationalTorque * deltaSeconds) * config.groundAngularDamping;
   const restingFrames =
-    Math.abs(angularVelocity) < RESTING_ANGULAR_VELOCITY && Math.abs(rotationDistance) < 1.5
+    Math.abs(axisSine) < RESTING_ANGLE_SINE &&
+    Math.abs(groundedAngularVelocity) < RESTING_ANGULAR_VELOCITY
       ? next.restingFrames + 1
       : 0;
 
   if (restingFrames < 2) {
-    const settledExtents = rotatedHalfExtents(size, settledRotation);
     return {
       resting: false,
       state: {
         ...next,
-        y: floorY - settledExtents.y,
+        y: restingToolY(kind, floorY, size, next.rotation),
+        vx: next.vx * 0.72,
         vy: 0,
-        rotation: settledRotation,
-        angularVelocity,
+        angularVelocity: groundedAngularVelocity,
         restingFrames
       }
     };
@@ -251,10 +338,9 @@ export function stepToolPhysics(
     resting: true,
     state: {
       ...next,
-      y: restingToolY(floorY, size, config.settleRotation),
+      y: restingToolY(kind, floorY, size, next.rotation),
       vx: 0,
       vy: 0,
-      rotation: config.settleRotation,
       angularVelocity: 0,
       restingFrames
     }

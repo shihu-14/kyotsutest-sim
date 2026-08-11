@@ -1,14 +1,24 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_TOOL_SIZES,
+  HELD_TOOL_ROTATIONS,
   HOME_TOOL_GAP,
+  REDUCED_MOTION_INITIAL_ROTATIONS,
+  TOOL_CONTACT_ANCHORS,
+  TOOL_CURSOR_OFFSETS,
   clientPointFromRoot,
+  contactPointFromHeldCenter,
+  droppedToolPhysicsState,
+  heldCenterFromContact,
   initialLandingCenters,
+  interpolateAngleShortest,
   physicsDeltaSeconds,
   resolveRestingX,
+  restingToolY,
   rootPointFromClient,
   rotatedHalfExtents,
   stepToolPhysics,
+  toolCollisionHalfExtents,
   toolBoundsAt,
   type ToolPhysicsState
 } from "./homeToolPhysics";
@@ -30,9 +40,24 @@ describe("homeToolPhysics", () => {
 
   it("keeps responsive landing positions in bounds and separated", () => {
     [320, 1280].forEach((rootWidth) => {
-      const centers = initialLandingCenters(rootWidth);
-      const pencilBounds = toolBoundsAt(centers.pencil, DEFAULT_TOOL_SIZES.pencil, 6);
-      const eraserBounds = toolBoundsAt(centers.eraser, DEFAULT_TOOL_SIZES.eraser, -8);
+      const sizes =
+        rootWidth === 320
+          ? {
+              pencil: { width: 64, height: (64 * 606) / 289 },
+              eraser: { width: 54, height: (54 * 230) / 181 }
+            }
+          : DEFAULT_TOOL_SIZES;
+      const centers = initialLandingCenters(rootWidth, sizes);
+      const pencilBounds = toolBoundsAt(
+        centers.pencil,
+        sizes.pencil,
+        REDUCED_MOTION_INITIAL_ROTATIONS.pencil
+      );
+      const eraserBounds = toolBoundsAt(
+        centers.eraser,
+        sizes.eraser,
+        REDUCED_MOTION_INITIAL_ROTATIONS.eraser
+      );
 
       expect(pencilBounds.left).toBeGreaterThanOrEqual(0);
       expect(eraserBounds.right).toBeLessThanOrEqual(rootWidth);
@@ -41,9 +66,9 @@ describe("homeToolPhysics", () => {
   });
 
   it("moves a requested resting position away from another tool", () => {
-    const otherBounds = toolBoundsAt(250, DEFAULT_TOOL_SIZES.eraser, -8);
-    const resolved = resolveRestingX(250, 500, DEFAULT_TOOL_SIZES.pencil, 6, otherBounds);
-    const resolvedBounds = toolBoundsAt(resolved, DEFAULT_TOOL_SIZES.pencil, 6);
+    const otherBounds = toolBoundsAt(400, DEFAULT_TOOL_SIZES.eraser, -61);
+    const resolved = resolveRestingX(400, 800, DEFAULT_TOOL_SIZES.pencil, 47, otherBounds);
+    const resolvedBounds = toolBoundsAt(resolved, DEFAULT_TOOL_SIZES.pencil, 47);
 
     expect(
       resolvedBounds.right + HOME_TOOL_GAP <= otherBounds.left ||
@@ -70,7 +95,94 @@ describe("homeToolPhysics", () => {
     }
 
     expect(resting).toBe(true);
-    expect(state.y + rotatedHalfExtents(DEFAULT_TOOL_SIZES.pencil, state.rotation).y).toBeCloseTo(720);
+    expect(state.y + toolCollisionHalfExtents("pencil", DEFAULT_TOOL_SIZES.pencil, state.rotation).y).toBeCloseTo(
+      720
+    );
     expect(state.vy).toBe(0);
+  });
+
+  it("uses ground torque to settle the pencil shaft horizontally without snapping its angle", () => {
+    const floorY = 720;
+    const landingRotation = 120;
+    let state: ToolPhysicsState = {
+      x: 500,
+      y: restingToolY("pencil", floorY, DEFAULT_TOOL_SIZES.pencil, landingRotation),
+      vx: 0,
+      vy: 0,
+      rotation: landingRotation,
+      angularVelocity: 0,
+      restingFrames: 0
+    };
+
+    const firstContact = stepToolPhysics("pencil", state, DEFAULT_TOOL_SIZES.pencil, floorY, 1280, 0.016);
+    expect(firstContact.state.rotation).toBe(landingRotation);
+    expect(firstContact.state.angularVelocity).toBeLessThan(0);
+
+    state = firstContact.state;
+    let resting = false;
+    for (let index = 0; index < 600 && !resting; index += 1) {
+      const result = stepToolPhysics("pencil", state, DEFAULT_TOOL_SIZES.pencil, floorY, 1280, 0.016);
+      state = result.state;
+      resting = result.resting;
+    }
+
+    const shaftAngle = ((state.rotation - 68.27021020073764) * Math.PI) / 180;
+    expect(resting).toBe(true);
+    expect(Math.abs(Math.sin(shaftAngle))).toBeLessThan(0.015);
+    expect(state.y + toolCollisionHalfExtents("pencil", DEFAULT_TOOL_SIZES.pencil, state.rotation).y).toBeCloseTo(
+      floorY
+    );
+  });
+
+  it("starts floor rotation through angular velocity instead of an instant angle correction", () => {
+    const floorY = 720;
+    const state: ToolPhysicsState = {
+      x: 500,
+      y: restingToolY("pencil", floorY, DEFAULT_TOOL_SIZES.pencil, 120),
+      vx: 0,
+      vy: 0,
+      rotation: 120,
+      angularVelocity: 0,
+      restingFrames: 0
+    };
+
+    const result = stepToolPhysics("pencil", state, DEFAULT_TOOL_SIZES.pencil, floorY, 1280, 0.016);
+
+    expect(result.state.rotation).toBe(120);
+    expect(result.state.angularVelocity).toBeLessThan(0);
+  });
+
+  it("drops a held tool without injecting angular velocity", () => {
+    expect(droppedToolPhysicsState({ x: 320, y: 240 }, 73)).toMatchObject({
+      x: 320,
+      y: 240,
+      rotation: 73,
+      angularVelocity: 0
+    });
+  });
+
+  it("interpolates pickup rotation across the shortest side of the 360 degree boundary", () => {
+    expect(interpolateAngleShortest(350, 10, 0.5)).toBe(360);
+    expect(interpolateAngleShortest(10, 350, 0.5)).toBe(0);
+  });
+
+  it("anchors the pencil cursor to the visible lead tip in the cropped image", () => {
+    expect(TOOL_CONTACT_ANCHORS.pencil).toEqual({ x: 260 / 289, y: 29 / 606 });
+  });
+
+  it("offsets the pencil nine pixels right and ten pixels up from the cursor", () => {
+    expect(TOOL_CURSOR_OFFSETS.pencil).toEqual({ x: 9, y: -10 });
+  });
+
+  it.each(["pencil", "eraser"] as const)("keeps the %s contact anchor on the cursor", (kind) => {
+    const cursor = { x: 410, y: 280 };
+    const rotation = HELD_TOOL_ROTATIONS[kind];
+    const center = heldCenterFromContact(kind, cursor, rotation, DEFAULT_TOOL_SIZES[kind]);
+
+    const resolvedContact = contactPointFromHeldCenter(kind, center, rotation, DEFAULT_TOOL_SIZES[kind]);
+    expect(resolvedContact.x).toBeCloseTo(cursor.x);
+    expect(resolvedContact.y).toBeCloseTo(cursor.y);
+    expect(center.x).toBeGreaterThan(cursor.x);
+    expect(center.y).toBeLessThan(cursor.y);
   });
 });

@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { sampleExams } from "../../data/sampleExam";
+import gradeCircleStamp from "../../assets/stamps/grade-circle.png";
+import { animeOnlymarkExam } from "../../data/exams/animeOnlymark2026";
+import { structuredExamFixture } from "../../test/examFixtures";
 import { ExamRunner } from "./ExamRunner";
 
 function installPageTabLayoutMocks() {
@@ -79,9 +81,9 @@ describe("ExamRunner", () => {
     render(
       <ExamRunner
         answers={{}}
-        currentPageId="p1"
+        currentPageId={structuredExamFixture.pages[0].id}
         deadline={Date.now() + 60_000}
-        exam={sampleExams[0]}
+        exam={structuredExamFixture}
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={onFinish}
@@ -93,7 +95,7 @@ describe("ExamRunner", () => {
     expect(document.querySelector('input[type="range"][aria-label="問題表示倍率"]')).not.toBeInTheDocument();
     expect(screen.getByLabelText("問題表示領域")).toBeInTheDocument();
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveTextContent(/^\d{2}:\d{2}$/);
-    expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveClass("timer-color-stadium-alert");
+    expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveClass("timer-exam-seal", "timer-color-stadium-alert");
     expect(screen.getByText("ホームに戻る")).toBeInTheDocument();
     expect(screen.queryByText("解答済み")).not.toBeInTheDocument();
     expect(screen.queryByText("中断")).not.toBeInTheDocument();
@@ -133,9 +135,9 @@ describe("ExamRunner", () => {
     render(
       <ExamRunner
         answers={{}}
-        currentPageId="p1"
+        currentPageId={structuredExamFixture.pages[0].id}
         deadline={Date.now() + 60_000}
-        exam={sampleExams[0]}
+        exam={structuredExamFixture}
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
@@ -181,10 +183,10 @@ describe("ExamRunner", () => {
 
     render(
       <ExamRunner
-        answers={{ q1: ["-3"] }}
-        currentPageId="p1"
+        answers={{ "fixture-q1": ["2"] }}
+        currentPageId={structuredExamFixture.pages[0].id}
         deadline={null}
-        exam={sampleExams[0]}
+        exam={structuredExamFixture}
         reviewMode
         onChangePage={vi.fn()}
         onExitReview={onExitReview}
@@ -195,7 +197,7 @@ describe("ExamRunner", () => {
     );
 
     expect(document.querySelector('[role="timer"]')).not.toBeInTheDocument();
-    expect(document.querySelector('[role="status"][aria-label="得点 4/32"]')).toHaveClass("review-score-badge");
+    expect(document.querySelector('[role="status"][aria-label="得点 4/12"]')).toHaveClass("review-score-badge");
     expect(screen.queryByText("結果へ戻る")).not.toBeInTheDocument();
 
     await user.click(screen.getByText("ホームに戻る"));
@@ -205,7 +207,7 @@ describe("ExamRunner", () => {
   });
 
   it("keeps grading stamps on problem numbers in review mode", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = animeOnlymarkExam;
 
     render(
       <ExamRunner
@@ -223,17 +225,37 @@ describe("ExamRunner", () => {
     );
 
     expect(document.querySelector(".page-image-grade-stamp")).toBeInTheDocument();
-    expect(screen.getByLabelText("正解")).toHaveClass("grade-stamp", "stamp-image", "circle");
-    expect(screen.getByLabelText("正解").querySelector("img.stamp-image-source")).not.toBeNull();
+    expect(screen.getByLabelText("正解")).toHaveClass("grade-stamp", "red-pen", "circle");
+    expect(screen.getByLabelText("正解")).not.toHaveClass("is-drawing");
+    expect(screen.getByLabelText("正解").querySelector("image.stamp-asset")).toHaveAttribute(
+      "href",
+      gradeCircleStamp
+    );
   });
 
-  it("zooms only from the problem display area when using a modified wheel", () => {
-    render(
+  it("uses fine zoom steps and caps trackpad wheel bursts to one update per frame", () => {
+    const frameCallbacks = new Map<number, FrameRequestCallback>();
+    let nextFrameId = 1;
+    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
+      const frameId = nextFrameId;
+      nextFrameId += 1;
+      frameCallbacks.set(frameId, callback);
+      return frameId;
+    }));
+    vi.stubGlobal("cancelAnimationFrame", vi.fn((frameId: number) => frameCallbacks.delete(frameId)));
+
+    const flushFrame = () => {
+      const callbacks = [...frameCallbacks.values()];
+      frameCallbacks.clear();
+      act(() => callbacks.forEach((callback) => callback(16)));
+    };
+
+    const rendered = render(
       <ExamRunner
         answers={{}}
-        currentPageId="p1"
+        currentPageId={structuredExamFixture.pages[0].id}
         deadline={Date.now() + 60_000}
-        exam={sampleExams[0]}
+        exam={structuredExamFixture}
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
@@ -241,28 +263,46 @@ describe("ExamRunner", () => {
       />
     );
 
-    const stage = screen.getByLabelText("問題表示領域");
-    fireEvent.wheel(stage, { ctrlKey: true, deltaY: -80 });
+    try {
+      const stage = screen.getByLabelText("問題表示領域");
+      for (let index = 0; index < 40; index += 1) {
+        fireEvent.wheel(stage, { ctrlKey: true, deltaY: -1 });
+      }
 
-    expect(stage).toHaveStyle({ "--booklet-zoom": "1.08" });
-    fireEvent.wheel(stage, { ctrlKey: true, deltaY: 80 });
+      expect(stage).toHaveStyle({ "--booklet-zoom": "1" });
+      flushFrame();
+      expect(stage).toHaveStyle({ "--booklet-zoom": "1.03" });
 
-    expect(stage).toHaveStyle({ "--booklet-zoom": "1" });
-    fireEvent.wheel(stage, { ctrlKey: true, deltaY: 80 });
+      fireEvent.keyDown(stage, { ctrlKey: true, key: "+" });
+      expect(stage).toHaveStyle({ "--booklet-zoom": "1.06" });
+      fireEvent.keyDown(stage, { ctrlKey: true, key: "-" });
+      expect(stage).toHaveStyle({ "--booklet-zoom": "1.03" });
 
-    expect(stage).toHaveStyle({ "--booklet-zoom": "1" });
-    expect(document.querySelector(".booklet-scroll-surface")).toBeInTheDocument();
+      for (let index = 0; index < 19; index += 1) {
+        fireEvent.wheel(stage, { ctrlKey: true, deltaY: -80 });
+        flushFrame();
+      }
+
+      expect(stage).toHaveStyle({ "--booklet-zoom": "1.6" });
+      fireEvent.wheel(stage, { ctrlKey: true, deltaY: -80 });
+      flushFrame();
+      expect(stage).toHaveStyle({ "--booklet-zoom": "1.6" });
+      expect(document.querySelector(".booklet-scroll-surface")).toBeInTheDocument();
+    } finally {
+      rendered.unmount();
+      vi.unstubAllGlobals();
+    }
   });
 
   it("uses the common exact scroll surface for generated and reproduced exam pages", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = animeOnlymarkExam;
 
     const firstRender = render(
       <ExamRunner
         answers={{}}
-        currentPageId="p1"
+        currentPageId={structuredExamFixture.pages[0].id}
         deadline={Date.now() + 60_000}
-        exam={sampleExams[0]}
+        exam={structuredExamFixture}
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
@@ -293,7 +333,7 @@ describe("ExamRunner", () => {
 
   it("can show the cover from the first page tab and navigate with side arrows", async () => {
     const user = userEvent.setup();
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = animeOnlymarkExam;
     const onChangePage = vi.fn();
 
     render(
@@ -340,7 +380,7 @@ describe("ExamRunner", () => {
   it("fits short page tabs and smoothly follows overflow page changes", async () => {
     const user = userEvent.setup();
     const pageTabLayout = installPageTabLayoutMocks();
-    const baseExam = sampleExams[0];
+    const baseExam = structuredExamFixture;
     const longExam = {
       ...baseExam,
       coverImageUrl: baseExam.coverImageUrl ?? "cover.png",
@@ -385,7 +425,9 @@ describe("ExamRunner", () => {
         />
       );
 
-      expect(screen.getByLabelText("問題ページ")).toHaveStyle("--visible-page-tabs: 3");
+      expect(screen.getByLabelText("問題ページ")).toHaveStyle(
+        `--visible-page-tabs: ${baseExam.pages.length}`
+      );
 
       shortRender.unmount();
       render(<ControlledRunner />);

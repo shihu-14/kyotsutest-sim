@@ -6,7 +6,7 @@ import { ExamRunner } from "./components/exam/ExamRunner";
 import { ScoringScreen } from "./components/scoring/ScoringScreen";
 import { sampleExams } from "./data/sampleExam";
 import type { AnswerValue, Exam, ExamPhase, QuestionSlot, UserAnswers } from "./types";
-import { clearAnswers, clearDeadline, loadAnswers, loadDeadline, saveAnswers, saveDeadline } from "./utils/storage";
+import { clearAnswers, clearDeadline, loadAnswers, saveAnswers, saveDeadline } from "./utils/storage";
 import { toggleAnswer } from "./utils/answer";
 
 export function App() {
@@ -25,7 +25,7 @@ export function App() {
   const openCover = (exam: Exam) => {
     setSelectedExam(exam);
     setAnswers(loadAnswers(exam.id));
-    setDeadline(loadDeadline(exam.id));
+    setDeadline(null);
     setCurrentPageId(exam.pages[0]?.id ?? "");
     setReviewFadeIn(false);
     setReviewUiVisible(false);

@@ -1,51 +1,49 @@
 import { describe, expect, it } from "vitest";
 import type { QuestionSlot } from "../types";
 import { answersEqual, gradeExam, gradeQuestion, toggleAnswer } from "./answer";
-import { sampleExams } from "../data/sampleExam";
+import { animeOnlymarkExam } from "../data/exams/animeOnlymark2026";
+import { structuredExamFixture } from "../test/examFixtures";
 
-const multiQuestion: QuestionSlot = sampleExams[0].questions.find((question) => question.id === "q5")!;
-const singleQuestion: QuestionSlot = sampleExams[0].questions.find((question) => question.id === "q1")!;
+const multiQuestion: QuestionSlot = structuredExamFixture.questions.find((question) => question.multi)!;
+const singleQuestion: QuestionSlot = structuredExamFixture.questions.find((question) => !question.multi)!;
 
 describe("answer utilities", () => {
   it("toggles a single-select answer on and off", () => {
-    expect(toggleAnswer(singleQuestion, [], "-3")).toEqual(["-3"]);
-    expect(toggleAnswer(singleQuestion, ["-3"], "-3")).toEqual([]);
-    expect(toggleAnswer(singleQuestion, ["-3"], "-2")).toEqual(["-2"]);
+    expect(toggleAnswer(singleQuestion, [], "2")).toEqual(["2"]);
+    expect(toggleAnswer(singleQuestion, ["2"], "2")).toEqual([]);
+    expect(toggleAnswer(singleQuestion, ["2"], "1")).toEqual(["1"]);
   });
 
   it("keeps multi-select answers in option order", () => {
-    const first = toggleAnswer(multiQuestion, [], "range8");
-    const second = toggleAnswer(multiQuestion, first, "mean6");
+    const first = toggleAnswer(multiQuestion, [], "3");
+    const second = toggleAnswer(multiQuestion, first, "1");
 
-    expect(second).toEqual(["mean6", "range8"]);
+    expect(second).toEqual(["1", "3"]);
   });
 
   it("compares multi-select answers without depending on click order", () => {
-    expect(answersEqual(["range8", "mean6"], ["mean6", "range8"], ["mean6", "median8", "range8"])).toBe(true);
+    expect(answersEqual(["3", "1"], ["1", "3"], ["1", "2", "3", "4"])).toBe(true);
   });
 
   it("grades unanswered, incorrect, and correct questions", () => {
     expect(gradeQuestion(singleQuestion, []).status).toBe("unanswered");
-    expect(gradeQuestion(singleQuestion, ["-2"]).earnedPoints).toBe(0);
-    expect(gradeQuestion(singleQuestion, ["-3"]).earnedPoints).toBe(4);
+    expect(gradeQuestion(singleQuestion, ["1"]).earnedPoints).toBe(0);
+    expect(gradeQuestion(singleQuestion, ["2"]).earnedPoints).toBe(4);
   });
 
   it("sums the full exam score", () => {
-    const summary = gradeExam(sampleExams[0], {
-      q1: ["-3"],
-      q2: ["4"],
-      q3: ["4/5"],
-      q4: ["3/4"],
-      q5: ["mean6", "range8"],
-      q6: ["60"]
+    const summary = gradeExam(structuredExamFixture, {
+      "fixture-q1": ["2"],
+      "fixture-q2": ["3"],
+      "fixture-q3": ["1", "3"]
     });
 
-    expect(summary.totalScore).toBe(32);
-    expect(summary.totalPoints).toBe(32);
+    expect(summary.totalScore).toBe(12);
+    expect(summary.totalPoints).toBe(12);
   });
 
   it("grades the anime sample with the provided answer key", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = animeOnlymarkExam;
     const answerKey = [
       "1",
       "3",

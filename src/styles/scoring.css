@@ -190,39 +190,97 @@
 }
 
 .red-pen {
+  display: block;
   width: 76px;
   height: 76px;
-  stroke: #e63828;
-  stroke-width: 7;
-  fill: transparent;
+  pointer-events: none;
+}
+
+.red-pen .stamp-drawing {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.red-pen.circle .stamp-drawing {
+  width: 136%;
+  height: 136%;
+  margin: -18%;
+}
+
+.red-pen .stamp-reveal-stroke {
+  fill: none;
+  stroke: #fff;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.red-pen.circle .circle-stroke {
-  stroke-dasharray: 220;
-  stroke-dashoffset: 220;
-  animation: draw-stamp 280ms ease-out forwards;
-}
-
-.red-pen.cross {
-  stroke-width: 7;
-}
-
-.red-pen.cross .cross-stroke {
-  stroke-dasharray: 52;
-  stroke-dashoffset: 52;
-  animation: draw-stamp 105ms ease-out forwards;
-}
-
-.red-pen.cross .cross-stroke.second {
-  animation-delay: 100ms;
-}
-
-.scoring-static .red-pen.circle .circle-stroke,
-.scoring-static .red-pen.cross .cross-stroke {
-  animation: none;
+  stroke-dasharray: 1;
   stroke-dashoffset: 0;
+}
+
+.red-pen .circle-reveal-stroke {
+  stroke-width: 58;
+}
+
+.red-pen .cross-reveal-stroke {
+  stroke-width: 170;
+}
+
+.red-pen.is-drawing.circle .circle-reveal-stroke {
+  stroke-dashoffset: 1;
+  animation: draw-stamp 340ms linear forwards;
+}
+
+.red-pen.is-drawing.cross .cross-reveal-stroke {
+  stroke-dashoffset: 1;
+  animation: draw-stamp 135ms linear forwards;
+}
+
+.red-pen.is-drawing.cross .cross-reveal-stroke.second {
+  animation-delay: 115ms;
+}
+
+.scoring-booklet-scene .choice-button.correct-choice {
+  animation: reveal-scoring-correct-choice 140ms ease-out 120ms both;
+}
+
+.scoring-booklet-scene .page-image-mark.review-correct:not(.selected)::after,
+.scoring-booklet-scene .page-image-mark.selected.review-correct::before {
+  animation: reveal-scoring-correct-mark 140ms ease-out 120ms both;
+}
+
+@keyframes reveal-scoring-correct-choice {
+  from {
+    border-color: #111;
+    background: var(--booklet-page-color);
+    color: #111;
+  }
+
+  to {
+    border-color: #c73228;
+    background: #c73228;
+    color: #c73228;
+  }
+}
+
+@keyframes reveal-scoring-correct-mark {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .red-pen.is-drawing .stamp-reveal-stroke,
+  .scoring-booklet-scene .choice-button.correct-choice,
+  .scoring-booklet-scene .page-image-mark.review-correct:not(.selected)::after,
+  .scoring-booklet-scene .page-image-mark.selected.review-correct::before {
+    animation-duration: 1ms;
+    animation-delay: 0ms;
+  }
 }
 
 .earned-points {

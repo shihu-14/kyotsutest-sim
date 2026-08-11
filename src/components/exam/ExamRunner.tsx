@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from "react";
-import type { AnswerValue, Exam, QuestionSlot, UserAnswers } from "../../types";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type WheelEvent } from "react";
+import type { AnswerValue, Exam, GradeSummary, QuestionSlot, UserAnswers } from "../../types";
 import { gradeExam } from "../../utils/answer";
 import { useCountdown } from "../../hooks/useCountdown";
+import { useBookletZoom } from "../../hooks/useBookletZoom";
 import { MarkSheet } from "./MarkSheet";
 import { ProblemBooklet } from "./ProblemBooklet";
 import { ReviewScoreBadge } from "./ReviewScoreBadge";
@@ -26,6 +27,7 @@ interface ExamRunnerProps {
   onExitReview?: () => void;
   onReturnHome?: () => void;
   onExpire: () => void;
+  renderReviewScore?: (summary: GradeSummary) => ReactNode;
 }
 
 const timerAccentColor = "#ff4d00";
@@ -46,14 +48,14 @@ export function ExamRunner({
   onFinish,
   onExitReview,
   onReturnHome,
-  onExpire
+  onExpire,
+  renderReviewScore
 }: ExamRunnerProps) {
-  const [bookletZoom, setBookletZoom] = useState(1);
   const [showCover, setShowCover] = useState(() => initialShowCover && Boolean(exam.coverImageUrl));
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showHomeConfirm, setShowHomeConfirm] = useState(false);
   const [coverMarks, setCoverMarks] = useState<Set<AnswerValue>>(() => new Set());
-  const bookletStageRef = useRef<HTMLDivElement | null>(null);
+  const { bookletStageRef, bookletStyle, handleBookletKeyDown, handleBookletWheel } = useBookletZoom();
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
   const previousPagePositionRef = useRef<number | null>(null);
@@ -69,7 +71,6 @@ export function ExamRunner({
   const page = exam.pages.find((candidate) => candidate.id === currentPageId) ?? exam.pages[0];
   const pageIndex = exam.pages.findIndex((candidate) => candidate.id === page.id);
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
-  const bookletStyle = { "--booklet-zoom": String(bookletZoom) } as CSSProperties;
   const pageTabsStyle = {
     "--visible-page-tabs": String(Math.min(exam.pages.length, visiblePageTabCount)),
     "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
@@ -124,10 +125,6 @@ export function ExamRunner({
     onChangePage(nextPage.id);
   };
 
-  const updateBookletZoom = (value: number) => {
-    setBookletZoom(Math.min(1.6, Math.max(1, value)));
-  };
-
   const toggleCoverMark = (value: AnswerValue) => {
     setCoverMarks((current) => {
       if (current.has(value)) {
@@ -145,24 +142,6 @@ export function ExamRunner({
   useEffect(() => {
     setShowCover(initialShowCover && Boolean(exam.coverImageUrl));
   }, [exam.coverImageUrl, exam.id, initialShowCover]);
-
-  useEffect(() => {
-    const stage = bookletStageRef.current;
-    if (!stage) {
-      return undefined;
-    }
-
-    const preventPageZoom = (event: globalThis.WheelEvent) => {
-      if (!event.ctrlKey && !event.metaKey) {
-        return;
-      }
-
-      event.preventDefault();
-    };
-
-    stage.addEventListener("wheel", preventPageZoom, { passive: false });
-    return () => stage.removeEventListener("wheel", preventPageZoom);
-  }, []);
 
   useEffect(() => {
     const nav = pageTabsRef.current;
@@ -206,31 +185,6 @@ export function ExamRunner({
     }
   }, [currentPageId, exam.pages.length, showCover]);
 
-  const handleBookletWheel = (event: WheelEvent<HTMLDivElement>) => {
-    if (!event.ctrlKey && !event.metaKey) {
-      return;
-    }
-
-    event.preventDefault();
-    updateBookletZoom(bookletZoom + (event.deltaY < 0 ? 0.08 : -0.08));
-  };
-
-  const handleBookletKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!event.ctrlKey && !event.metaKey) {
-      return;
-    }
-
-    if (event.key === "+" || event.key === "=") {
-      event.preventDefault();
-      updateBookletZoom(bookletZoom + 0.08);
-    }
-
-    if (event.key === "-") {
-      event.preventDefault();
-      updateBookletZoom(bookletZoom - 0.08);
-    }
-  };
-
   const handlePageTabsWheel = (event: WheelEvent<HTMLElement>) => {
     const nav = pageTabsRef.current;
     if (!nav || nav.scrollWidth <= nav.clientWidth || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
@@ -245,7 +199,9 @@ export function ExamRunner({
     <RootElement className={["exam-layout", "exam-mode-background", className].filter(Boolean).join(" ")}>
       <header className="exam-toolbar" aria-label="試験操作">
         <div className="toolbar-metrics">
-          {reviewMode && reviewSummary ? <ReviewScoreBadge summary={reviewSummary} /> : null}
+          {reviewMode && reviewSummary
+            ? renderReviewScore?.(reviewSummary) ?? <ReviewScoreBadge summary={reviewSummary} />
+            : null}
           {!reviewMode ? (
             <StopwatchTimer
               formatted={countdown.formatted}

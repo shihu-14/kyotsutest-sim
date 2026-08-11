@@ -13,6 +13,7 @@ import { GradeStamp } from "./GradeStamp";
 import { PageImageMarks } from "./PageImageMarks";
 
 interface ProblemBookletProps {
+  animateGradeStamps?: boolean;
   page: ExamPage;
   questionsById: Map<string, QuestionSlot>;
   answers: UserAnswers;
@@ -22,6 +23,7 @@ interface ProblemBookletProps {
 }
 
 export function ProblemBooklet({
+  animateGradeStamps = false,
   page,
   questionsById,
   answers,
@@ -36,6 +38,7 @@ export function ProblemBooklet({
           <img className="exact-page-image" src={page.pageImageUrl} alt={page.pageImageAlt ?? page.title} />
           {page.markAreas?.length ? (
             <PageImageMarks
+              animateGradeStamps={animateGradeStamps}
               areas={page.markAreas}
               answers={answers}
               gradeAnchors={page.gradeAnchors ?? []}
@@ -109,6 +112,7 @@ export function ProblemBooklet({
         return (
           <QuestionBlock
             answers={answers[question.id] ?? []}
+            animateGradeStamp={animateGradeStamps}
             gradeStatesActive={Boolean(gradeStates)}
             gradeState={gradeStates?.get(question.id)}
             key={question.id}
@@ -123,6 +127,7 @@ export function ProblemBooklet({
 }
 
 interface QuestionBlockProps {
+  animateGradeStamp: boolean;
   question: QuestionSlot;
   answers: AnswerValue[];
   gradeStatesActive: boolean;
@@ -131,7 +136,15 @@ interface QuestionBlockProps {
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
 }
 
-function QuestionBlock({ question, answers, gradeStatesActive, gradeState, reviewMode, onToggleAnswer }: QuestionBlockProps) {
+function QuestionBlock({
+  animateGradeStamp,
+  question,
+  answers,
+  gradeStatesActive,
+  gradeState,
+  reviewMode,
+  onToggleAnswer
+}: QuestionBlockProps) {
   const isCorrect =
     question.correct.length === answers.length && question.correct.every((value) => answers.includes(value));
   const isWrong = reviewMode && !isCorrect;
@@ -141,7 +154,7 @@ function QuestionBlock({ question, answers, gradeStatesActive, gradeState, revie
       <h3 id={`${question.id}-title`}>
         <span className="question-grade-anchor">
           <span className="mark-label">{question.label}</span>
-          {gradeState ? <GradeStamp isCorrect={gradeState.isCorrect} /> : null}
+          {gradeState ? <GradeStamp animate={animateGradeStamp} isCorrect={gradeState.isCorrect} /> : null}
         </span>
         {renderMathSegments(normalizePreviewText(question.prompt))}
       </h3>

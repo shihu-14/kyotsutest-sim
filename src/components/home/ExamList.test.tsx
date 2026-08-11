@@ -1,10 +1,21 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { readFileSync } from "node:fs";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import eraserImageUrl from "../../assets/home-tools/eraser.png";
+import pencilImageUrl from "../../assets/home-tools/pencil.png";
 import { sampleExams } from "../../data/sampleExam";
 import { useHomePencilDrawing } from "../../hooks/useHomePencilDrawing";
+import {
+  DEFAULT_TOOL_SIZES,
+  HELD_TOOL_LIFT,
+  HELD_TOOL_ROTATIONS,
+  TOOL_CURSOR_OFFSETS,
+  contactPointFromHeldCenter
+} from "../../utils/homeToolPhysics";
 import { ExamList } from "./ExamList";
+import { HomeDesignPreview } from "../design-previews/HomeDesignPreview";
 import { HomeDrawingTools } from "./HomeDrawingTools";
 
 function installPointerCapture(element: HTMLElement) {
@@ -80,6 +91,29 @@ function dispatchPointerEvent(target: Element, type: string, init: PointerEventI
   return event;
 }
 
+function pngDimensions(path: string) {
+  const image = readFileSync(path);
+  return {
+    width: image.readUInt32BE(16),
+    height: image.readUInt32BE(20)
+  };
+}
+
+function rotationFromTransform(element: HTMLElement) {
+  return Number(element.style.transform.match(/rotate\((-?[\d.]+)deg\)/)?.[1]);
+}
+
+function domStructureSignature(element: Element): string {
+  const className = element.getAttribute("class") ?? "";
+  const children = Array.from(element.children).map(domStructureSignature).join(",");
+  return `${element.tagName.toLowerCase()}.${className}[${children}]`;
+}
+
+function domTagSignature(element: Element): string {
+  const children = Array.from(element.children).map(domTagSignature).join(",");
+  return `${element.tagName.toLowerCase()}[${children}]`;
+}
+
 function PencilExclusionHarness() {
   const {
     canvasRef,
@@ -104,6 +138,7 @@ function PencilExclusionHarness() {
       <span data-testid="drawing-state">{hasDrawing ? "drawing" : "empty"}</span>
       <HomeDrawingTools
         onPickTool={pickUpTool}
+        onToolImageLoad={() => undefined}
         phases={toolPhases}
         registerToolElement={registerToolElement}
       />
@@ -124,6 +159,253 @@ describe("ExamList", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
   });
+
+  it("uses the losslessly cropped PNG tools instead of custom SVG graphics", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const pencilButton = screen.getByRole("button", { name: "鉛筆を拾う" });
+    const eraserButton = screen.getByRole("button", { name: "消しゴムを拾う" });
+    const pencilImage = pencilButton.querySelector("img");
+    const eraserImage = eraserButton.querySelector("img");
+
+    expect(pencilButton.querySelector("svg")).not.toBeInTheDocument();
+    expect(eraserButton.querySelector("svg")).not.toBeInTheDocument();
+    expect(pencilImage).toHaveAttribute("src", pencilImageUrl);
+    expect(pencilImage).toHaveAttribute("width", "289");
+    expect(pencilImage).toHaveAttribute("height", "606");
+    expect(pencilImage).toHaveAttribute("draggable", "false");
+    expect(eraserImage).toHaveAttribute("src", eraserImageUrl);
+    expect(eraserImage).toHaveAttribute("width", "181");
+    expect(eraserImage).toHaveAttribute("height", "230");
+    expect(eraserImage).toHaveAttribute("draggable", "false");
+  });
+
+  it("keeps the cropped PNG files at their exact source dimensions", () => {
+    expect(pngDimensions("src/assets/home-tools/pencil.png")).toEqual({
+      width: 289,
+      height: 606
+    });
+    expect(pngDimensions("src/assets/home-tools/eraser.png")).toEqual({
+      width: 181,
+      height: 230
+    });
+  });
+
+  it("preserves each resting angle when tool images load and the floor is remeasured", () => {
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    ["鉛筆を拾う", "消しゴムを拾う"].forEach((label) => {
+      const tool = screen.getByRole("button", { name: label });
+      const image = tool.querySelector("img");
+      const restingTransform = tool.style.transform;
+
+      expect(image).not.toBeNull();
+      fireEvent.load(image!);
+      fireEvent(window, new Event("resize"));
+
+      expect(tool).toHaveAttribute("data-tool-phase", "resting");
+      expect(tool.style.transform).toBe(restingTransform);
+    });
+  });
+
+  it("drops resting tools to a newly extended page floor", () => {
+    let floorHeight = 1000;
+    let motionChange: ((event: MediaQueryListEvent) => void) | undefined;
+    let resizeCallback: ResizeObserverCallback | undefined;
+    const scheduledFrames = new Map<number, FrameRequestCallback>();
+    let nextFrameId = 0;
+    let timestamp = 0;
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+
+    vi.stubGlobal("matchMedia", vi.fn(() => ({
+      addEventListener: (_type: string, listener: (event: MediaQueryListEvent) => void) => {
+        motionChange = listener;
+      },
+      matches: true,
+      media: "(prefers-reduced-motion: reduce)",
+      removeEventListener: vi.fn()
+    })));
+    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
+      const frameId = ++nextFrameId;
+      scheduledFrames.set(frameId, callback);
+      return frameId;
+    }));
+    vi.stubGlobal("cancelAnimationFrame", vi.fn((frameId: number) => scheduledFrames.delete(frameId)));
+    vi.stubGlobal("ResizeObserver", class {
+      constructor(callback: ResizeObserverCallback) {
+        resizeCallback = callback;
+      }
+      disconnect() {}
+      observe() {}
+      unobserve() {}
+    });
+    const getBoundingClientRectSpy = vi
+      .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+      .mockImplementation(function (this: HTMLElement) {
+        if (this.classList.contains("home-pencil-surface")) {
+          return {
+            bottom: floorHeight,
+            height: floorHeight,
+            left: 0,
+            right: 1280,
+            top: 0,
+            width: 1280,
+            x: 0,
+            y: 0,
+            toJSON: () => ({})
+          } as DOMRect;
+        }
+        return originalGetBoundingClientRect.call(this);
+      });
+
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const pencil = screen.getByRole("button", { name: "鉛筆を拾う" });
+    const eraser = screen.getByRole("button", { name: "消しゴムを拾う" });
+    const pencilTopBefore = Number.parseFloat(pencil.style.top);
+    const eraserTopBefore = Number.parseFloat(eraser.style.top);
+
+    act(() => motionChange?.({ matches: false } as MediaQueryListEvent));
+    floorHeight = 1240;
+    act(() => resizeCallback?.([], {} as ResizeObserver));
+
+    expect(pencil).toHaveAttribute("data-tool-phase", "falling");
+    expect(eraser).toHaveAttribute("data-tool-phase", "falling");
+    expect(Number.parseFloat(pencil.style.top)).toBeCloseTo(pencilTopBefore);
+    expect(Number.parseFloat(eraser.style.top)).toBeCloseTo(eraserTopBefore);
+
+    for (
+      let frame = 0;
+      frame < 600 && (pencil.dataset.toolPhase !== "resting" || eraser.dataset.toolPhase !== "resting");
+      frame += 1
+    ) {
+      const callbacks = [...scheduledFrames.values()];
+      scheduledFrames.clear();
+      timestamp += 16;
+      act(() => callbacks.forEach((callback) => callback(timestamp)));
+    }
+
+    expect(pencil).toHaveAttribute("data-tool-phase", "resting");
+    expect(eraser).toHaveAttribute("data-tool-phase", "resting");
+    expect(Number.parseFloat(pencil.style.top)).toBeGreaterThan(pencilTopBefore + 200);
+    expect(Number.parseFloat(eraser.style.top)).toBeGreaterThan(eraserTopBefore + 200);
+    getBoundingClientRectSpy.mockRestore();
+  });
+
+  it.each(["pencil", "eraser"] as const)(
+    "uses one right-handed angle for held and contact %s poses, separated only by height",
+    (kind) => {
+      render(
+        <ExamList
+          exams={sampleExams}
+          onDelete={vi.fn()}
+          onEdit={vi.fn()}
+          onOpenEditor={vi.fn()}
+          onSelect={vi.fn()}
+        />
+      );
+
+      const surface = screen.getByRole("main").parentElement;
+      if (!surface) {
+        throw new Error("home pencil surface was not rendered");
+      }
+      installPointerCapture(surface);
+      const tool = screen.getByRole("button", {
+        name: kind === "pencil" ? "鉛筆を拾う" : "消しゴムを拾う"
+      });
+      const restingRotation = rotationFromTransform(tool);
+
+      pickTool(kind);
+      fireEvent.pointerMove(surface, {
+        buttons: 0,
+        clientX: 80,
+        clientY: 80,
+        pointerId: 91,
+        pointerType: "mouse"
+      });
+      const heldRotation = rotationFromTransform(tool);
+      const heldLeft = Number.parseFloat(tool.style.left);
+      const heldTop = Number.parseFloat(tool.style.top);
+      const heldContactPoint = contactPointFromHeldCenter(
+        kind,
+        { x: heldLeft, y: heldTop },
+        heldRotation,
+        DEFAULT_TOOL_SIZES[kind]
+      );
+
+      expect(restingRotation).not.toBe(HELD_TOOL_ROTATIONS[kind]);
+      expect(heldRotation).toBe(HELD_TOOL_ROTATIONS[kind]);
+      expect(heldContactPoint.x).toBeCloseTo(80 + TOOL_CURSOR_OFFSETS[kind].x);
+      expect(heldContactPoint.y).toBeCloseTo(80 + TOOL_CURSOR_OFFSETS[kind].y - HELD_TOOL_LIFT);
+
+      fireEvent.pointerDown(surface, {
+        button: 0,
+        clientX: 80,
+        clientY: 80,
+        pointerId: 91,
+        pointerType: "mouse"
+      });
+      const contactRotation = rotationFromTransform(tool);
+      const contactLeft = Number.parseFloat(tool.style.left);
+      const contactTop = Number.parseFloat(tool.style.top);
+      const contactPoint = contactPointFromHeldCenter(
+        kind,
+        { x: contactLeft, y: contactTop },
+        contactRotation,
+        DEFAULT_TOOL_SIZES[kind]
+      );
+
+      expect(contactRotation).toBe(heldRotation);
+      expect(contactLeft).toBeCloseTo(heldLeft);
+      expect(contactTop - heldTop).toBeCloseTo(HELD_TOOL_LIFT);
+      expect(contactPoint.x).toBeCloseTo(80 + TOOL_CURSOR_OFFSETS[kind].x);
+      expect(contactPoint.y).toBeCloseTo(80 + TOOL_CURSOR_OFFSETS[kind].y);
+
+      fireEvent.pointerUp(surface, {
+        clientX: 80,
+        clientY: 80,
+        pointerId: 91,
+        pointerType: "mouse"
+      });
+      expect(rotationFromTransform(tool)).toBe(heldRotation);
+      expect(Number.parseFloat(tool.style.top)).toBeCloseTo(heldTop);
+
+      const leftBeforeFollow = tool.style.left;
+      fireEvent.pointerMove(surface, {
+        buttons: 0,
+        clientX: 120,
+        clientY: 100,
+        pointerId: 92,
+        pointerType: "mouse"
+      });
+      expect(tool).toHaveAttribute("data-tool-phase", "held");
+      expect(tool.style.left).not.toBe(leftBeforeFollow);
+    }
+  );
 
   it("continues scheduling and painting animation frames in StrictMode", () => {
     const scheduledFrames = new Map<number, FrameRequestCallback>();
@@ -257,7 +539,7 @@ describe("ExamList", () => {
     expect(scheduledFrames.size).toBe(0);
   });
 
-  it("uses a full-page surface and preserves the threshold, capture, and clear behavior", async () => {
+  it("uses a full-page surface and preserves the threshold and capture behavior", async () => {
     const { clearRect, stroke } = installCanvasContext();
     render(
       <ExamList
@@ -276,13 +558,12 @@ describe("ExamList", () => {
       throw new Error("home pencil surface was not rendered");
     }
 
-    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
     const { releasePointerCapture, setPointerCapture } = installPointerCapture(surface);
 
     expect(surface.querySelector(":scope > .home-pencil-canvas")).toHaveAttribute("aria-hidden", "true");
     expect(surface.querySelector(":scope > main")).toBe(main);
     expect(surface.querySelector(":scope > .home-drawing-tool-layer")).toBeInTheDocument();
-    expect(clearButton).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "書き込みを消す" })).not.toBeInTheDocument();
 
     const noToolPointerDown = dispatchPointerEvent(surface, "pointerdown", {
       button: 0,
@@ -298,14 +579,13 @@ describe("ExamList", () => {
     fireEvent.pointerDown(surface, { button: 0, clientX: 20, clientY: 20, pointerId: 7, pointerType: "mouse" });
     expect(setPointerCapture).toHaveBeenCalledWith(7);
     fireEvent.pointerMove(surface, { buttons: 1, clientX: 22, clientY: 20, pointerId: 7, pointerType: "mouse" });
-    expect(clearButton).toBeDisabled();
+    expect(stroke).not.toHaveBeenCalled();
     fireEvent.pointerUp(surface, { clientX: 22, clientY: 20, pointerId: 7, pointerType: "mouse" });
     expect(releasePointerCapture).toHaveBeenCalledWith(7);
 
     fireEvent.pointerDown(surface, { button: 0, clientX: 20, clientY: 20, pointerId: 8, pointerType: "mouse" });
     expect(setPointerCapture).toHaveBeenCalledWith(8);
     fireEvent.pointerMove(surface, { buttons: 1, clientX: 24, clientY: 20, pointerId: 8, pointerType: "mouse" });
-    expect(clearButton).toBeEnabled();
     await waitFor(() => expect(stroke).toHaveBeenCalled());
 
     const strokeCountBeforePointerUp = stroke.mock.calls.length;
@@ -313,17 +593,11 @@ describe("ExamList", () => {
     expect(releasePointerCapture).toHaveBeenCalledWith(8);
     await waitFor(() => expect(stroke.mock.calls.length).toBeGreaterThan(strokeCountBeforePointerUp));
 
-    clearRect.mockClear();
-    stroke.mockClear();
-    fireEvent.click(clearButton);
-    expect(clearButton).toBeDisabled();
-    await waitFor(() => expect(clearRect).toHaveBeenCalled());
-    expect(stroke).not.toHaveBeenCalled();
-
     const clearCountBeforeResize = clearRect.mock.calls.length;
+    const strokeCountBeforeResize = stroke.mock.calls.length;
     fireEvent(window, new Event("resize"));
     await waitFor(() => expect(clearRect.mock.calls.length).toBeGreaterThan(clearCountBeforeResize));
-    expect(stroke).not.toHaveBeenCalled();
+    expect(stroke.mock.calls.length).toBeGreaterThan(strokeCountBeforeResize);
   });
 
   it("prevents selection on pointerdown and clears the dragging class on every finish path", () => {
@@ -378,44 +652,6 @@ describe("ExamList", () => {
     expect(surface).toHaveClass("is-pencil-dragging");
 
     unmount();
-    expect(surface).not.toHaveClass("is-pencil-dragging");
-  });
-
-  it("clears the dragging class when the drawing is cleared", () => {
-    render(
-      <ExamList
-        exams={sampleExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
-
-    const surface = screen.getByRole("main").parentElement;
-    if (!surface) {
-      throw new Error("home pencil surface was not rendered");
-    }
-
-    installPointerCapture(surface);
-    pickTool("pencil");
-    dispatchPointerEvent(surface, "pointerdown", {
-      button: 0,
-      clientX: 20,
-      clientY: 20,
-      pointerId: 55,
-      pointerType: "mouse"
-    });
-    fireEvent.pointerMove(surface, {
-      buttons: 1,
-      clientX: 25,
-      clientY: 22,
-      pointerId: 55,
-      pointerType: "mouse"
-    });
-
-    expect(surface).toHaveClass("is-pencil-dragging");
-    fireEvent.click(screen.getByRole("button", { name: "書き込みを消す" }));
     expect(surface).not.toHaveClass("is-pencil-dragging");
   });
 
@@ -485,21 +721,17 @@ describe("ExamList", () => {
       throw new Error("home pencil surface was not rendered");
     }
 
-    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
     installPointerCapture(surface);
     const grid = screen.getByRole("region", { name: "公開中の試験一覧" });
-    const article = screen.getByRole("heading", { name: sampleExams[0].title }).closest("article");
-    expect(article).not.toBeNull();
+    const article = screen.getByRole("article", { name: sampleExams[0].title });
 
     pickTool("pencil");
     [surface, grid].forEach((target, index) => {
       dragFrom(target, surface, index + 10);
-      expect(clearButton).toBeEnabled();
-      fireEvent.click(clearButton);
-      expect(clearButton).toBeDisabled();
+      expect(screen.getByRole("button", { name: "鉛筆を拾う" })).toHaveAttribute("data-tool-phase", "held");
     });
 
-    const articlePointerDown = dispatchPointerEvent(article!, "pointerdown", {
+    const articlePointerDown = dispatchPointerEvent(article, "pointerdown", {
       button: 0,
       clientX: 20,
       clientY: 20,
@@ -514,11 +746,10 @@ describe("ExamList", () => {
       pointerId: 12,
       pointerType: "mouse"
     });
-    expect(clearButton).toBeDisabled();
     expect(screen.getByRole("button", { name: "鉛筆を拾う" })).not.toHaveAttribute("data-tool-phase", "held");
   });
 
-  it("captures pen input on pointerdown and draws only after the threshold", () => {
+  it("captures pen input on pointerdown and draws only after the threshold", async () => {
     render(
       <ExamList
         exams={sampleExams}
@@ -534,7 +765,7 @@ describe("ExamList", () => {
       throw new Error("home pencil surface was not rendered");
     }
 
-    const clearButton = screen.getByRole("button", { name: "書き込みを消す" });
+    const { stroke } = installCanvasContext();
     const { setPointerCapture } = installPointerCapture(surface);
     pickTool("pencil", "pen");
 
@@ -547,7 +778,7 @@ describe("ExamList", () => {
       pressure: 0.2
     });
     expect(setPointerCapture).toHaveBeenCalledWith(5);
-    expect(clearButton).toBeDisabled();
+    expect(stroke).not.toHaveBeenCalled();
 
     fireEvent.pointerMove(surface, {
       buttons: 1,
@@ -558,7 +789,7 @@ describe("ExamList", () => {
       pressure: 0.8
     });
 
-    expect(clearButton).toBeEnabled();
+    await waitFor(() => expect(stroke).toHaveBeenCalled());
   });
 
   it("replays pencil and eraser operations in order after a resize", async () => {
@@ -586,6 +817,7 @@ describe("ExamList", () => {
     pickTool("eraser");
     dragFrom(surface, surface, 62);
     await waitFor(() => expect(fillRect).toHaveBeenCalled());
+    expect(fillRect).toHaveBeenCalledWith(-19, -8, 38, 16);
 
     const strokeCountBeforeSecondLine = stroke.mock.calls.length;
     pickTool("pencil");
@@ -603,12 +835,6 @@ describe("ExamList", () => {
     expect(fillRect).toHaveBeenCalled();
     expect(context.globalCompositeOperation).toBe("source-over");
 
-    const fillCountBeforeClear = fillRect.mock.calls.length;
-    const strokeCountBeforeClear = stroke.mock.calls.length;
-    fireEvent.click(screen.getByRole("button", { name: "書き込みを消す" }));
-    await waitFor(() => expect(screen.getByRole("button", { name: "書き込みを消す" })).toBeDisabled());
-    expect(fillRect).toHaveBeenCalledTimes(fillCountBeforeClear);
-    expect(stroke).toHaveBeenCalledTimes(strokeCountBeforeClear);
   });
 
   it("drops a held tool without preventing the original UI click", () => {
@@ -624,8 +850,8 @@ describe("ExamList", () => {
     );
 
     pickTool("pencil");
-    const startButton = screen.getAllByRole("button", { name: "試験を始める" })[0];
-    const pointerDown = dispatchPointerEvent(startButton, "pointerdown", {
+    const selectButton = screen.getByRole("button", { name: `${sampleExams[0].title}を選択` });
+    const pointerDown = dispatchPointerEvent(selectButton, "pointerdown", {
       button: 0,
       clientX: 300,
       clientY: 300,
@@ -635,7 +861,7 @@ describe("ExamList", () => {
 
     expect(pointerDown.defaultPrevented).toBe(false);
     expect(screen.getByRole("button", { name: "鉛筆を拾う" })).toHaveAttribute("data-tool-phase", "resting");
-    fireEvent.click(startButton);
+    fireEvent.click(selectButton);
     expect(onSelect).toHaveBeenCalledWith(sampleExams[0]);
   });
 
@@ -706,7 +932,7 @@ describe("ExamList", () => {
     expect(dragStart.defaultPrevented).toBe(true);
   });
 
-  it("shows the revised card layout and starts the exam", async () => {
+  it("uses each problem booklet itself as the exam selection control", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const exam = sampleExams[0];
@@ -721,17 +947,76 @@ describe("ExamList", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: "新規作成" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "問題の新規作成" })).toBeDisabled();
     expect(screen.getByLabelText(`${exam.title}の表紙`)).toBeInTheDocument();
     expect(screen.queryByText(exam.subject)).not.toBeInTheDocument();
     expect(screen.queryByText(exam.description)).not.toBeInTheDocument();
 
-    const card = screen.getByRole("heading", { name: exam.title }).closest("article");
-    expect(card).not.toBeNull();
+    const card = screen.getByRole("article", { name: exam.title });
+    expect(card).toHaveAttribute("data-card-structure", "steam-capsule");
+    expect(card).toHaveAttribute("data-capsule-theme", "current");
+    expect(card).not.toHaveTextContent(`${exam.durationMinutes}分`);
+    expect(within(card).queryByText(`${exam.questions.length}問`)).not.toBeInTheDocument();
+    expect(card).not.toHaveTextContent(`${exam.totalPoints}点`);
+    expect(within(card).queryByRole("heading", { name: exam.title })).not.toBeInTheDocument();
+    expect(within(card).queryByText(exam.title)).not.toBeInTheDocument();
+    expect(within(card!).queryByText("共通テスト形式")).not.toBeInTheDocument();
+    expect(within(card!).queryByText("公開中")).not.toBeInTheDocument();
+    expect(within(card!).getByLabelText(`${exam.title}の設定`)).toBeInTheDocument();
+    expect(within(card!).queryByRole("button", { name: "試験を始める" })).not.toBeInTheDocument();
+    expect(card.querySelector(".steam-capsule-overlay")).not.toBeInTheDocument();
 
-    await user.click(within(card!).getByRole("button", { name: "試験を始める" }));
+    await user.click(within(card!).getByRole("button", { name: `${exam.title}を選択` }));
 
     expect(onSelect).toHaveBeenCalledWith(exam);
+  });
+
+  it("omits card darkening controls while keeping the card action menu", async () => {
+    const user = userEvent.setup();
+    const exam = sampleExams[0];
+    render(
+      <ExamList
+        exams={sampleExams}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    expect(screen.queryByText("カード暗さ調整")).not.toBeInTheDocument();
+    expect(document.querySelector(".steam-capsule-overlay")).not.toBeInTheDocument();
+    const card = screen.getByRole("article", { name: exam.title });
+    await user.click(within(card).getByLabelText(`${exam.title}の設定`));
+    expect(within(card).getByRole("button", { name: "編集する" })).toBeEnabled();
+    expect(within(card).getByRole("button", { name: "削除する" })).toBeEnabled();
+    expect(screen.queryByLabelText("試験を始めるボタンの色")).not.toBeInTheDocument();
+    ["書き込みを消す", "画面候補", "ホーム候補", "時間候補", "ページ候補", "採点候補", "編集候補"].forEach(
+      (name) => expect(screen.queryByRole("button", { name })).not.toBeInTheDocument()
+    );
+  });
+
+  it("keeps the adopted Steam Capsule card usable without a cover image", () => {
+    const examWithoutCover = {
+      ...sampleExams[0],
+      id: "home-without-cover",
+      title: "表紙なしホーム試験",
+      coverImageUrl: undefined
+    };
+
+    render(
+      <ExamList
+        exams={[examWithoutCover]}
+        onDelete={vi.fn()}
+        onEdit={vi.fn()}
+        onOpenEditor={vi.fn()}
+        onSelect={vi.fn()}
+      />
+    );
+
+    const card = screen.getByRole("article", { name: examWithoutCover.title });
+    expect(within(card!).getByRole("img", { name: `${examWithoutCover.title}の表紙画像なし` })).toBeInTheDocument();
+    expect(within(card!).getByRole("button", { name: `${examWithoutCover.title}を選択` })).toBeInTheDocument();
   });
 
   it("registers the anime TeX exam as a published PDF-page sample", () => {
@@ -757,10 +1042,11 @@ describe("ExamList", () => {
     expect(animeExam?.questions.reduce((sum, question) => sum + question.points, 0)).toBe(100);
   });
 
-  it("shows disabled card edit actions and keeps delete available", async () => {
+  it("runs edit and delete actions without selecting the exam", async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn();
     const onEdit = vi.fn();
+    const onSelect = vi.fn();
     const exam = sampleExams[0];
 
     render(
@@ -769,24 +1055,23 @@ describe("ExamList", () => {
         onDelete={onDelete}
         onEdit={onEdit}
         onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
+        onSelect={onSelect}
       />
     );
 
-    const card = screen.getByRole("heading", { name: exam.title }).closest("article");
-    expect(card).not.toBeNull();
+    const card = screen.getByRole("article", { name: exam.title });
+    await user.click(within(card).getByLabelText(`${exam.title}の設定`));
+    await user.click(within(card).getByRole("button", { name: "編集する" }));
+    await user.click(within(card).getByRole("button", { name: "削除する" }));
 
-    await user.click(within(card!).getByLabelText(`${exam.title}の設定`));
-    expect(within(card!).getByRole("button", { name: "編集する" })).toBeDisabled();
-    await user.click(within(card!).getByRole("button", { name: "削除する" }));
-
-    expect(onEdit).not.toHaveBeenCalled();
+    expect(onEdit).toHaveBeenCalledWith(exam);
     expect(onDelete).toHaveBeenCalledWith(exam.id);
+    expect(onSelect).not.toHaveBeenCalled();
   });
 
-  it("opens the exam screen design candidate mode and switches between ten candidates", async () => {
+  it("closes a card action menu when another part of the page is clicked", async () => {
     const user = userEvent.setup();
-
+    const exam = sampleExams[0];
     render(
       <ExamList
         exams={sampleExams}
@@ -797,157 +1082,13 @@ describe("ExamList", () => {
       />
     );
 
-    await user.click(screen.getByRole("button", { name: "画面候補" }));
+    const settings = screen.getByLabelText(`${exam.title}の設定`);
+    const menu = settings.closest("details");
+    await user.click(settings);
+    expect(menu).toHaveAttribute("open");
 
-    expect(screen.getByRole("heading", { name: "解答画面デザイン候補" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Focus Commandのプレビュー" })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: /06 Carbon Console/ }));
-
-    expect(screen.getByRole("article", { name: "06 Carbon Consoleのプレビュー" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
+    await user.click(screen.getByRole("heading", { name: "共通テスト形式 ウェブ模試" }));
+    expect(menu).not.toHaveAttribute("open");
   });
 
-  it("opens the timer design candidate mode and switches structural candidates", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <ExamList
-        exams={sampleExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
-
-    await user.click(screen.getByRole("button", { name: "時間候補" }));
-
-    expect(screen.getByRole("heading", { name: "制限時間デザイン候補" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(15);
-    expect(
-      screen.getByRole("article", { name: "01 Exam Seal Stopwatchのプレビュー" })
-    ).toBeInTheDocument();
-    expect(screen.getAllByRole("timer", { name: /残り時間/ })).toHaveLength(4);
-
-    await user.click(screen.getByRole("tab", { name: /15 Live Activity Pill/ }));
-
-    const preview = screen.getByRole("article", { name: "15 Live Activity Pillのプレビュー" });
-    expect(preview).toBeInTheDocument();
-    expect(within(preview).getAllByRole("timer", { name: /残り時間/ })[0]).toHaveAttribute(
-      "data-timer-layout",
-      "live-activity"
-    );
-  });
-
-  it("opens the home screen design candidate mode and switches between ten candidates", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <ExamList
-        exams={sampleExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
-
-    await user.click(screen.getByRole("button", { name: "ホーム候補" }));
-
-    expect(screen.getByRole("heading", { name: "ホーム画面デザイン候補" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Official Bookletのプレビュー" })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: /10 Material Bento/ }));
-
-    expect(screen.getByRole("article", { name: "10 Material Bentoのプレビュー" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
-  });
-
-  it("opens the editor design candidate mode and switches between ten candidates", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <ExamList
-        exams={sampleExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
-
-    await user.click(screen.getByRole("button", { name: "編集候補" }));
-
-    expect(screen.getByRole("heading", { name: "編集画面デザイン候補" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Overleaf Splitのプレビュー" })).toBeInTheDocument();
-    expect(
-      screen.getAllByText(
-        (_content, element) => element?.textContent?.includes("\\mark[answer=1,points=10,choices=4]{1}") ?? false
-      ).length
-    ).toBeGreaterThan(0);
-    expect(
-      screen.queryAllByText(
-        (_content, element) => element?.textContent?.includes("\\mark[answer=4,points=10,choices=4]{1}") ?? false
-      )
-    ).toHaveLength(0);
-
-    await user.click(screen.getByRole("tab", { name: /10 Review Studio/ }));
-
-    expect(screen.getByRole("article", { name: "10 Review Studioのプレビュー" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
-  });
-
-  it("opens the page navigation design candidate mode and switches between ten candidates", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <ExamList
-        exams={sampleExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
-
-    await user.click(screen.getByRole("button", { name: "ページ候補" }));
-
-    expect(screen.getByRole("heading", { name: "ページ遷移UI候補" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Fine Outlineのプレビュー" })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: /10 Bold Outline/ }));
-
-    expect(screen.getByRole("article", { name: "10 Bold Outlineのプレビュー" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
-  });
-
-  it("opens the scoring design candidate mode and switches between ten candidates", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <ExamList
-        exams={sampleExams}
-        onDelete={vi.fn()}
-        onEdit={vi.fn()}
-        onOpenEditor={vi.fn()}
-        onSelect={vi.fn()}
-      />
-    );
-
-    await user.click(screen.getByRole("button", { name: "採点候補" }));
-
-    expect(screen.getByRole("heading", { name: "採点画面デザイン候補" })).toBeInTheDocument();
-    expect(screen.getAllByRole("tab")).toHaveLength(10);
-    expect(screen.getByRole("article", { name: "01 Ledger Dashboardのプレビュー" })).toBeInTheDocument();
-
-    await user.click(screen.getByRole("tab", { name: /08 Scoreboard/ }));
-
-    expect(screen.getByRole("article", { name: "08 Scoreboardのプレビュー" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "試験一覧" })).toBeInTheDocument();
-  });
 });

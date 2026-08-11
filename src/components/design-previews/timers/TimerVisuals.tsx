@@ -92,10 +92,11 @@ function AppleRingTimer(props: TimerVisualProps) {
         <circle cx="60" cy="60" r="51" pathLength="1" strokeDasharray={`${ratio} 1`} />
       </svg>
       <div className="timer-apple-copy">
-        <small>残り時間</small>
         <strong>{props.formatted}</strong>
-        <span>{stateText(props.state)}・{percentText(props.remainingMs, props.totalMs)}・減少中</span>
       </div>
+      <span className="timer-apple-status">
+        {stateText(props.state)}・{percentText(props.remainingMs, props.totalMs)}・減少中
+      </span>
     </div>
   );
 }
