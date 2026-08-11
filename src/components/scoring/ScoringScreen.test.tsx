@@ -27,9 +27,7 @@ describe("ScoringScreen", () => {
   });
 
   it("can reopen directly in the completed scoring state", () => {
-    render(
-      <ScoringScreen answers={{}} exam={structuredExamFixture} startComplete onReview={vi.fn()} />
-    );
+    render(<ScoringScreen answers={{}} exam={structuredExamFixture} startComplete onReview={vi.fn()} />);
 
     expect(screen.getByRole("main")).toHaveClass("scoring-static");
     expect(document.querySelector(".scoring-final-content p")).toHaveTextContent("得点");
@@ -88,13 +86,7 @@ describe("ScoringScreen", () => {
     const exam = structuredExamFixture;
     const firstQuestion = exam.questions[0];
 
-    render(
-      <ScoringScreen
-        answers={{ [firstQuestion.id]: firstQuestion.correct }}
-        exam={exam}
-        onReview={vi.fn()}
-      />
-    );
+    render(<ScoringScreen answers={{ [firstQuestion.id]: firstQuestion.correct }} exam={exam} onReview={vi.fn()} />);
 
     act(() => {
       vi.advanceTimersByTime(1000);
@@ -110,10 +102,7 @@ describe("ScoringScreen", () => {
     expect(circle.querySelector("image.stamp-asset")).toHaveAttribute("href", gradeCircleStamp);
     expect(circle.querySelectorAll("path.circle-reveal-stroke")).toHaveLength(1);
     expect(circle.querySelector("path.circle-reveal-stroke")).toHaveAttribute("pathLength", "1");
-    expect(circle.querySelector("path.circle-reveal-stroke")).toHaveAttribute(
-      "d",
-      expect.stringMatching(/^M218 280/)
-    );
+    expect(circle.querySelector("path.circle-reveal-stroke")).toHaveAttribute("d", expect.stringMatching(/^M218 280/));
   });
 
   it("shows only the score pop and then forces review mode", () => {

@@ -154,9 +154,7 @@ describe("MarkSheet", () => {
     );
 
     expect(screen.getByRole("button", { name: "ア" })).toHaveClass("answer-number");
-    expect(screen.getByRole("button", { name: "ア" }).closest(".answer-grid-row")).not.toHaveClass(
-      "review-incorrect"
-    );
+    expect(screen.getByRole("button", { name: "ア" }).closest(".answer-grid-row")).not.toHaveClass("review-incorrect");
     expect(screen.getByRole("button", { name: "ア 1" })).toHaveClass("filled");
     expect(screen.getByRole("button", { name: "ア 1" })).not.toHaveClass("review-wrong");
     expect(screen.getByRole("button", { name: "ア 2" })).toHaveClass("review-correct");

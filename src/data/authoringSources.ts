@@ -16,6 +16,6 @@ const authoringDataByExamId: ReadonlyMap<string, ExamAuthoringData> = new Map([
 export function resolveAuthoringData(exam: Exam | null | undefined) {
   return {
     defaults: animeOnlymarkAuthoringData,
-    examSource: exam ? authoringDataByExamId.get(exam.id) ?? null : animeOnlymarkAuthoringData
+    examSource: exam ? (authoringDataByExamId.get(exam.id) ?? null) : animeOnlymarkAuthoringData
   };
 }

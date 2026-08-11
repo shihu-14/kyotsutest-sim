@@ -103,16 +103,14 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
     return () => window.clearTimeout(timeoutId);
   }, [onReview, showResult, startComplete]);
 
-  const screenClassName = ["screen", "scoring-screen", startComplete ? "scoring-static" : ""]
-    .filter(Boolean)
-    .join(" ");
+  const screenClassName = ["screen", "scoring-screen", startComplete ? "scoring-static" : ""].filter(Boolean).join(" ");
 
   return (
     <main className={screenClassName}>
       {!showResult ? (
         <section className="scoring-booklet-scene" aria-label="問題用紙への採点">
           <div className="scoring-booklet-shell">
-            <div className="scoring-page-turn" key={showCover ? "cover" : displayPage?.id ?? "done"}>
+            <div className="scoring-page-turn" key={showCover ? "cover" : (displayPage?.id ?? "done")}>
               {showCover ? (
                 <article className="booklet-page exact-page cover-page-display" aria-label={`${exam.title}の表紙`}>
                   <div className="exact-page-frame cover-page-frame">
@@ -135,12 +133,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
         </section>
       ) : null}
 
-      {showResult && startComplete && exam.pages[0] ? (
-        <ScoringReviewBackdrop
-          answers={answers}
-          exam={exam}
-        />
-      ) : null}
+      {showResult && startComplete && exam.pages[0] ? <ScoringReviewBackdrop answers={answers} exam={exam} /> : null}
 
       {showResult ? (
         <section

@@ -47,16 +47,8 @@ describe("homeToolPhysics", () => {
             }
           : DEFAULT_TOOL_SIZES;
       const centers = initialLandingCenters(rootWidth, sizes);
-      const pencilBounds = toolBoundsAt(
-        centers.pencil,
-        sizes.pencil,
-        REDUCED_MOTION_INITIAL_ROTATIONS.pencil
-      );
-      const eraserBounds = toolBoundsAt(
-        centers.eraser,
-        sizes.eraser,
-        REDUCED_MOTION_INITIAL_ROTATIONS.eraser
-      );
+      const pencilBounds = toolBoundsAt(centers.pencil, sizes.pencil, REDUCED_MOTION_INITIAL_ROTATIONS.pencil);
+      const eraserBounds = toolBoundsAt(centers.eraser, sizes.eraser, REDUCED_MOTION_INITIAL_ROTATIONS.eraser);
 
       expect(pencilBounds.left).toBeGreaterThanOrEqual(0);
       expect(eraserBounds.right).toBeLessThanOrEqual(rootWidth);
@@ -94,9 +86,7 @@ describe("homeToolPhysics", () => {
     }
 
     expect(resting).toBe(true);
-    expect(state.y + toolCollisionHalfExtents("pencil", DEFAULT_TOOL_SIZES.pencil, state.rotation).y).toBeCloseTo(
-      720
-    );
+    expect(state.y + toolCollisionHalfExtents("pencil", DEFAULT_TOOL_SIZES.pencil, state.rotation).y).toBeCloseTo(720);
     expect(state.vy).toBe(0);
   });
 

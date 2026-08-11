@@ -33,8 +33,8 @@ describe("authoring preview and math utilities", () => {
     const parsed = parseAuthoringLatex(String.raw`\mark[answer=1,points=4,choices=4]{ア}
 \choice{ア}{1}{$-3$}`);
 
-    expect(parsed.renderedHtml).toContain("class=\"latex-mark\"");
-    expect(parsed.renderedHtml).toContain("class=\"latex-choice\"");
+    expect(parsed.renderedHtml).toContain('class="latex-mark"');
+    expect(parsed.renderedHtml).toContain('class="latex-choice"');
     expect(parsed.renderedHtml).not.toContain("&lt;span");
   });
 
@@ -53,6 +53,8 @@ describe("authoring preview and math utilities", () => {
   it("keeps the anime default TeX points aligned with the exam data", () => {
     const parsed = parseAuthoringLatex(animeOnlymarkAuthoringSource);
 
-    expect(parsed.marks.map((mark) => mark.points)).toEqual(animeOnlymarkExam.questions.map((question) => question.points));
+    expect(parsed.marks.map((mark) => mark.points)).toEqual(
+      animeOnlymarkExam.questions.map((question) => question.points)
+    );
   });
 });

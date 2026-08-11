@@ -24,10 +24,7 @@ export function CoverPage({ exam, onBack, onStart }: CoverPageProps) {
       }
     };
     const preventKeyboardZoom = (event: KeyboardEvent) => {
-      if (
-        (event.ctrlKey || event.metaKey) &&
-        ["+", "=", "-", "_", "0"].includes(event.key)
-      ) {
+      if ((event.ctrlKey || event.metaKey) && ["+", "=", "-", "_", "0"].includes(event.key)) {
         event.preventDefault();
       }
     };
@@ -58,11 +55,7 @@ export function CoverPage({ exam, onBack, onStart }: CoverPageProps) {
                   draggable={false}
                 />
                 {exam.coverMarkAreas?.length ? (
-                  <CoverImageMarks
-                    areas={exam.coverMarkAreas}
-                    selectedValues={coverMarks}
-                    onToggle={toggleCoverMark}
-                  />
+                  <CoverImageMarks areas={exam.coverMarkAreas} selectedValues={coverMarks} onToggle={toggleCoverMark} />
                 ) : null}
               </>
             ) : (

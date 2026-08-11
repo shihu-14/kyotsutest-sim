@@ -1,10 +1,4 @@
-import type {
-  AuthoringMeta,
-  Exam,
-  ExamPage,
-  ProblemBlock,
-  QuestionSlot
-} from "../../types";
+import type { AuthoringMeta, Exam, ExamPage, ProblemBlock, QuestionSlot } from "../../types";
 import {
   createDraftSection,
   createDraftSubsection,
@@ -187,7 +181,11 @@ export function serializeSectionSource(section: DraftSection): string {
   return `${lines.join("\n").trim()}\n`;
 }
 
-export function buildSectionCompileSource(meta: AuthoringMeta, section: DraftSection, environmentSource: string): string {
+export function buildSectionCompileSource(
+  meta: AuthoringMeta,
+  section: DraftSection,
+  environmentSource: string
+): string {
   return `${authoringTexPreamble}\n${environmentSource}\n\\begin{document}\n\\examtitle{${meta.title}}\n${serializeSectionSource(section)}\\end{document}\n`;
 }
 
@@ -405,7 +403,9 @@ function imageStyleFromOptions(rawOptions: string | undefined): Record<string, s
 }
 
 function layoutFromSection(section: DraftSection, environmentSource: string) {
-  const body = [environmentSource, section.body, ...section.subsections.map((subsection) => subsection.body)].join("\n");
+  const body = [environmentSource, section.body, ...section.subsections.map((subsection) => subsection.body)].join(
+    "\n"
+  );
   const colors = texColorMap(body);
   const layout: NonNullable<ExamPage["layout"]> = {};
 
@@ -574,7 +574,10 @@ function buildDraftPages(
 }
 
 function answerValues(mark: DraftMark): string[] {
-  return mark.answer.split("|").map((value) => value.trim()).filter(Boolean);
+  return mark.answer
+    .split("|")
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
 function optionsFromMark(mark: DraftMark) {

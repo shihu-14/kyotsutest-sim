@@ -26,11 +26,7 @@ export function toggleAnswer(
   return normalizeAnswer(toggled, getOptionOrder(question));
 }
 
-export function answersEqual(
-  left: AnswerValue[],
-  right: AnswerValue[],
-  optionOrder: AnswerValue[]
-): boolean {
+export function answersEqual(left: AnswerValue[], right: AnswerValue[], optionOrder: AnswerValue[]): boolean {
   const normalizedLeft = normalizeAnswer(left, optionOrder);
   const normalizedRight = normalizeAnswer(right, optionOrder);
   return (

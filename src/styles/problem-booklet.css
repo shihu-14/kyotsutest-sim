@@ -100,7 +100,10 @@
   --has-cover-tab: 1;
   display: flex;
   gap: 0;
-  width: min(100%, calc((var(--has-cover-tab) * var(--cover-tab-width)) + (var(--visible-page-tabs) * var(--page-tab-width))));
+  width: min(
+    100%,
+    calc((var(--has-cover-tab) * var(--cover-tab-width)) + (var(--visible-page-tabs) * var(--page-tab-width)))
+  );
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.72);
   border-radius: 6px;

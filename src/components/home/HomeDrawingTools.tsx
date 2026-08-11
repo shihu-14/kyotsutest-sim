@@ -10,12 +10,7 @@ interface HomeDrawingToolsProps {
   registerToolElement: (kind: HomeDrawingToolKind, element: HTMLButtonElement | null) => void;
 }
 
-export function HomeDrawingTools({
-  onPickTool,
-  onToolImageLoad,
-  phases,
-  registerToolElement
-}: HomeDrawingToolsProps) {
+export function HomeDrawingTools({ onPickTool, onToolImageLoad, phases, registerToolElement }: HomeDrawingToolsProps) {
   const renderTool = (kind: HomeDrawingToolKind, label: string) => {
     const phase = phases[kind];
     const isResting = phase === "resting";

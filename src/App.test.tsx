@@ -68,9 +68,9 @@ describe("App", () => {
     await user.click(screen.getByRole("button", { name: "試験を始める" }));
 
     expect(screen.getByRole("timer")).toBeInTheDocument();
-    expect(screen.getAllByRole("button", { name: "1 4" }).every((button) => !button.classList.contains("selected"))).toBe(
-      true
-    );
+    expect(
+      screen.getAllByRole("button", { name: "1 4" }).every((button) => !button.classList.contains("selected"))
+    ).toBe(true);
     expect(window.localStorage.getItem("kyotsu-test-sim:answers:anime-onlymark-2026")).toBe("{}");
     expect(window.localStorage.getItem("kyotsu-test-sim:deadline:anime-onlymark-2026")).not.toBeNull();
   });
@@ -91,7 +91,9 @@ describe("App", () => {
 
     await user.click(screen.getByRole("button", { name: "ホームに戻る" }));
     const homeDialog = screen.getByRole("dialog", { name: "ホームに戻る確認" });
-    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか（現在の解答は保存されません）")).toBeInTheDocument();
+    expect(
+      within(homeDialog).getByText("試験を中断してホームへ戻りますか（現在の解答は保存されません）")
+    ).toBeInTheDocument();
 
     await user.click(within(homeDialog).getByRole("button", { name: "ホームに戻る" }));
 

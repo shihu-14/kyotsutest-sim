@@ -123,10 +123,7 @@ describe("ProblemBooklet", () => {
     });
     expect(screen.getByLabelText("正解")).toHaveClass("grade-stamp", "red-pen", "circle");
     expect(screen.getByLabelText("正解")).not.toHaveClass("is-drawing");
-    expect(screen.getByLabelText("正解").querySelector("image.stamp-asset")).toHaveAttribute(
-      "href",
-      gradeCircleStamp
-    );
+    expect(screen.getByLabelText("正解").querySelector("image.stamp-asset")).toHaveAttribute("href", gradeCircleStamp);
     expect(screen.getByLabelText("正解").querySelector("mask")).toBeNull();
   });
 
@@ -163,11 +160,11 @@ describe("ProblemBooklet", () => {
       />
     );
 
-    expect(
-      screen.getByRole("button", { name: `${firstQuestion.label} ${firstCorrectOption.label}` })
-    ).toHaveClass("review-correct");
-    expect(
-      screen.getByRole("button", { name: `${nextQuestion.label} ${nextCorrectOption.label}` })
-    ).not.toHaveClass("review-correct");
+    expect(screen.getByRole("button", { name: `${firstQuestion.label} ${firstCorrectOption.label}` })).toHaveClass(
+      "review-correct"
+    );
+    expect(screen.getByRole("button", { name: `${nextQuestion.label} ${nextCorrectOption.label}` })).not.toHaveClass(
+      "review-correct"
+    );
   });
 });

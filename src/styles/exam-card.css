@@ -55,8 +55,11 @@
 .exam-card-cover-placeholder {
   display: grid;
   place-items: center;
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--exam-card-placeholder-bg) 82%, white), var(--exam-card-placeholder-bg));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--exam-card-placeholder-bg) 82%, white),
+    var(--exam-card-placeholder-bg)
+  );
   color: var(--exam-card-muted);
   padding: 24px;
   text-align: center;

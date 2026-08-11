@@ -67,4 +67,3 @@ export function renderMathSegments(text: string): ReactNode[] {
 
   return segments;
 }
-

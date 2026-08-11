@@ -22,12 +22,7 @@ export function StopwatchTimer({ formatted, remainingMs, totalMs }: StopwatchTim
   } as CSSProperties;
 
   return (
-    <div
-      aria-label={`残り時間 ${formatted}`}
-      className="stopwatch-timer"
-      role="timer"
-      style={style}
-    >
+    <div aria-label={`残り時間 ${formatted}`} className="stopwatch-timer" role="timer" style={style}>
       <div className="stopwatch-crown" aria-hidden="true" />
       <div className="stopwatch-dial">
         <div className="stopwatch-face">

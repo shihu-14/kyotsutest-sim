@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { structuredExamFixture } from "../../test/examFixtures";
-import {
-  coverSourceFromExam,
-  environmentFromExam,
-  metaFromExam
-} from "./authoringEnvironment";
+import { coverSourceFromExam, environmentFromExam, metaFromExam } from "./authoringEnvironment";
 import { buildPublishedExam, sourceFromExam } from "./authoringPublish";
 
 describe("authoringPublish", () => {
@@ -35,13 +31,9 @@ describe("authoringPublish", () => {
       published: true
     });
     expect(published.questions).toHaveLength(structuredExamFixture.questions.length);
-    expect(
-      published.questions.map(({ label, points, multi, correct }) => ({ label, points, multi, correct }))
-    ).toEqual(
+    expect(published.questions.map(({ label, points, multi, correct }) => ({ label, points, multi, correct }))).toEqual(
       structuredExamFixture.questions.map(({ label, points, multi, correct }) => ({ label, points, multi, correct }))
     );
-    expect(published.pages.map((page) => page.title)).toEqual(
-      structuredExamFixture.pages.map((page) => page.title)
-    );
+    expect(published.pages.map((page) => page.title)).toEqual(structuredExamFixture.pages.map((page) => page.title));
   });
 });

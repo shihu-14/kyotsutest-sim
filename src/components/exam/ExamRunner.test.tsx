@@ -160,7 +160,9 @@ describe("ExamRunner", () => {
     fireEvent.click(homeButton);
     const homeDialog = screen.getByRole("dialog", { name: "ホームに戻る確認" });
     expect(onReturnHome).not.toHaveBeenCalled();
-    expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか（現在の解答は保存されません）")).toBeInTheDocument();
+    expect(
+      within(homeDialog).getByText("試験を中断してホームへ戻りますか（現在の解答は保存されません）")
+    ).toBeInTheDocument();
     expect(within(homeDialog).queryByRole("heading")).not.toBeInTheDocument();
     expect(homeDialog).toHaveStyle({ width: "min(550px, calc(100vw - 40px))" });
     expect(within(homeDialog).getByText("試験を中断してホームへ戻りますか（現在の解答は保存されません）")).toHaveStyle({
@@ -233,22 +235,25 @@ describe("ExamRunner", () => {
     expect(document.querySelector(".page-image-grade-stamp")).toBeInTheDocument();
     expect(screen.getByLabelText("正解")).toHaveClass("grade-stamp", "red-pen", "circle");
     expect(screen.getByLabelText("正解")).not.toHaveClass("is-drawing");
-    expect(screen.getByLabelText("正解").querySelector("image.stamp-asset")).toHaveAttribute(
-      "href",
-      gradeCircleStamp
-    );
+    expect(screen.getByLabelText("正解").querySelector("image.stamp-asset")).toHaveAttribute("href", gradeCircleStamp);
   });
 
   it("uses fine zoom steps and caps trackpad wheel bursts to one update per frame", () => {
     const frameCallbacks = new Map<number, FrameRequestCallback>();
     let nextFrameId = 1;
-    vi.stubGlobal("requestAnimationFrame", vi.fn((callback: FrameRequestCallback) => {
-      const frameId = nextFrameId;
-      nextFrameId += 1;
-      frameCallbacks.set(frameId, callback);
-      return frameId;
-    }));
-    vi.stubGlobal("cancelAnimationFrame", vi.fn((frameId: number) => frameCallbacks.delete(frameId)));
+    vi.stubGlobal(
+      "requestAnimationFrame",
+      vi.fn((callback: FrameRequestCallback) => {
+        const frameId = nextFrameId;
+        nextFrameId += 1;
+        frameCallbacks.set(frameId, callback);
+        return frameId;
+      })
+    );
+    vi.stubGlobal(
+      "cancelAnimationFrame",
+      vi.fn((frameId: number) => frameCallbacks.delete(frameId))
+    );
 
     const flushFrame = () => {
       const callbacks = [...frameCallbacks.values()];
@@ -431,9 +436,7 @@ describe("ExamRunner", () => {
         />
       );
 
-      expect(screen.getByLabelText("問題ページ")).toHaveStyle(
-        `--visible-page-tabs: ${baseExam.pages.length}`
-      );
+      expect(screen.getByLabelText("問題ページ")).toHaveStyle(`--visible-page-tabs: ${baseExam.pages.length}`);
 
       shortRender.unmount();
       render(<ControlledRunner />);
