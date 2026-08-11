@@ -1,9 +1,9 @@
 import { useState } from "react";
-import type { Exam } from "../../types";
+import type { Exam } from "../../../types";
 import {
   timerVisualCandidates,
   type TimerVisualState
-} from "./timers/TimerVisuals";
+} from "./TimerVisuals";
 
 interface TimerDesignPreviewProps {
   exam: Exam;

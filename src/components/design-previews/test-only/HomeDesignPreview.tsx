@@ -1,10 +1,10 @@
 import { useState, type ComponentType, type ReactNode } from "react";
-import type { Exam } from "../../types";
+import type { Exam } from "../../../types";
 import {
   SteamCapsuleCard,
   steamCapsuleThemes,
   type SteamCapsuleThemeId
-} from "../home/SteamCapsuleCard";
+} from "../../home/SteamCapsuleCard";
 
 interface HomeDesignPreviewProps {
   exams: Exam[];

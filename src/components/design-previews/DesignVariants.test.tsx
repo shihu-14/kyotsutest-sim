@@ -3,8 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sampleExams } from "../../data/sampleExam";
 import { ExamList } from "../home/ExamList";
-import { HomeDesignPreview } from "./HomeDesignPreview";
-import { TimerDesignPreview } from "./TimerDesignPreview";
+import { HomeDesignPreview } from "./test-only/HomeDesignPreview";
+import { TimerDesignPreview } from "./test-only/TimerDesignPreview";
 
 function tagSignature(element: Element): string {
   return `${element.tagName.toLowerCase()}[${Array.from(element.children)

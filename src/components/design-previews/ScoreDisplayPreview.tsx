@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Exam, UserAnswers } from "../../types";
 import { ExamRunner } from "../exam/ExamRunner";
-import { ScoreDisplay, scoreDisplayCandidates, type ScoreDisplayVariant } from "../exam/ScoreDisplay";
+import { ScoreDisplay, scoreDisplayCandidates, type ScoreDisplayVariant } from "./ScoreDisplay";
 
 interface ScoreDisplayPreviewProps {
   exam: Exam;
