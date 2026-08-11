@@ -19,7 +19,6 @@ export function App() {
     finishExam: finishSession,
     openCover: openSessionCover,
     openExamEditor: openSessionEditor,
-    openNewEditor: openSessionNewEditor,
     resetToList: resetSessionToList,
     startExam: startSessionExam,
     state: {
@@ -59,11 +58,6 @@ export function App() {
   const finishExam = () => {
     resetReviewTransition();
     finishSession();
-  };
-
-  const openNewEditor = () => {
-    resetReviewTransition();
-    openSessionNewEditor();
   };
 
   const openExamEditor = (exam: Exam) => {
@@ -108,7 +102,6 @@ export function App() {
         exams={exams}
         onDelete={deleteExam}
         onEdit={openExamEditor}
-        onOpenEditor={openNewEditor}
         onSelect={openCover}
       />
     );

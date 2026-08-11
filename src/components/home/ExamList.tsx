@@ -9,7 +9,6 @@ interface ExamListProps {
   onDelete: (examId: string) => void;
   onEdit: (exam: Exam) => void;
   onSelect: (exam: Exam) => void;
-  onOpenEditor: () => void;
 }
 
 interface ExamCardActionsProps {
@@ -48,8 +47,7 @@ function ExamCardActions({ exam, onDelete, onEdit }: ExamCardActionsProps) {
   );
 }
 
-export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: ExamListProps) {
-  const authoringDisabled = true;
+export function ExamList({ exams, onDelete, onEdit, onSelect }: ExamListProps) {
   const publishedExams = exams.filter((exam) => exam.published);
   const {
     canvasRef,
@@ -72,9 +70,8 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
           <div className="home-actions">
             <button
               className="secondary-button authoring-disabled-button"
-              disabled={authoringDisabled}
+              disabled
               type="button"
-              onClick={authoringDisabled ? undefined : onOpenEditor}
             >
               問題の新規作成
             </button>

@@ -53,7 +53,6 @@ export function useExamSession() {
   }, [state.selectedExam]);
 
   const enterReview = useCallback(() => dispatch({ type: "ENTER_REVIEW" }), []);
-  const openNewEditor = useCallback(() => dispatch({ type: "OPEN_NEW_EDITOR" }), []);
   const openExamEditor = useCallback((exam: Exam) => dispatch({ type: "OPEN_EDITOR", exam }), []);
   const closeEditor = useCallback(() => dispatch({ type: "CLOSE_EDITOR" }), []);
   const changePage = useCallback((pageId: string) => dispatch({ type: "CHANGE_PAGE", pageId }), []);
@@ -76,7 +75,6 @@ export function useExamSession() {
     finishExam,
     openCover,
     openExamEditor,
-    openNewEditor,
     resetToList,
     startExam,
     state,
