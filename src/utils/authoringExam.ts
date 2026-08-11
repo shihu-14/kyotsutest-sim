@@ -21,6 +21,7 @@ import {
   parseAuthoringLatex
 } from "./latex";
 import { loadAuthorCover, loadAuthorEnvironment, loadAuthorMeta, loadAuthorSource } from "./storage";
+import { positiveChoiceCount } from "./authoringSyntax";
 
 const draftPageId = (sectionIndex: number) => `draft-p${sectionIndex + 1}`;
 const authoringTexPreamble = String.raw`\documentclass[b5paper,12pt]{article}
@@ -106,10 +107,6 @@ export function cloneDraft(draft: ExamDraft): ExamDraft {
       }))
     }))
   };
-}
-
-function positiveChoiceCount(count: number): number {
-  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 1;
 }
 
 function splitTexOptions(input: string): string[] {
