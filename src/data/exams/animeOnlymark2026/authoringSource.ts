@@ -1,13 +1,15 @@
-import type { AuthoringMeta } from "../types";
-import animeFigure01 from "../assets/exams/anime-onlymark-2026/crops/page-01-figures.jpg";
-import animeFigure04 from "../assets/exams/anime-onlymark-2026/crops/page-04-figure.jpg";
-import animeFigure05 from "../assets/exams/anime-onlymark-2026/crops/page-05-figures.jpg";
-import animeFigure06 from "../assets/exams/anime-onlymark-2026/crops/page-06-figure.jpg";
-import animeFigure07 from "../assets/exams/anime-onlymark-2026/crops/page-07-figure.jpg";
-import animeFigure09 from "../assets/exams/anime-onlymark-2026/crops/page-09-figures.jpg";
-import animeFigure10 from "../assets/exams/anime-onlymark-2026/crops/page-10-figure.jpg";
+import type { AuthoringMeta } from "../../../types";
+import animeFigure01 from "../../../assets/exams/anime-onlymark-2026/crops/page-01-figures.jpg";
+import animeFigure04 from "../../../assets/exams/anime-onlymark-2026/crops/page-04-figure.jpg";
+import animeFigure05 from "../../../assets/exams/anime-onlymark-2026/crops/page-05-figures.jpg";
+import animeFigure06 from "../../../assets/exams/anime-onlymark-2026/crops/page-06-figure.jpg";
+import animeFigure07 from "../../../assets/exams/anime-onlymark-2026/crops/page-07-figure.jpg";
+import animeFigure09 from "../../../assets/exams/anime-onlymark-2026/crops/page-09-figures.jpg";
+import animeFigure10 from "../../../assets/exams/anime-onlymark-2026/crops/page-10-figure.jpg";
 
-export const defaultAuthoringMeta: AuthoringMeta = {
+export const animeOnlymarkExamId = "anime-onlymark-2026";
+
+export const animeOnlymarkAuthoringMeta: AuthoringMeta = {
   title: "漫画映画",
   subject: "漫画映画",
   description: "漫画・映画に関する題材を共通テスト形式で解くサンプル問題冊子。",
@@ -16,7 +18,7 @@ export const defaultAuthoringMeta: AuthoringMeta = {
   durationMinutes: 40
 };
 
-export const defaultEnvironmentSource = String.raw`\usepackage[inner=0.9in,outer=0.9in,top=80pt,bottom=0.76in]{geometry}
+export const animeOnlymarkEnvironmentSource = String.raw`\usepackage[inner=0.9in,outer=0.9in,top=80pt,bottom=0.76in]{geometry}
 \usepackage{adjustbox,tcolorbox,ulem,soul,setspace,letterspace,subfig,ifthen,multicol,tabularx,booktabs,enumitem,relsize,mathtools,mathcomp,siunitx,pifont,graphicx,caption,fancyhdr,titlesec,parskip,array,transparent,changepage}
 \graphicspath{{Images/}}
 \captionsetup{justification=raggedright,singlelinecheck=false,font=scriptsize}
@@ -32,14 +34,14 @@ export const defaultEnvironmentSource = String.raw`\usepackage[inner=0.9in,outer
 \renewcommand{\footrulewidth}{0pt}
 \newgeometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}`;
 
-export const defaultCoverSource = String.raw`\item 解答用紙に正しくマークされていない場合は, 採点されないことがあります。
+export const animeOnlymarkCoverSource = String.raw`\item 解答用紙に正しくマークされていない場合は, 採点されないことがあります。
 \item この問題冊子は, 全14ページで構成されています。問題は第1問から第9問まであり, 一部の問題には小問が含まれます。配点は各問題ごとに明記されています。
 \item 試験中に問題冊子の印刷不鮮明，ページの落丁・乱丁及び問題の不備等に気付いた場合は教えてください。
 \item 解答は，各問題にある所定の記号をクリックまたはタップをしマークしなさい。
 \item 試験中の他のウェブサイトおよび書籍等の閲覧は禁止します。
 \item 試験終了後, 問題冊子は持ち帰りなさい。`;
 
-export const defaultAuthoringSource = String.raw`\examtitle{漫画映画}
+export const animeOnlymarkAuthoringSource = String.raw`\examtitle{漫画映画}
 \sectiontitle{第1問}
 以下の連立方程式において, 各式 ① から ③ がそれぞれ画像 I から III に示されたアニメの名称の一部を表している。
 このとき, 式 \(n_d\:g'' atf-\) が表すアニメの名称として最も適当なものを選べ。
@@ -224,3 +226,16 @@ Sora and dreadless Siro overwhelmed driven native executing gods since enemies _
 \choice{21}{4}{underestimate}
 `;
 
+export interface ExamAuthoringData {
+  meta: AuthoringMeta;
+  source: string;
+  environmentSource: string;
+  coverSource: string;
+}
+
+export const animeOnlymarkAuthoringData: ExamAuthoringData = {
+  meta: animeOnlymarkAuthoringMeta,
+  source: animeOnlymarkAuthoringSource,
+  environmentSource: animeOnlymarkEnvironmentSource,
+  coverSource: animeOnlymarkCoverSource
+};

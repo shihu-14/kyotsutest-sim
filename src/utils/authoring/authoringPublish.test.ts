@@ -9,13 +9,21 @@ import { buildPublishedExam, sourceFromExam } from "./authoringPublish";
 
 describe("authoringPublish", () => {
   it("publishes an existing structured exam without changing its authored meaning", () => {
-    const source = sourceFromExam(structuredExamFixture);
+    const fallbackMeta = {
+      title: "",
+      subject: "",
+      description: "",
+      questionCount: 0,
+      totalPoints: 0,
+      durationMinutes: 0
+    };
+    const source = sourceFromExam(structuredExamFixture, { meta: fallbackMeta, source: "" }, null);
     const published = buildPublishedExam(
-      metaFromExam(structuredExamFixture),
+      metaFromExam(structuredExamFixture, fallbackMeta),
       source,
       structuredExamFixture,
-      environmentFromExam(structuredExamFixture),
-      coverSourceFromExam(structuredExamFixture)
+      environmentFromExam(structuredExamFixture, ""),
+      coverSourceFromExam(structuredExamFixture, "")
     );
 
     expect(published).toMatchObject({

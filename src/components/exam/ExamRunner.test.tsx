@@ -95,7 +95,7 @@ describe("ExamRunner", () => {
     expect(document.querySelector('input[type="range"][aria-label="問題表示倍率"]')).not.toBeInTheDocument();
     expect(screen.getByLabelText("問題表示領域")).toBeInTheDocument();
     expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveTextContent(/^\d{2}:\d{2}$/);
-    expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveClass("timer-exam-seal", "timer-color-stadium-alert");
+    expect(screen.getByRole("timer", { name: /残り時間/ })).toHaveClass("stopwatch-timer");
     expect(screen.getByText("ホームに戻る")).toBeInTheDocument();
     expect(screen.queryByText("解答済み")).not.toBeInTheDocument();
     expect(screen.queryByText("中断")).not.toBeInTheDocument();

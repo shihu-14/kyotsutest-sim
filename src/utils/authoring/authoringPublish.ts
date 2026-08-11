@@ -18,7 +18,6 @@ import {
   type DraftSection,
   type ExamDraft
 } from "./authoringDraft";
-import { defaultAuthoringMeta, defaultAuthoringSource } from "../../data/authoringDefaults";
 import { coverInstructionsFromSource, metaFromExam } from "./authoringEnvironment";
 import { parseAuthoringLatex } from "./authoringPreview";
 import { loadAuthorSource } from "./authoringStorage";
@@ -40,7 +39,11 @@ const authoringTexPreamble = String.raw`\documentclass[b5paper,12pt]{article}
 \newcommand{\counterbox}{\stepcounter{kyotsuanswer}\fbox{\arabic{kyotsuanswer}}}
 \newcommand{\choice}[3]{\par\smallskip\noindent\textcircled{\scriptsize #2}\quad #3}
 \newcommand{\mark}[2][]{\counterbox}`;
-const animeSampleExamId = "anime-onlymark-2026";
+
+interface AuthoringSourceSeed {
+  meta: AuthoringMeta;
+  source: string;
+}
 
 function splitTexOptions(input: string): string[] {
   const parts: string[] = [];
@@ -280,20 +283,27 @@ function draftFromExam(exam: Exam): ExamDraft {
   return normalizeSourceDraft({ sections });
 }
 
-export function sourceFromExam(exam: Exam | null | undefined): string {
+export function sourceFromExam(
+  exam: Exam | null | undefined,
+  defaults: AuthoringSourceSeed,
+  examSource: AuthoringSourceSeed | null
+): string {
   if (!exam) {
     const annotatedDefaultSource = serializeAuthoringDraft(
-      defaultAuthoringMeta,
-      normalizeSourceDraft(parseAuthoringDraft(defaultAuthoringSource))
+      defaults.meta,
+      normalizeSourceDraft(parseAuthoringDraft(defaults.source))
     );
     return loadAuthorSource(annotatedDefaultSource);
   }
 
-  if (exam.id === animeSampleExamId) {
-    return serializeAuthoringDraft(metaFromExam(exam), normalizeSourceDraft(parseAuthoringDraft(defaultAuthoringSource)));
+  if (examSource) {
+    return serializeAuthoringDraft(
+      metaFromExam(exam, defaults.meta),
+      normalizeSourceDraft(parseAuthoringDraft(examSource.source))
+    );
   }
 
-  return serializeAuthoringDraft(metaFromExam(exam), draftFromExam(exam));
+  return serializeAuthoringDraft(metaFromExam(exam, defaults.meta), draftFromExam(exam));
 }
 
 export function validateAuthoring(source: string, meta: AuthoringMeta): string[] {

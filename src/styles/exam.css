@@ -38,13 +38,12 @@
   --timer-size: 92px;
   --timer-crown-angle: 90deg;
   --timer-css-crown-angle: calc(90deg - var(--timer-crown-angle));
-  --timer-accent: #ffc04d;
-  --timer-track: rgba(255, 192, 77, 0.2);
-  --timer-fill: color-mix(in srgb, var(--timer-accent) 28%, var(--timer-face));
-  --timer-face: #fffdf7;
-  --timer-text: #2f2a20;
-  --timer-muted: rgba(47, 42, 32, 0.62);
-  --timer-shadow: rgba(84, 46, 5, 0.18);
+  --timer-accent: #ff4d00;
+  --timer-fill: #ffd6c2;
+  --timer-face: #fff7f2;
+  --timer-text: #111111;
+  --timer-muted: rgba(127, 40, 0, 0.58);
+  --timer-shadow: rgba(255, 77, 0, 0.18);
   position: relative;
   display: grid;
   width: calc(var(--timer-size) + 18px);
@@ -129,24 +128,4 @@
   font-size: calc(var(--timer-size) * 0.22);
   font-weight: 950;
   line-height: 1.05;
-}
-
-.timer-exam-seal {
-  --timer-accent: #d4552d;
-  --timer-track: rgba(212, 85, 45, 0.16);
-  --timer-fill: #ffd7c9;
-  --timer-face: #fff8ef;
-  --timer-text: #5e2418;
-  --timer-muted: rgba(94, 36, 24, 0.6);
-  --timer-shadow: rgba(146, 63, 28, 0.2);
-}
-
-.timer-color-stadium-alert {
-  --timer-accent: #ff4d00;
-  --timer-track: rgba(255, 77, 0, 0.16);
-  --timer-fill: #ffd6c2;
-  --timer-face: #fff7f2;
-  --timer-text: #111111;
-  --timer-muted: rgba(127, 40, 0, 0.58);
-  --timer-shadow: rgba(255, 77, 0, 0.18);
 }

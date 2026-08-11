@@ -18,16 +18,13 @@ export function StopwatchTimer({ formatted, remainingMs, totalMs }: StopwatchTim
   const progress = clampProgress(remainingMs, totalMs);
   const style = {
     "--timer-crown-angle": "90deg",
-    "--timer-progress": `${progress * 100}%`,
-    "--timer-elapsed": `${(1 - progress) * 100}%`,
-    "--timer-progress-angle": `${progress * 360}deg`,
     "--timer-elapsed-angle": `${(1 - progress) * 360}deg`
   } as CSSProperties;
 
   return (
     <div
       aria-label={`残り時間 ${formatted}`}
-      className="stopwatch-timer timer-exam-seal timer-color-stadium-alert"
+      className="stopwatch-timer"
       role="timer"
       style={style}
     >

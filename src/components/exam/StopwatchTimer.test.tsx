@@ -10,10 +10,7 @@ describe("StopwatchTimer", () => {
 
     expect(timer).toHaveTextContent("30:00");
     expect(timer).not.toHaveTextContent("残り時間");
-    expect(timer.style.getPropertyValue("--timer-progress")).toBe("75%");
-    expect(timer.style.getPropertyValue("--timer-elapsed")).toBe("25%");
     expect(timer.style.getPropertyValue("--timer-crown-angle")).toBe("90deg");
-    expect(timer.style.getPropertyValue("--timer-progress-angle")).toBe("270deg");
     expect(timer.style.getPropertyValue("--timer-elapsed-angle")).toBe("90deg");
     expect(timer.querySelector(".stopwatch-dial")).toBeInTheDocument();
   });

@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useHomeDrawingSurface } from "../../hooks/useHomeDrawingSurface";
 import type { Exam } from "../../types";
 import { HomeDrawingTools } from "./HomeDrawingTools";
-import { SteamCapsuleCard } from "./SteamCapsuleCard";
+import { ExamCard } from "./ExamCard";
 
 interface ExamListProps {
   exams: Exam[];
@@ -82,7 +82,7 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
         </header>
         <section aria-label="公開中の試験一覧" className="exam-grid">
           {publishedExams.map((exam) => (
-            <SteamCapsuleCard
+            <ExamCard
               exam={exam}
               key={exam.id}
               onSelect={() => onSelect(exam)}
