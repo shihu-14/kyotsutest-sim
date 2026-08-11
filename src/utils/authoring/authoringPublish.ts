@@ -4,7 +4,7 @@ import type {
   ExamPage,
   ProblemBlock,
   QuestionSlot
-} from "../types";
+} from "../../types";
 import {
   createDraftSection,
   createDraftSubsection,
@@ -18,7 +18,7 @@ import {
   type DraftSection,
   type ExamDraft
 } from "./authoringDraft";
-import { defaultAuthoringMeta, defaultAuthoringSource } from "./authoringDefaults";
+import { defaultAuthoringMeta, defaultAuthoringSource } from "../../data/authoringDefaults";
 import { coverInstructionsFromSource, metaFromExam } from "./authoringEnvironment";
 import { parseAuthoringLatex } from "./authoringPreview";
 import { loadAuthorSource } from "./authoringStorage";

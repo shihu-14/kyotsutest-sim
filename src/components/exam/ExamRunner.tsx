@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
-import type { AnswerValue, Exam, GradeSummary, QuestionSlot, UserAnswers } from "../../types";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import type { AnswerValue, Exam, QuestionSlot, UserAnswers } from "../../types";
 import { gradeExam } from "../../utils/answer";
 import { useCountdown } from "../../hooks/useCountdown";
 import { useBookletZoom } from "../../hooks/useBookletZoom";
@@ -28,7 +28,6 @@ interface ExamRunnerProps {
   onExitReview?: () => void;
   onReturnHome?: () => void;
   onExpire: () => void;
-  renderReviewScore?: (summary: GradeSummary) => ReactNode;
 }
 
 const timerAccentColor = "#ff4d00";
@@ -47,8 +46,7 @@ export function ExamRunner({
   onFinish,
   onExitReview,
   onReturnHome,
-  onExpire,
-  renderReviewScore
+  onExpire
 }: ExamRunnerProps) {
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showHomeConfirm, setShowHomeConfirm] = useState(false);
@@ -117,16 +115,12 @@ export function ExamRunner({
     <RootElement className={["exam-layout", "exam-mode-background", className].filter(Boolean).join(" ")}>
       <header className="exam-toolbar" aria-label="試験操作">
         <div className="toolbar-metrics">
-          {reviewMode && reviewSummary
-            ? renderReviewScore?.(reviewSummary) ?? <ReviewScoreBadge summary={reviewSummary} />
-            : null}
+          {reviewMode && reviewSummary ? <ReviewScoreBadge summary={reviewSummary} /> : null}
           {!reviewMode ? (
             <StopwatchTimer
               formatted={countdown.formatted}
-              label={`残り時間 ${countdown.formatted}`}
               remainingMs={countdown.remainingMs}
               totalMs={totalTimeMs}
-              variant="timer-exam-seal timer-color-stadium-alert"
             />
           ) : null}
           {reviewMode ? (

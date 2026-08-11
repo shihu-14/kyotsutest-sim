@@ -1,4 +1,4 @@
-import type { AuthoringMeta } from "../types";
+import type { AuthoringMeta } from "../../types";
 
 const AUTHOR_SOURCE_KEY = "kyotsu-test-sim:author-source";
 const AUTHOR_META_KEY = "kyotsu-test-sim:author-meta";

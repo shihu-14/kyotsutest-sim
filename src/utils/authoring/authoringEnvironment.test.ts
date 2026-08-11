@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { structuredExamFixture } from "../test/examFixtures";
+import { structuredExamFixture } from "../../test/examFixtures";
 import {
   coverInstructionsFromSource,
   metaFromExam,

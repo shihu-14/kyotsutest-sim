@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import type { AuthoringMeta } from "../types";
+import type { AuthoringMeta } from "../../types";
 import {
   loadAuthorCover,
   loadAuthorEnvironment,

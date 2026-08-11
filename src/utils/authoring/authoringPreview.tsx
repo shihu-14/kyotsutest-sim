@@ -1,7 +1,7 @@
-import { mathToHtml } from "./math";
+import { mathToHtml } from "../math";
 import { parseAuthoringAttributes, parseMarkCommand } from "./authoringSyntax";
 
-export interface ParsedMark {
+interface ParsedMark {
   id: string;
   label: string;
   answer: string[];
@@ -10,7 +10,7 @@ export interface ParsedMark {
   multi: boolean;
 }
 
-export interface ParsedAuthoringDocument {
+interface ParsedAuthoringDocument {
   title: string;
   marks: ParsedMark[];
   renderedHtml: string;
@@ -192,4 +192,3 @@ export function parseAuthoringLatex(source: string): ParsedAuthoringDocument {
     errors
   };
 }
-

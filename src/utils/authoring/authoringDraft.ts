@@ -1,4 +1,4 @@
-import type { AuthoringMeta } from "../types";
+import type { AuthoringMeta } from "../../types";
 import {
   authoringBodyComment,
   authoringLayoutCommentLines,

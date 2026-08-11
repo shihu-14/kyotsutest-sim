@@ -4,8 +4,6 @@ interface StopwatchTimerProps {
   formatted: string;
   remainingMs: number;
   totalMs: number;
-  variant?: string;
-  label?: string;
 }
 
 function clampProgress(remainingMs: number, totalMs: number) {
@@ -16,7 +14,7 @@ function clampProgress(remainingMs: number, totalMs: number) {
   return Math.min(1, Math.max(0, remainingMs / totalMs));
 }
 
-export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "timer-exam-seal", label }: StopwatchTimerProps) {
+export function StopwatchTimer({ formatted, remainingMs, totalMs }: StopwatchTimerProps) {
   const progress = clampProgress(remainingMs, totalMs);
   const style = {
     "--timer-crown-angle": "90deg",
@@ -28,8 +26,8 @@ export function StopwatchTimer({ formatted, remainingMs, totalMs, variant = "tim
 
   return (
     <div
-      aria-label={label ?? `残り時間 ${formatted}`}
-      className={`stopwatch-timer ${variant}`}
+      aria-label={`残り時間 ${formatted}`}
+      className="stopwatch-timer timer-exam-seal timer-color-stadium-alert"
       role="timer"
       style={style}
     >
