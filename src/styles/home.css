@@ -6,8 +6,8 @@
   isolation: isolate;
 }
 
-.home-pencil-surface.is-pencil-dragging,
-.home-pencil-surface.is-pencil-dragging * {
+.home-pencil-surface.is-home-tool-contacting,
+.home-pencil-surface.is-home-tool-contacting * {
   -webkit-user-select: none;
   user-select: none;
 }
