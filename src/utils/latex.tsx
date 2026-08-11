@@ -149,23 +149,6 @@ function renderInlineLatexHtml(text: string): string {
   return output;
 }
 
-function replaceMarkCommands(line: string): string {
-  return line.replace(/\\mark(?:\[([^\]]*)\])?\{([^}]*)\}/g, (_full, attrsRaw: string, label: string) => {
-    const attrs = parseAttributes(attrsRaw);
-    const points = Number(attrs.points ?? 0);
-    const answer = attrs.answer ? attrs.answer.split("|").join(", ") : "未設定";
-    return `<span class="latex-mark" title="answer: ${escapeHtml(answer)}, points: ${Number.isFinite(points) ? points : 0}">${escapeHtml(label)}</span>`;
-  });
-}
-
-function replaceChoiceCommands(line: string): string {
-  return line.replace(
-    /\\choice\{([^}]*)\}\{([^}]*)\}\{([^}]*)\}/g,
-    (_full, markLabel: string, value: string, content: string) =>
-      `<span class="latex-choice"><span>${escapeHtml(markLabel)}</span><strong>${escapeHtml(value)}</strong>${renderInlineLatexHtml(content)}</span>`
-  );
-}
-
 function renderCommandAwareInlineHtml(line: string): string {
   const fragments: string[] = [];
   const placeholderPrefix = "__KYOTSU_HTML_FRAGMENT_";

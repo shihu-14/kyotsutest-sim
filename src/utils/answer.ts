@@ -63,7 +63,3 @@ export function gradeExam(exam: Exam, answers: UserAnswers): GradeSummary {
     gradedQuestions
   };
 }
-
-export function answeredCount(exam: Exam, answers: UserAnswers): number {
-  return exam.questions.filter((question) => (answers[question.id] ?? []).length > 0).length;
-}

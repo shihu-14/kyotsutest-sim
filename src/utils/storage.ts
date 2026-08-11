@@ -33,16 +33,6 @@ export function saveDeadline(examId: string, deadline: number): void {
   window.localStorage.setItem(`${DEADLINE_PREFIX}${examId}`, String(deadline));
 }
 
-export function loadDeadline(examId: string): number | null {
-  const raw = window.localStorage.getItem(`${DEADLINE_PREFIX}${examId}`);
-  if (!raw) {
-    return null;
-  }
-
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 export function clearDeadline(examId: string): void {
   window.localStorage.removeItem(`${DEADLINE_PREFIX}${examId}`);
 }

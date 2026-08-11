@@ -16,7 +16,6 @@ import {
   resolveRestingX,
   restingToolY,
   rootPointFromClient,
-  rotatedHalfExtents,
   stepToolPhysics,
   toolCollisionHalfExtents,
   toolBoundsAt,

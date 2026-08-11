@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { AuthoringMeta, Exam } from "../../types";
+import type { Exam } from "../../types";
 import {
   EnvironmentSettingsPanel,
   type NumberMetaKey,

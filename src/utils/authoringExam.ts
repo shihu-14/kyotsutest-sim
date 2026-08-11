@@ -563,32 +563,6 @@ export function parseEnvironmentEditorSource(
   };
 }
 
-function getMarkSections(source: string): string[] {
-  const sections: string[] = [];
-  let currentSection = "第1問";
-  let currentSubsection = "";
-
-  source.split("\n").forEach((line) => {
-    const sectionMatch = line.match(/\\sectiontitle\{([^}]*)\}/);
-    if (sectionMatch) {
-      currentSection = sectionMatch[1];
-      currentSubsection = "";
-    }
-
-    const subsectionMatch = line.match(/\\subsectiontitle\{([^}]*)\}/);
-    if (subsectionMatch) {
-      currentSubsection = subsectionMatch[1];
-    }
-
-    const markCount = line.match(/\\mark(?:\[[^\]]*\])?\{([^}]*)\}/g)?.length ?? 0;
-    for (let index = 0; index < markCount; index += 1) {
-      sections.push(currentSubsection ? `${currentSection} ${currentSubsection}` : currentSection);
-    }
-  });
-
-  return sections;
-}
-
 export function validateAuthoring(source: string, meta: AuthoringMeta): string[] {
   const parsed = parseAuthoringLatex(source);
   const errors = [...parsed.errors];
