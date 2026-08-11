@@ -15,7 +15,7 @@ export const scorePopCandidates = [
 
 export type ScorePopVariant = (typeof scorePopCandidates)[number]["id"];
 
-interface ScorePopProps {
+interface ScorePopCandidateProps {
   score: number;
   totalPoints: number;
   variant: ScorePopVariant;
@@ -57,7 +57,7 @@ function CountUpScore({ score }: { score: number }) {
   return <>{displayScore}</>;
 }
 
-export function ScorePop({ score, totalPoints, variant }: ScorePopProps) {
+export function ScorePopCandidate({ score, totalPoints, variant }: ScorePopCandidateProps) {
   const percentage = totalPoints > 0 ? Math.max(0, Math.min(100, (score / totalPoints) * 100)) : 0;
   const progressStyle = {
     "--score-pop-progress": `${percentage}%`,

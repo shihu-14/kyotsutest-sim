@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScorePop, scorePopCandidates, type ScorePopVariant } from "./ScorePop";
+import { ScorePopCandidate, scorePopCandidates, type ScorePopVariant } from "./ScorePopCandidate";
 
 const previewScore = 86;
 const previewTotalPoints = 100;
@@ -53,7 +53,7 @@ export function ScorePopPreview() {
         <div className="score-pop-preview-stage" aria-label="得点ポップ再生エリア">
           <div className="score-pop-preview-paper" aria-hidden="true" />
           <div className="score-pop-preview-position">
-            <ScorePop
+            <ScorePopCandidate
               key={`${activeVariant}-${replayKey}`}
               score={previewScore}
               totalPoints={previewTotalPoints}
