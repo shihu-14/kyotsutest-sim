@@ -6,6 +6,7 @@ import {
   serializeAuthoringDraft,
   sumDraftPoints
 } from "./authoringDraft";
+import { parseAuthoringLatex } from "./latex";
 
 describe("authoring draft utilities", () => {
   it("splits source into sections, subsections, body, and marks", () => {
@@ -76,5 +77,35 @@ describe("authoring draft utilities", () => {
     expect(draft.sections[0].body).toContain("\\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}");
     expect(draft.sections[0].body).toContain("本文C");
     expect(draft.sections[0].body).not.toContain("\\usepackage");
+  });
+
+  it("keeps draft and preview mark semantics aligned", () => {
+    const source = String.raw`\examtitle{Sample}
+\sectiontitle{第1問}
+\mark[answer=1|3,points=6,choices=5,multi=true]{ア}
+\choice{ア}{1}{Alpha}
+\choice{ア}{3}{Gamma}`;
+    const draftMark = getDraftMarkEntries(parseAuthoringDraft(source))[0].mark;
+    const previewMark = parseAuthoringLatex(source).marks[0];
+
+    expect({
+      answer: draftMark.answer.split("|").filter(Boolean),
+      choices: draftMark.choices,
+      label: draftMark.label,
+      multi: draftMark.multi,
+      points: draftMark.points
+    }).toEqual({
+      answer: previewMark.answer,
+      choices: previewMark.choices,
+      label: previewMark.label,
+      multi: previewMark.multi,
+      points: previewMark.points
+    });
+    expect(draftMark.optionContents).toEqual(
+      expect.arrayContaining([
+        { content: "Alpha", value: "1" },
+        { content: "Gamma", value: "3" }
+      ])
+    );
   });
 });
