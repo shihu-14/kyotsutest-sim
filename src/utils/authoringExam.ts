@@ -15,10 +15,9 @@ import {
   defaultAuthoringMeta,
   defaultAuthoringSource,
   defaultCoverSource,
-  defaultEnvironmentSource,
-  normalizePreviewText,
-  parseAuthoringLatex
-} from "./latex";
+  defaultEnvironmentSource
+} from "./authoringDefaults";
+import { normalizePreviewText, parseAuthoringLatex } from "./authoringPreview";
 import { loadAuthorCover, loadAuthorEnvironment, loadAuthorMeta, loadAuthorSource } from "./storage";
 import {
   authoringBodyComment,
