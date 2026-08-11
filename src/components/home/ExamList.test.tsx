@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import eraserImageUrl from "../../assets/home-tools/eraser.png";
 import pencilImageUrl from "../../assets/home-tools/pencil.png";
 import { sampleExams } from "../../data/sampleExam";
-import { useHomePencilDrawing } from "../../hooks/useHomePencilDrawing";
+import { useHomeDrawingSurface } from "../../hooks/useHomeDrawingSurface";
 import {
   DEFAULT_TOOL_SIZES,
   HELD_TOOL_LIFT,
@@ -110,7 +110,7 @@ function PencilExclusionHarness() {
     registerToolElement,
     rootRef,
     toolPhases
-  } = useHomePencilDrawing();
+  } = useHomeDrawingSurface();
 
   return (
     <div className="pencil-exclusion-harness" ref={rootRef} {...pointerHandlers}>
@@ -615,7 +615,7 @@ describe("ExamList", () => {
       });
 
       expect(pointerDown.defaultPrevented).toBe(true);
-      expect(surface).toHaveClass("is-pencil-dragging");
+      expect(surface).toHaveClass("is-home-tool-contacting");
 
       dispatchPointerEvent(surface, finishEvent, {
         clientX: 20,
@@ -624,7 +624,7 @@ describe("ExamList", () => {
         pointerType: "mouse"
       });
 
-      expect(surface).not.toHaveClass("is-pencil-dragging");
+      expect(surface).not.toHaveClass("is-home-tool-contacting");
     });
 
     const pointerDown = dispatchPointerEvent(surface, "pointerdown", {
@@ -635,10 +635,10 @@ describe("ExamList", () => {
       pointerType: "mouse"
     });
     expect(pointerDown.defaultPrevented).toBe(true);
-    expect(surface).toHaveClass("is-pencil-dragging");
+    expect(surface).toHaveClass("is-home-tool-contacting");
 
     unmount();
-    expect(surface).not.toHaveClass("is-pencil-dragging");
+    expect(surface).not.toHaveClass("is-home-tool-contacting");
   });
 
   it("finishes an active gesture when reduced motion is enabled", () => {
@@ -682,12 +682,12 @@ describe("ExamList", () => {
       pointerId: 57,
       pointerType: "mouse"
     });
-    expect(surface).toHaveClass("is-pencil-dragging");
+    expect(surface).toHaveClass("is-home-tool-contacting");
 
     act(() => handleMotionChange?.({ matches: true } as MediaQueryListEvent));
 
     expect(releasePointerCapture).toHaveBeenCalledWith(57);
-    expect(surface).not.toHaveClass("is-pencil-dragging");
+    expect(surface).not.toHaveClass("is-home-tool-contacting");
     expect(screen.getByRole("button", { name: "鉛筆を拾う" })).toHaveAttribute("data-tool-phase", "resting");
   });
 
@@ -880,7 +880,7 @@ describe("ExamList", () => {
       });
 
       expect(pointerDown.defaultPrevented).toBe(false);
-      expect(surface).not.toHaveClass("is-pencil-dragging");
+      expect(surface).not.toHaveClass("is-home-tool-contacting");
       fireEvent.pointerMove(surface, {
         buttons: 1,
         clientX: 25,

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useHomePencilDrawing } from "../../hooks/useHomePencilDrawing";
+import { useHomeDrawingSurface } from "../../hooks/useHomeDrawingSurface";
 import type { Exam } from "../../types";
 import { ScoreDisplayPreview } from "../design-previews/ScoreDisplayPreview";
 import { ScorePopPreview } from "../design-previews/ScorePopPreview";
@@ -65,7 +65,7 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
     remeasureToolWorld,
     rootRef,
     toolPhases,
-  } = useHomePencilDrawing();
+  } = useHomeDrawingSurface();
 
   return (
     <div className="home-pencil-surface" ref={rootRef} {...pointerHandlers}>

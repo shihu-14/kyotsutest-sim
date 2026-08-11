@@ -22,7 +22,7 @@ import {
 import { useHomeToolWorld } from "./useHomeToolWorld";
 
 const DRAG_START_DISTANCE = 3;
-const PENCIL_DRAGGING_CLASS = "is-pencil-dragging";
+const HOME_TOOL_CONTACT_CLASS = "is-home-tool-contacting";
 const ERASER_FACE = { height: 16, width: 38 };
 const UI_DROP_SELECTOR = [
   "a",
@@ -51,7 +51,7 @@ interface ActiveGesture {
   operation: DrawingOperation;
 }
 
-interface HomePencilDrawing {
+interface HomeDrawingSurfaceApi {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   pickUpTool: (kind: HomeDrawingToolKind, point: Point2D) => void;
   pointerHandlers: {
@@ -72,7 +72,7 @@ function isUiDropTarget(target: EventTarget | null) {
   return target instanceof Element && target.closest(UI_DROP_SELECTOR) !== null;
 }
 
-export function useHomePencilDrawing(): HomePencilDrawing {
+export function useHomeDrawingSurface(): HomeDrawingSurfaceApi {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const operationsRef = useRef<DrawingOperation[]>([]);
@@ -183,7 +183,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
 
       const activeGesture = activeGestureRef.current;
       activeGestureRef.current = null;
-      root.classList.remove(PENCIL_DRAGGING_CLASS);
+      root.classList.remove(HOME_TOOL_CONTACT_CLASS);
       if (activeGesture?.drawing) {
         if (activeGesture.operation.kind === "pencil" || hasDrawingRef.current) {
           operationsRef.current.push(activeGesture.operation);
@@ -217,7 +217,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
       window.removeEventListener("resize", handleResize);
       mediaQuery?.removeEventListener?.("change", handleMotionChange);
       resizeObserver?.disconnect();
-      root.classList.remove(PENCIL_DRAGGING_CLASS);
+      root.classList.remove(HOME_TOOL_CONTACT_CLASS);
 
       const activeGesture = activeGestureRef.current;
       if (
@@ -254,7 +254,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
         return;
       }
 
-      root.classList.remove(PENCIL_DRAGGING_CLASS);
+      root.classList.remove(HOME_TOOL_CONTACT_CLASS);
       if (activeGesture.drawing) {
         if (activeGesture.operation.kind === "pencil") {
           operationsRef.current.push(activeGesture.operation);
@@ -295,7 +295,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
 
       event.preventDefault();
       window.getSelection()?.removeAllRanges();
-      event.currentTarget.classList.add(PENCIL_DRAGGING_CLASS);
+      event.currentTarget.classList.add(HOME_TOOL_CONTACT_CLASS);
       const bounds = event.currentTarget.getBoundingClientRect();
       const point = rootPointFromClient({ x: event.clientX, y: event.clientY }, bounds);
       const operation: DrawingOperation =
