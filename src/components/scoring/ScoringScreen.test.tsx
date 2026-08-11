@@ -116,7 +116,7 @@ describe("ScoringScreen", () => {
     );
   });
 
-  it("pauses on the score pop without entering review in debug mode", () => {
+  it("shows only the score pop and then forces review mode", () => {
     vi.useFakeTimers();
     const onReview = vi.fn();
     const baseExam = structuredExamFixture;
@@ -160,14 +160,16 @@ describe("ScoringScreen", () => {
     expect(onReview).not.toHaveBeenCalled();
 
     act(() => {
-      vi.advanceTimersByTime(10_000);
+      vi.advanceTimersByTime(1999);
     });
 
-    expect(screen.getByLabelText("採点結果")).toHaveClass("auto-review-score-pop");
-    expect(document.querySelector(".scoring-final-content")).toHaveStyle({
-      animation: "scoring-score-pop-in 420ms cubic-bezier(0.2, 0.9, 0.25, 1.16) both"
-    });
     expect(onReview).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+
+    expect(onReview).toHaveBeenCalledTimes(1);
   });
 
   it("turns pages without grading targets faster than graded pages", () => {
