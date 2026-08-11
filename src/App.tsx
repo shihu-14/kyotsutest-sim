@@ -1,104 +1,74 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { AuthoringEditor } from "./components/authoring/AuthoringEditor";
+import { ExamRunner } from "./components/exam/ExamRunner";
 import { CoverPage } from "./components/home/CoverPage";
 import { ExamList } from "./components/home/ExamList";
-import { ExamRunner } from "./components/exam/ExamRunner";
 import { ScoringScreen } from "./components/scoring/ScoringScreen";
 import { sampleExams } from "./data/sampleExam";
+import { useExamSession } from "./hooks/useExamSession";
 import { useReviewTransition } from "./hooks/useReviewTransition";
-import type { AnswerValue, Exam, ExamPhase, QuestionSlot, UserAnswers } from "./types";
-import { clearAnswers, clearDeadline, loadAnswers, saveAnswers, saveDeadline } from "./utils/storage";
-import { toggleAnswer } from "./utils/answer";
+import type { Exam } from "./types";
 
 export function App() {
-  const [phase, setPhase] = useState<ExamPhase>("select");
   const [exams, setExams] = useState<Exam[]>(sampleExams);
-  const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
-  const [editingExam, setEditingExam] = useState<Exam | null>(null);
-  const [answers, setAnswers] = useState<UserAnswers>({});
-  const [deadline, setDeadline] = useState<number | null>(null);
-  const [currentPageId, setCurrentPageId] = useState<string>("");
-  const [showCompletedScoring, setShowCompletedScoring] = useState(false);
+  const {
+    changePage,
+    closeEditor,
+    discardExamAndReturnHome: discardSession,
+    enterReview,
+    finishExam: finishSession,
+    openCover: openSessionCover,
+    openExamEditor: openSessionEditor,
+    openNewEditor: openSessionNewEditor,
+    resetToList: resetSessionToList,
+    startExam: startSessionExam,
+    state: {
+      answers,
+      currentPageId,
+      deadline,
+      editingExam,
+      phase,
+      selectedExam,
+      showCompletedScoring
+    },
+    toggleAnswer
+  } = useExamSession();
   const { className: reviewTransitionClassName, resetReviewTransition, startReviewTransition } =
     useReviewTransition();
 
   const openCover = (exam: Exam) => {
-    setSelectedExam(exam);
-    setAnswers(loadAnswers(exam.id));
-    setDeadline(null);
-    setCurrentPageId(exam.pages[0]?.id ?? "");
     resetReviewTransition();
-    setPhase("cover");
+    openSessionCover(exam);
   };
 
   const startExam = () => {
-    if (!selectedExam) {
-      return;
-    }
-
-    const nextDeadline = Date.now() + selectedExam.durationMinutes * 60 * 1000;
-    clearAnswers(selectedExam.id);
-    setAnswers({});
-    setDeadline(nextDeadline);
-    saveDeadline(selectedExam.id, nextDeadline);
-    setCurrentPageId(selectedExam.pages[0]?.id ?? "");
     resetReviewTransition();
-    setPhase("exam");
+    startSessionExam();
   };
 
   const resetToList = () => {
-    if (selectedExam) {
-      clearDeadline(selectedExam.id);
-    }
-    setSelectedExam(null);
-    setDeadline(null);
-    setCurrentPageId("");
-    setShowCompletedScoring(false);
     resetReviewTransition();
-    setPhase("select");
+    resetSessionToList();
   };
 
-  const discardExamAndReturnHome = useCallback(() => {
-    if (selectedExam) {
-      clearAnswers(selectedExam.id);
-      clearDeadline(selectedExam.id);
-    }
-    setAnswers({});
-    setSelectedExam(null);
-    setDeadline(null);
-    setCurrentPageId("");
-    setShowCompletedScoring(false);
+  const discardExamAndReturnHome = () => {
     resetReviewTransition();
-    setPhase("select");
-  }, [resetReviewTransition, selectedExam]);
-
-  const deleteExam = (examId: string) => {
-    setExams((current) => current.filter((exam) => exam.id !== examId));
-    if (selectedExam?.id === examId) {
-      resetToList();
-    }
+    discardSession();
   };
 
-  const finishExam = useCallback(() => {
-    if (selectedExam) {
-      clearDeadline(selectedExam.id);
-    }
-    setDeadline(null);
-    setShowCompletedScoring(false);
+  const finishExam = () => {
     resetReviewTransition();
-    setPhase("scoring");
-  }, [resetReviewTransition, selectedExam]);
+    finishSession();
+  };
 
   const openNewEditor = () => {
-    setEditingExam(null);
     resetReviewTransition();
-    setPhase("editor");
+    openSessionNewEditor();
   };
 
   const openExamEditor = (exam: Exam) => {
-    setEditingExam(exam);
     resetReviewTransition();
-    setPhase("editor");
+    openSessionEditor(exam);
   };
 
   const publishExam = (exam: Exam) => {
@@ -110,33 +80,23 @@ export function App() {
 
       return current.map((item) => (item.id === exam.id ? exam : item));
     });
-    setEditingExam(null);
     resetReviewTransition();
-    setPhase("select");
+    closeEditor();
   };
 
-  const handleToggleAnswer = (question: QuestionSlot, value: AnswerValue) => {
-    setAnswers((current) => ({
-      ...current,
-      [question.id]: toggleAnswer(question, current[question.id], value)
-    }));
-  };
-
-  useEffect(() => {
-    if (selectedExam) {
-      saveAnswers(selectedExam.id, answers);
+  const deleteExam = (examId: string) => {
+    setExams((current) => current.filter((exam) => exam.id !== examId));
+    if (selectedExam?.id === examId) {
+      resetToList();
     }
-  }, [answers, selectedExam]);
+  };
 
   if (phase === "editor") {
     return (
       <AuthoringEditor
         initialExam={editingExam}
         key={editingExam?.id ?? "new"}
-        onBack={() => {
-          setEditingExam(null);
-          setPhase("select");
-        }}
+        onBack={closeEditor}
         onPublish={publishExam}
       />
     );
@@ -165,10 +125,8 @@ export function App() {
         exam={selectedExam}
         startComplete={showCompletedScoring}
         onReview={() => {
-          setShowCompletedScoring(true);
-          setCurrentPageId(selectedExam.pages[0]?.id ?? "");
+          enterReview();
           startReviewTransition();
-          setPhase("review");
         }}
       />
     );
@@ -182,12 +140,12 @@ export function App() {
       exam={selectedExam}
       className={reviewTransitionClassName}
       reviewMode={phase === "review"}
-      onChangePage={setCurrentPageId}
+      onChangePage={changePage}
       onExitReview={discardExamAndReturnHome}
       onExpire={finishExam}
       onFinish={finishExam}
       onReturnHome={discardExamAndReturnHome}
-      onToggleAnswer={handleToggleAnswer}
+      onToggleAnswer={toggleAnswer}
     />
   );
 }
