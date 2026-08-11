@@ -6,7 +6,7 @@ import {
   serializeAuthoringDraft,
   sumDraftPoints
 } from "./authoringDraft";
-import { parseAuthoringLatex } from "./latex";
+import { parseAuthoringLatex } from "./authoringPreview";
 
 describe("authoring draft utilities", () => {
   it("splits source into sections, subsections, body, and marks", () => {

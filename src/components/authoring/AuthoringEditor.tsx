@@ -34,7 +34,7 @@ import {
   sourceFromExam,
   validateAuthoring
 } from "../../utils/authoringExam";
-import { parseAuthoringLatex } from "../../utils/latex";
+import { parseAuthoringLatex } from "../../utils/authoringPreview";
 import { saveAuthorCover, saveAuthorEnvironment, saveAuthorMeta, saveAuthorSource } from "../../utils/storage";
 
 interface AuthoringEditorProps {

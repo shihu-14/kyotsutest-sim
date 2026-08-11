@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { animeOnlymarkAnswerKey, animeOnlymarkExam } from "../data/exams/animeOnlymark2026";
-import { defaultAuthoringSource, parseAuthoringLatex, renderMathSegments } from "./latex";
+import { defaultAuthoringSource } from "./authoringDefaults";
+import { parseAuthoringLatex } from "./authoringPreview";
+import { renderMathSegments } from "./math";
 
-describe("latex utilities", () => {
+describe("authoring preview and math utilities", () => {
   it("extracts mark commands into grading slots", () => {
     const parsed = parseAuthoringLatex(String.raw`\examtitle{Sample}
 \sectiontitle{第1問}

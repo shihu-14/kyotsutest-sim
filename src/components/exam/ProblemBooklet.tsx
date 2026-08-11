@@ -6,7 +6,8 @@ import type {
   QuestionSlot,
   UserAnswers
 } from "../../types";
-import { normalizePreviewText, renderMathSegments, mathToHtml } from "../../utils/latex";
+import { normalizePreviewText } from "../../utils/authoringPreview";
+import { mathToHtml, renderMathSegments } from "../../utils/math";
 import { GradeStamp } from "./GradeStamp";
 import { PageImageMarks } from "./PageImageMarks";
 
