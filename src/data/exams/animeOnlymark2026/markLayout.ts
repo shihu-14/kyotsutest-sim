@@ -117,16 +117,8 @@ export const animePageGradeAnchors: Record<number, PageGradeAnchor[]> = {
   ],
   5: [imageGradeAnchor(7, 703, 263.5)],
   6: [imageGradeAnchor(8, 1079, 312.5)],
-  7: [
-    imageGradeAnchor(9, 479.5, 1121.5),
-    imageGradeAnchor(10, 479.5, 1205.5),
-    imageGradeAnchor(11, 479.5, 1289.5)
-  ],
-  8: [
-    imageGradeAnchor(12, 349, 392.5),
-    imageGradeAnchor(13, 349, 805.5),
-    imageGradeAnchor(14, 349, 1218.5)
-  ],
+  7: [imageGradeAnchor(9, 479.5, 1121.5), imageGradeAnchor(10, 479.5, 1205.5), imageGradeAnchor(11, 479.5, 1289.5)],
+  8: [imageGradeAnchor(12, 349, 392.5), imageGradeAnchor(13, 349, 805.5), imageGradeAnchor(14, 349, 1218.5)],
   9: [imageGradeAnchor(15, 456, 436.5), imageGradeAnchor(16, 454.5, 515.5)],
   10: [imageGradeAnchor(17, 516, 262.5)],
   11: [imageGradeAnchor(18, 350, 447), imageGradeAnchor(19, 350, 983)],

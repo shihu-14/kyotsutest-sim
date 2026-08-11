@@ -1,11 +1,4 @@
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  type DragEventHandler,
-  type PointerEventHandler,
-  type RefObject
-} from "react";
+import { useCallback, useEffect, useRef, type DragEventHandler, type PointerEventHandler, type RefObject } from "react";
 import {
   clampDrawingPressure,
   drawingPressure,
@@ -165,7 +158,8 @@ export function useHomeDrawingSurface(): HomeDrawingSurfaceApi {
       return undefined;
     }
 
-    const mediaQuery = typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+    const mediaQuery =
+      typeof window.matchMedia === "function" ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
     setReducedMotionPreference(mediaQuery?.matches ?? false);
     resizeCanvas();
     initializeToolWorld();
@@ -340,10 +334,7 @@ export function useHomeDrawingSurface(): HomeDrawingSurfaceApi {
       }
 
       const activeGesture = activeGestureRef.current;
-      updateHeldPointer(
-        { x: event.clientX, y: event.clientY },
-        activeGesture?.pointerId === event.pointerId
-      );
+      updateHeldPointer({ x: event.clientX, y: event.clientY }, activeGesture?.pointerId === event.pointerId);
 
       if (!activeGesture || activeGesture.pointerId !== event.pointerId) {
         return;
@@ -356,10 +347,7 @@ export function useHomeDrawingSurface(): HomeDrawingSurfaceApi {
 
       const bounds = event.currentTarget.getBoundingClientRect();
       const point = rootPointFromClient({ x: event.clientX, y: event.clientY }, bounds);
-      const distanceFromStart = Math.hypot(
-        point.x - activeGesture.startPoint.x,
-        point.y - activeGesture.startPoint.y
-      );
+      const distanceFromStart = Math.hypot(point.x - activeGesture.startPoint.x, point.y - activeGesture.startPoint.y);
       if (!activeGesture.drawing && distanceFromStart < DRAG_START_DISTANCE) {
         return;
       }

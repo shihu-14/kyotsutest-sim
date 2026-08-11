@@ -86,9 +86,7 @@ export function useHomeToolWorld(rootRef: RefObject<HTMLDivElement | null>) {
     eraser: null
   });
   const toolPhasesRef = useRef<Record<HomeDrawingToolKind, HomeDrawingToolPhase>>(INITIAL_TOOL_PHASES);
-  const [toolPhases, setToolPhases] = useState<Record<HomeDrawingToolKind, HomeDrawingToolPhase>>(
-    INITIAL_TOOL_PHASES
-  );
+  const [toolPhases, setToolPhases] = useState<Record<HomeDrawingToolKind, HomeDrawingToolPhase>>(INITIAL_TOOL_PHASES);
 
   const setToolPhase = useCallback((kind: HomeDrawingToolKind, phase: HomeDrawingToolPhase) => {
     if (toolPhasesRef.current[kind] === phase) {
@@ -323,11 +321,7 @@ export function useHomeToolWorld(rootRef: RefObject<HTMLDivElement | null>) {
     heldToolRef.current = null;
     liftAnimationRef.current = null;
     lastPhysicsTimestampRef.current = null;
-    const centers = initialLandingCenters(
-      floorSizeRef.current.width,
-      toolSizesRef.current,
-      INITIAL_FALL_ROTATIONS
-    );
+    const centers = initialLandingCenters(floorSizeRef.current.width, toolSizesRef.current, INITIAL_FALL_ROTATIONS);
     restingPreferenceXRef.current = { pencil: centers.pencil, eraser: centers.eraser };
 
     if (reducedMotionRef.current || typeof window.requestAnimationFrame !== "function") {

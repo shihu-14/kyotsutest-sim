@@ -21,12 +21,7 @@ export function GradeStamp({ animate = false, isCorrect }: GradeStampProps) {
         .filter(Boolean)
         .join(" ")}
     >
-      <svg
-        aria-hidden="true"
-        className="stamp-drawing"
-        focusable="false"
-        viewBox={`0 0 ${width} ${height}`}
-      >
+      <svg aria-hidden="true" className="stamp-drawing" focusable="false" viewBox={`0 0 ${width} ${height}`}>
         {animate ? (
           <defs>
             <mask height={height} id={maskId} maskUnits="userSpaceOnUse" width={width} x="0" y="0">
@@ -38,11 +33,7 @@ export function GradeStamp({ animate = false, isCorrect }: GradeStampProps) {
                 />
               ) : (
                 <>
-                  <path
-                    className="stamp-reveal-stroke cross-reveal-stroke first"
-                    d="M135 78 L905 826"
-                    pathLength="1"
-                  />
+                  <path className="stamp-reveal-stroke cross-reveal-stroke first" d="M135 78 L905 826" pathLength="1" />
                   <path
                     className="stamp-reveal-stroke cross-reveal-stroke second"
                     d="M902 44 L60 1040"

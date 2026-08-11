@@ -1,5 +1,12 @@
 import type { CSSProperties } from "react";
-import type { AnswerValue, GradedQuestion, PageGradeAnchor, PageMarkArea, QuestionSlot, UserAnswers } from "../../types";
+import type {
+  AnswerValue,
+  GradedQuestion,
+  PageGradeAnchor,
+  PageMarkArea,
+  QuestionSlot,
+  UserAnswers
+} from "../../types";
 import { GradeStamp } from "./GradeStamp";
 
 interface PageImageMarksProps {

@@ -1,11 +1,7 @@
 import { useMemo, useState } from "react";
 import { resolveAuthoringData } from "../../data/authoringSources";
 import type { Exam } from "../../types";
-import {
-  EnvironmentSettingsPanel,
-  type NumberMetaKey,
-  type TextMetaKey
-} from "./EnvironmentSettingsPanel";
+import { EnvironmentSettingsPanel, type NumberMetaKey, type TextMetaKey } from "./EnvironmentSettingsPanel";
 import { SectionEditor } from "./SectionEditor";
 import { SectionNavigator } from "./SectionNavigator";
 import { EnvironmentTexEditor, PublishedSectionPreview, SectionTexEditor } from "./TexEditors";
@@ -64,11 +60,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
     environmentFromExam(initialExam, authoringData.defaults.environmentSource)
   );
   const [coverSource, setCoverSource] = useState(() =>
-    coverSourceFromExam(
-      initialExam,
-      authoringData.defaults.coverSource,
-      authoringData.examSource?.coverSource
-    )
+    coverSourceFromExam(initialExam, authoringData.defaults.coverSource, authoringData.examSource?.coverSource)
   );
   const [savedSource, setSavedSource] = useState(source);
   const [savedMeta, setSavedMeta] = useState(meta);
@@ -93,11 +85,14 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
   const isEnvironmentSelected = selectedPanel === "environment";
   const selectedSection = isEnvironmentSelected
     ? null
-    : draft.sections[Math.min(selectedSectionIndex, Math.max(0, draft.sections.length - 1))] ?? null;
-  const selectedPage = previewExam.pages[Math.min(selectedSectionIndex, Math.max(0, previewExam.pages.length - 1))] ?? null;
+    : (draft.sections[Math.min(selectedSectionIndex, Math.max(0, draft.sections.length - 1))] ?? null);
+  const selectedPage =
+    previewExam.pages[Math.min(selectedSectionIndex, Math.max(0, previewExam.pages.length - 1))] ?? null;
   const selectedSectionSource = selectedSection ? serializeSectionSource(selectedSection) : "";
-  const selectedCompileSize = selectedSection ? buildSectionCompileSource(meta, selectedSection, environmentSource).length : 0;
-  const centerTitle = isEnvironmentSelected ? "環境設定" : selectedSection?.title ?? "大問";
+  const selectedCompileSize = selectedSection
+    ? buildSectionCompileSource(meta, selectedSection, environmentSource).length
+    : 0;
+  const centerTitle = isEnvironmentSelected ? "環境設定" : (selectedSection?.title ?? "大問");
   const texTabLabel = isEnvironmentSelected ? "詳細TeX" : "大問TeX";
   const sectionTotals = useMemo(
     () =>
@@ -357,9 +352,7 @@ export function AuthoringEditor({ initialExam = null, onBack, onPublish }: Autho
                 <h2>{selectedPage?.title ?? "プレビュー"}</h2>
               </div>
             </div>
-            {selectedPage ? (
-              <PublishedSectionPreview exam={previewExam} page={selectedPage} />
-            ) : null}
+            {selectedPage ? <PublishedSectionPreview exam={previewExam} page={selectedPage} /> : null}
             {showValidationErrors && validationErrors.length ? (
               <div className="validation-errors" role="alert">
                 <strong>投稿できません</strong>

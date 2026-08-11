@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-  drawingPressure,
-  renderHomeDrawing,
-  type DrawingOperation
-} from "./homeDrawingRenderer";
+import { drawingPressure, renderHomeDrawing, type DrawingOperation } from "./homeDrawingRenderer";
 
 function createContext() {
   const events: string[] = [];

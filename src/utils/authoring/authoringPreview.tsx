@@ -44,7 +44,9 @@ export function escapeHtml(value: string): string {
 }
 
 function isPreviewSettingCommand(line: string): boolean {
-  return /^\\(?:pagecolor|linespread|geometry|newgeometry|definecolor|setmainfont|setmainjfont|setsansjfont)\b/.test(line);
+  return /^\\(?:pagecolor|linespread|geometry|newgeometry|definecolor|setmainfont|setmainjfont|setsansjfont)\b/.test(
+    line
+  );
 }
 
 function renderInlineLatexHtml(text: string): string {
@@ -85,14 +87,12 @@ function renderCommandAwareInlineHtml(line: string): string {
         }">${escapeHtml(label)}</span>`
       );
     })
-    .replace(
-      /\\choice\{([^}]*)\}\{([^}]*)\}\{([^}]*)\}/g,
-      (_full, markLabel: string, value: string, content: string) =>
-        stash(
-          `<span class="latex-choice"><span>${escapeHtml(markLabel)}</span><strong>${escapeHtml(
-            value
-          )}</strong>${renderInlineLatexHtml(content)}</span>`
-        )
+    .replace(/\\choice\{([^}]*)\}\{([^}]*)\}\{([^}]*)\}/g, (_full, markLabel: string, value: string, content: string) =>
+      stash(
+        `<span class="latex-choice"><span>${escapeHtml(markLabel)}</span><strong>${escapeHtml(
+          value
+        )}</strong>${renderInlineLatexHtml(content)}</span>`
+      )
     );
 
   let rendered = renderInlineLatexHtml(withPlaceholders);

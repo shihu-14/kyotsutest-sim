@@ -1,11 +1,5 @@
 import type { CSSProperties } from "react";
-import type {
-  AnswerValue,
-  ExamPage,
-  GradedQuestion,
-  QuestionSlot,
-  UserAnswers
-} from "../../types";
+import type { AnswerValue, ExamPage, GradedQuestion, QuestionSlot, UserAnswers } from "../../types";
 import { normalizePreviewText } from "../../utils/authoring/authoringPreview";
 import { mathToHtml, renderMathSegments } from "../../utils/math";
 import { GradeStamp } from "./GradeStamp";
@@ -157,7 +151,11 @@ function QuestionBlock({
         </span>
         {renderMathSegments(normalizePreviewText(question.prompt))}
       </h3>
-      <div className="choice-list" role={question.multi ? "group" : "radiogroup"} aria-label={`${question.label}の選択肢`}>
+      <div
+        className="choice-list"
+        role={question.multi ? "group" : "radiogroup"}
+        aria-label={`${question.label}の選択肢`}
+      >
         {question.options.map((option) => {
           const selected = answers.includes(option.value);
           const isCorrectChoice = question.correct.includes(option.value);

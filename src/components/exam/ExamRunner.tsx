@@ -125,11 +125,7 @@ export function ExamRunner({
         <div className="toolbar-metrics">
           {reviewMode && reviewSummary ? <ReviewScoreBadge summary={reviewSummary} /> : null}
           {!reviewMode ? (
-            <StopwatchTimer
-              formatted={countdown.formatted}
-              remainingMs={countdown.remainingMs}
-              totalMs={totalTimeMs}
-            />
+            <StopwatchTimer formatted={countdown.formatted} remainingMs={countdown.remainingMs} totalMs={totalTimeMs} />
           ) : null}
           {reviewMode ? (
             <button

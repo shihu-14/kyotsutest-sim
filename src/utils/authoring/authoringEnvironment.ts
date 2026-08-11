@@ -132,7 +132,9 @@ export function parseEnvironmentEditorSource(
     .map((line) => line.trim())
     .filter(Boolean)
     .filter((line) => !line.startsWith("%"))
-    .filter((line) => !/^\\(?:examtitle|examsubject|examdescription|questioncount|totalpoints|durationminutes)\{/.test(line))
+    .filter(
+      (line) => !/^\\(?:examtitle|examsubject|examdescription|questioncount|totalpoints|durationminutes)\{/.test(line)
+    )
     .join("\n");
 
   return {

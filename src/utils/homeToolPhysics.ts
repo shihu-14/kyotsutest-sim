@@ -215,11 +215,7 @@ export function initialLandingCenters(
   const pencilHalfWidth = rotatedHalfExtents(sizes.pencil, rotations.pencil).x;
   const eraserHalfWidth = rotatedHalfExtents(sizes.eraser, rotations.eraser).x;
   const eraserX = clamp(rootWidth * 0.9, eraserHalfWidth + margin, rootWidth - eraserHalfWidth - margin);
-  const desiredPencilX = clamp(
-    rootWidth * 0.74,
-    pencilHalfWidth + margin,
-    rootWidth - pencilHalfWidth - margin
-  );
+  const desiredPencilX = clamp(rootWidth * 0.74, pencilHalfWidth + margin, rootWidth - pencilHalfWidth - margin);
   const pencilX = Math.min(desiredPencilX, eraserX - eraserHalfWidth - HOME_TOOL_GAP - pencilHalfWidth);
 
   return {
@@ -254,7 +250,9 @@ export function resolveRestingX(
 
   const leftCandidate = otherBounds.left - HOME_TOOL_GAP - halfWidth;
   const rightCandidate = otherBounds.right + HOME_TOOL_GAP + halfWidth;
-  const candidates = [leftCandidate, rightCandidate].filter((candidate) => candidate >= minimum && candidate <= maximum);
+  const candidates = [leftCandidate, rightCandidate].filter(
+    (candidate) => candidate >= minimum && candidate <= maximum
+  );
   if (candidates.length === 0) {
     return clamped;
   }
@@ -277,7 +275,7 @@ export function stepToolPhysics(
   }
 
   const config = PHYSICS_CONFIG[kind];
-  let next: ToolPhysicsState = {
+  const next: ToolPhysicsState = {
     ...state,
     x: state.x + state.vx * deltaSeconds,
     y: state.y + state.vy * deltaSeconds + (GRAVITY * deltaSeconds * deltaSeconds) / 2,
@@ -309,14 +307,11 @@ export function stepToolPhysics(
   const axisRadians = degreesToRadians(next.rotation + shape.axisOffset);
   const axisSine = Math.sin(axisRadians);
   const gravitationalTorque =
-    Math.abs(axisSine) < Number.EPSILON
-      ? 0
-      : -Math.sign(axisSine) * Math.cos(axisRadians) * config.groundTorque;
+    Math.abs(axisSine) < Number.EPSILON ? 0 : -Math.sign(axisSine) * Math.cos(axisRadians) * config.groundTorque;
   const groundedAngularVelocity =
     (next.angularVelocity + gravitationalTorque * deltaSeconds) * config.groundAngularDamping;
   const restingFrames =
-    Math.abs(axisSine) < RESTING_ANGLE_SINE &&
-    Math.abs(groundedAngularVelocity) < RESTING_ANGULAR_VELOCITY
+    Math.abs(axisSine) < RESTING_ANGLE_SINE && Math.abs(groundedAngularVelocity) < RESTING_ANGULAR_VELOCITY
       ? next.restingFrames + 1
       : 0;
 

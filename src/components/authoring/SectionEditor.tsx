@@ -20,21 +20,14 @@ export function SectionEditor({ section, sectionIndex, onChange }: SectionEditor
   const updateSection = (updates: Partial<DraftSection>) => {
     onChange({ ...section, ...updates });
   };
-  const updateSubsection = (
-    subsectionIndex: number,
-    updates: Partial<DraftSubsection>
-  ) => {
+  const updateSubsection = (subsectionIndex: number, updates: Partial<DraftSubsection>) => {
     const subsections = section.subsections.map((subsection, index) =>
       index === subsectionIndex ? { ...subsection, ...updates } : subsection
     );
     updateSection({ subsections });
   };
 
-  const updateMark = (
-    subsectionIndex: number | null,
-    markIndex: number,
-    updates: Partial<DraftMark>
-  ) => {
+  const updateMark = (subsectionIndex: number | null, markIndex: number, updates: Partial<DraftMark>) => {
     if (subsectionIndex === null) {
       const marks = section.marks.map((mark, index) => (index === markIndex ? { ...mark, ...updates } : mark));
       updateSection({ marks });
@@ -48,9 +41,7 @@ export function SectionEditor({ section, sectionIndex, onChange }: SectionEditor
 
       return {
         ...subsection,
-        marks: subsection.marks.map((mark, itemIndex) =>
-          itemIndex === markIndex ? { ...mark, ...updates } : mark
-        )
+        marks: subsection.marks.map((mark, itemIndex) => (itemIndex === markIndex ? { ...mark, ...updates } : mark))
       };
     });
     updateSection({ subsections });
@@ -186,7 +177,10 @@ function choiceText(mark: DraftMark): string {
 }
 
 function choicesFromText(text: string): DraftChoice[] {
-  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
   const contents = lines.length ? lines : ["1"];
   return contents.map((content, index) => ({ value: String(index + 1), content }));
 }
@@ -201,7 +195,10 @@ function positiveInputNumber(value: string): number {
 }
 
 function answerValuesFromMark(mark: DraftMark): string[] {
-  return mark.answer.split("|").map((value) => value.trim()).filter(Boolean);
+  return mark.answer
+    .split("|")
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
 function MarkList({ marks, prefix, onRemove, onUpdate }: MarkListProps) {
