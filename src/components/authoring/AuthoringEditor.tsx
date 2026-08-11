@@ -24,16 +24,18 @@ import {
 import {
   buildPublishedExam,
   buildSectionCompileSource,
+  serializeSectionSource,
+  sourceFromExam,
+  validateAuthoring
+} from "../../utils/authoringExam";
+import {
   coverSourceFromExam,
   environmentFromExam,
   metaFromExam,
   parseEnvironmentEditorSource,
   sameMeta,
-  serializeEnvironmentEditorSource,
-  serializeSectionSource,
-  sourceFromExam,
-  validateAuthoring
-} from "../../utils/authoringExam";
+  serializeEnvironmentEditorSource
+} from "../../utils/authoringEnvironment";
 import { parseAuthoringLatex } from "../../utils/authoringPreview";
 import { saveAuthorCover, saveAuthorEnvironment, saveAuthorMeta, saveAuthorSource } from "../../utils/storage";
 
