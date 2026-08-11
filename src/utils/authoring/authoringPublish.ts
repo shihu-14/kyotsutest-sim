@@ -1,26 +1,33 @@
-import type { AuthoringMeta, Exam, ExamPage, ProblemBlock, QuestionSlot } from "../types";
+import type {
+  AuthoringMeta,
+  Exam,
+  ExamPage,
+  ProblemBlock,
+  QuestionSlot
+} from "../../types";
 import {
-  createDefaultChoices,
+  createDraftSection,
+  createDraftSubsection,
   getDraftMarkEntries,
   normalizeMarkChoices,
+  normalizeSourceDraft,
   parseAuthoringDraft,
   serializeAuthoringDraft,
   shouldOmitSubsectionTitle,
-  type DraftChoice,
   type DraftMark,
   type DraftSection,
-  type DraftSubsection,
   type ExamDraft
 } from "./authoringDraft";
+import { coverInstructionsFromSource, metaFromExam } from "./authoringEnvironment";
+import { parseAuthoringLatex } from "./authoringPreview";
+import { loadAuthorSource } from "./authoringStorage";
 import {
-  defaultAuthoringMeta,
-  defaultAuthoringSource,
-  defaultCoverSource,
-  defaultEnvironmentSource,
-  normalizePreviewText,
-  parseAuthoringLatex
-} from "./latex";
-import { loadAuthorCover, loadAuthorEnvironment, loadAuthorMeta, loadAuthorSource } from "./storage";
+  authoringBodyComment,
+  authoringLayoutCommentLines,
+  authoringMarkComment,
+  serializeChoiceCommand,
+  serializeMarkCommand
+} from "./authoringSyntax";
 
 const draftPageId = (sectionIndex: number) => `draft-p${sectionIndex + 1}`;
 const authoringTexPreamble = String.raw`\documentclass[b5paper,12pt]{article}
@@ -32,84 +39,10 @@ const authoringTexPreamble = String.raw`\documentclass[b5paper,12pt]{article}
 \newcommand{\counterbox}{\stepcounter{kyotsuanswer}\fbox{\arabic{kyotsuanswer}}}
 \newcommand{\choice}[3]{\par\smallskip\noindent\textcircled{\scriptsize #2}\quad #3}
 \newcommand{\mark}[2][]{\counterbox}`;
-const animeSampleExamId = "anime-onlymark-2026";
-const coverInstructionsBlockPattern = /\\begin\{coverinstructions\}([\s\S]*?)\\end\{coverinstructions\}/;
 
-export function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
-  return (
-    left.title === right.title &&
-    left.subject === right.subject &&
-    left.description === right.description &&
-    left.questionCount === right.questionCount &&
-    left.totalPoints === right.totalPoints &&
-    left.durationMinutes === right.durationMinutes
-  );
-}
-
-export function metaFromExam(exam: Exam | null | undefined): AuthoringMeta {
-  if (!exam) {
-    return loadAuthorMeta(defaultAuthoringMeta);
-  }
-
-  return {
-    title: exam.title,
-    subject: exam.subject,
-    description: exam.description,
-    questionCount: exam.questions.length,
-    totalPoints: exam.totalPoints,
-    durationMinutes: exam.durationMinutes
-  };
-}
-
-export function createDraftMark(label: string, points = 1): DraftMark {
-  return {
-    id: `mark-${label}`,
-    label,
-    answer: "1",
-    points,
-    choices: 4,
-    multi: false,
-    optionContents: createDefaultChoices(4)
-  };
-}
-
-export function createDraftSection(index: number): DraftSection {
-  return {
-    id: `section-${index + 1}`,
-    title: `第${index + 1}問`,
-    body: "",
-    marks: [],
-    subsections: []
-  };
-}
-
-export function createDraftSubsection(sectionIndex: number, subsectionIndex: number): DraftSubsection {
-  return {
-    id: `section-${sectionIndex + 1}-subsection-${subsectionIndex + 1}`,
-    title: `問${subsectionIndex + 1}`,
-    body: "",
-    marks: []
-  };
-}
-
-export function cloneDraft(draft: ExamDraft): ExamDraft {
-  return {
-    sections: draft.sections.map((section) => ({
-      ...section,
-      marks: section.marks.map((mark) => ({ ...mark, optionContents: mark.optionContents.map((choice) => ({ ...choice })) })),
-      subsections: section.subsections.map((subsection) => ({
-        ...subsection,
-        marks: subsection.marks.map((mark) => ({
-          ...mark,
-          optionContents: mark.optionContents.map((choice) => ({ ...choice }))
-        }))
-      }))
-    }))
-  };
-}
-
-function positiveChoiceCount(count: number): number {
-  return Number.isFinite(count) && count > 0 ? Math.floor(count) : 1;
+interface AuthoringSourceSeed {
+  meta: AuthoringMeta;
+  source: string;
 }
 
 function splitTexOptions(input: string): string[] {
@@ -214,96 +147,19 @@ function texColorMap(body: string): Map<string, string> {
   return colors;
 }
 
-export function normalizeFormDraft(draft: ExamDraft): ExamDraft {
-  let nextMarkNumber = 1;
-
-  return {
-    sections: draft.sections.map((section, sectionIndex) => ({
-      ...section,
-      title: `第${sectionIndex + 1}問`,
-      marks: section.marks.map((mark) => ({
-        ...mark,
-        label: String(nextMarkNumber++)
-      })),
-      subsections: section.subsections.map((subsection, subsectionIndex) => ({
-        ...subsection,
-        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
-        marks: subsection.marks.map((mark) => ({
-          ...mark,
-          label: String(nextMarkNumber++)
-        }))
-      }))
-    }))
-  };
-}
-
-export function normalizeSourceDraft(draft: ExamDraft): ExamDraft {
-  return {
-    sections: draft.sections.map((section, sectionIndex) => ({
-      ...section,
-      title: section.title.trim() || `第${sectionIndex + 1}問`,
-      marks: section.marks.map((mark, markIndex) => ({
-        ...mark,
-        label: mark.label.trim() || String(markIndex + 1)
-      })),
-      subsections: section.subsections.map((subsection, subsectionIndex) => ({
-        ...subsection,
-        title: subsection.title.trim() || `問${subsectionIndex + 1}`,
-        marks: subsection.marks.map((mark, markIndex) => ({
-          ...mark,
-          label: mark.label.trim() || String(markIndex + 1)
-        }))
-      }))
-    }))
-  };
-}
-
-function serializeMarkForSection(mark: DraftMark): string {
-  const attrs = [
-    `answer=${mark.answer}`,
-    `points=${Math.max(0, mark.points)}`,
-    `choices=${positiveChoiceCount(mark.choices)}`,
-    mark.multi ? "multi=true" : ""
-  ].filter(Boolean);
-
-  return `\\mark[${attrs.join(",")}]{${mark.label}}`;
-}
-
-function serializeChoiceForSection(mark: DraftMark, choice: DraftChoice): string {
-  return `\\choice{${mark.label}}{${choice.value}}{${choice.content}}`;
-}
-
-function bodyComment(label: string, hasBody: boolean): string {
-  return hasBody ? `% === ${label} ===` : `% === ${label}: ここに問題文を記述 ===`;
-}
-
-function markComment(mark: DraftMark): string {
-  const answer = mark.answer.trim() || "未設定";
-  return `% --- 解答番号 ${mark.label}: 正解 ${answer} / 配点 ${Math.max(0, mark.points)} / 選択肢 ${positiveChoiceCount(mark.choices)} ---`;
-}
-
-function layoutCommentLines(): string[] {
-  return [
-    "% --- preview設定: 必要なら次の行を有効化して調整 ---",
-    "% \\pagecolor{beige}",
-    "% \\linespread{1.5}",
-    "% \\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}"
-  ];
-}
-
 export function serializeSectionSource(section: DraftSection): string {
   const lines = [`\\sectiontitle{${section.title}}`];
 
-  lines.push(bodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
-  lines.push(...layoutCommentLines());
+  lines.push(authoringBodyComment(`大問本文: ${section.title}`, Boolean(section.body.trim())));
+  lines.push(...authoringLayoutCommentLines());
   if (section.body.trim()) {
     lines.push(...section.body.trim().split("\n"));
   }
 
   section.marks.forEach((mark) => {
-    lines.push(markComment(mark));
-    lines.push(serializeMarkForSection(mark));
-    normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceForSection(mark, choice)));
+    lines.push(authoringMarkComment(mark));
+    lines.push(serializeMarkCommand(mark));
+    normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceCommand(mark, choice)));
   });
 
   section.subsections.forEach((subsection) => {
@@ -313,7 +169,7 @@ export function serializeSectionSource(section: DraftSection): string {
       lines.push(`\\subsectiontitle{${subsection.title}}`);
     }
     lines.push(
-      bodyComment(
+      authoringBodyComment(
         omitSubsectionTitle ? `小問本文: ${section.title}` : `小問本文: ${section.title} ${subsection.title}`,
         Boolean(subsection.body.trim())
       )
@@ -322,9 +178,9 @@ export function serializeSectionSource(section: DraftSection): string {
       lines.push(...subsection.body.trim().split("\n"));
     }
     subsection.marks.forEach((mark) => {
-      lines.push(markComment(mark));
-      lines.push(serializeMarkForSection(mark));
-      normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceForSection(mark, choice)));
+      lines.push(authoringMarkComment(mark));
+      lines.push(serializeMarkCommand(mark));
+      normalizeMarkChoices(mark).forEach((choice) => lines.push(serializeChoiceCommand(mark, choice)));
     });
   });
 
@@ -333,21 +189,6 @@ export function serializeSectionSource(section: DraftSection): string {
 
 export function buildSectionCompileSource(meta: AuthoringMeta, section: DraftSection, environmentSource: string): string {
   return `${authoringTexPreamble}\n${environmentSource}\n\\begin{document}\n\\examtitle{${meta.title}}\n${serializeSectionSource(section)}\\end{document}\n`;
-}
-
-function getSectionMarkEntries(section: DraftSection) {
-  return [
-    ...section.marks.map((mark) => ({ mark })),
-    ...section.subsections.flatMap((subsection) => subsection.marks.map((mark) => ({ mark })))
-  ];
-}
-
-export function sectionPointTotal(section: DraftSection): number {
-  return getSectionMarkEntries(section).reduce((sum, entry) => sum + entry.mark.points, 0);
-}
-
-export function sectionMarkCount(section: DraftSection): number {
-  return getSectionMarkEntries(section).length;
 }
 
 function draftBodyLineFromBlock(block: ProblemBlock): string | null {
@@ -442,151 +283,27 @@ function draftFromExam(exam: Exam): ExamDraft {
   return normalizeSourceDraft({ sections });
 }
 
-export function sourceFromExam(exam: Exam | null | undefined): string {
+export function sourceFromExam(
+  exam: Exam | null | undefined,
+  defaults: AuthoringSourceSeed,
+  examSource: AuthoringSourceSeed | null
+): string {
   if (!exam) {
     const annotatedDefaultSource = serializeAuthoringDraft(
-      defaultAuthoringMeta,
-      normalizeSourceDraft(parseAuthoringDraft(defaultAuthoringSource))
+      defaults.meta,
+      normalizeSourceDraft(parseAuthoringDraft(defaults.source))
     );
     return loadAuthorSource(annotatedDefaultSource);
   }
 
-  if (exam.id === animeSampleExamId) {
-    return serializeAuthoringDraft(metaFromExam(exam), normalizeSourceDraft(parseAuthoringDraft(defaultAuthoringSource)));
+  if (examSource) {
+    return serializeAuthoringDraft(
+      metaFromExam(exam, defaults.meta),
+      normalizeSourceDraft(parseAuthoringDraft(examSource.source))
+    );
   }
 
-  return serializeAuthoringDraft(metaFromExam(exam), draftFromExam(exam));
-}
-
-export function environmentFromExam(exam: Exam | null | undefined): string {
-  if (!exam) {
-    return loadAuthorEnvironment(defaultEnvironmentSource);
-  }
-
-  return defaultEnvironmentSource;
-}
-
-export function coverSourceFromExam(exam: Exam | null | undefined): string {
-  if (!exam) {
-    return loadAuthorCover(defaultCoverSource);
-  }
-
-  if (exam.id === animeSampleExamId) {
-    return defaultCoverSource;
-  }
-
-  return exam.instructions.map((instruction) => `\\item ${instruction}`).join("\n") || defaultCoverSource;
-}
-
-function coverInstructionsFromSource(source: string): string[] {
-  const instructions = source
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .filter((line) => !line.startsWith("%"))
-    .filter((line) => !/^\\(?:begin|end)\{enumerate\}/.test(line))
-    .map((line) => normalizePreviewText(line.replace(/^\\item\s*/, "")))
-    .filter(Boolean);
-
-  return instructions.length
-    ? instructions
-    : defaultCoverSource.split("\n").map((line) => normalizePreviewText(line.replace(/^\\item\s*/, "")));
-}
-
-function escapeSettingValue(value: string): string {
-  return value.replace(/[{}]/g, "");
-}
-
-export function serializeEnvironmentEditorSource(
-  meta: AuthoringMeta,
-  environmentSource: string,
-  coverSource: string
-): string {
-  return [
-    "% === 試験設定 ===",
-    `\\examtitle{${escapeSettingValue(meta.title)}}`,
-    `\\examsubject{${escapeSettingValue(meta.subject)}}`,
-    `\\examdescription{${escapeSettingValue(meta.description)}}`,
-    `\\questioncount{${meta.questionCount}}`,
-    `\\totalpoints{${meta.totalPoints}}`,
-    `\\durationminutes{${meta.durationMinutes}}`,
-    "",
-    "% === preview環境 ===",
-    environmentSource.trim(),
-    "",
-    "% === 表紙注意事項 ===",
-    "\\begin{coverinstructions}",
-    coverSource.trim(),
-    "\\end{coverinstructions}"
-  ].join("\n");
-}
-
-function readBracedCommand(source: string, command: string): string | null {
-  const match = source.match(new RegExp(`\\\\${command}\\{([^}]*)\\}`));
-  return match?.[1] ?? null;
-}
-
-function readPositiveNumberCommand(source: string, command: string, fallback: number): number {
-  const value = Number(readBracedCommand(source, command));
-  return Number.isFinite(value) ? Math.max(0, value) : fallback;
-}
-
-export function parseEnvironmentEditorSource(
-  source: string,
-  fallbackMeta: AuthoringMeta,
-  fallbackEnvironmentSource: string,
-  fallbackCoverSource: string
-) {
-  const coverMatch = source.match(coverInstructionsBlockPattern);
-  const nextCoverSource = coverMatch?.[1]?.trim() || fallbackCoverSource;
-  const nextMeta: AuthoringMeta = {
-    title: readBracedCommand(source, "examtitle") ?? fallbackMeta.title,
-    subject: readBracedCommand(source, "examsubject") ?? fallbackMeta.subject,
-    description: readBracedCommand(source, "examdescription") ?? fallbackMeta.description,
-    questionCount: readPositiveNumberCommand(source, "questioncount", fallbackMeta.questionCount),
-    totalPoints: readPositiveNumberCommand(source, "totalpoints", fallbackMeta.totalPoints),
-    durationMinutes: readPositiveNumberCommand(source, "durationminutes", fallbackMeta.durationMinutes)
-  };
-  const nextEnvironmentSource = source
-    .replace(coverInstructionsBlockPattern, "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .filter((line) => !line.startsWith("%"))
-    .filter((line) => !/^\\(?:examtitle|examsubject|examdescription|questioncount|totalpoints|durationminutes)\{/.test(line))
-    .join("\n");
-
-  return {
-    meta: nextMeta,
-    environmentSource: nextEnvironmentSource || fallbackEnvironmentSource,
-    coverSource: nextCoverSource
-  };
-}
-
-function getMarkSections(source: string): string[] {
-  const sections: string[] = [];
-  let currentSection = "第1問";
-  let currentSubsection = "";
-
-  source.split("\n").forEach((line) => {
-    const sectionMatch = line.match(/\\sectiontitle\{([^}]*)\}/);
-    if (sectionMatch) {
-      currentSection = sectionMatch[1];
-      currentSubsection = "";
-    }
-
-    const subsectionMatch = line.match(/\\subsectiontitle\{([^}]*)\}/);
-    if (subsectionMatch) {
-      currentSubsection = subsectionMatch[1];
-    }
-
-    const markCount = line.match(/\\mark(?:\[[^\]]*\])?\{([^}]*)\}/g)?.length ?? 0;
-    for (let index = 0; index < markCount; index += 1) {
-      sections.push(currentSubsection ? `${currentSection} ${currentSubsection}` : currentSection);
-    }
-  });
-
-  return sections;
+  return serializeAuthoringDraft(metaFromExam(exam, defaults.meta), draftFromExam(exam));
 }
 
 export function validateAuthoring(source: string, meta: AuthoringMeta): string[] {

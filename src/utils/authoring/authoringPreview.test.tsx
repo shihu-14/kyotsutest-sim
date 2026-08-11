@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { animeOnlymarkAnswerKey, animeOnlymarkExam } from "../data/exams/animeOnlymark2026";
-import { defaultAuthoringSource, parseAuthoringLatex, renderMathSegments } from "./latex";
+import { animeOnlymarkAnswerKey, animeOnlymarkExam } from "../../data/exams/animeOnlymark2026";
+import { animeOnlymarkAuthoringSource } from "../../data/exams/animeOnlymark2026/authoringSource";
+import { parseAuthoringLatex } from "./authoringPreview";
+import { renderMathSegments } from "../math";
 
-describe("latex utilities", () => {
+describe("authoring preview and math utilities", () => {
   it("extracts mark commands into grading slots", () => {
     const parsed = parseAuthoringLatex(String.raw`\examtitle{Sample}
 \sectiontitle{第1問}
@@ -43,13 +45,13 @@ describe("latex utilities", () => {
   });
 
   it("keeps the anime default TeX answer marks aligned with the answer key", () => {
-    const parsed = parseAuthoringLatex(defaultAuthoringSource);
+    const parsed = parseAuthoringLatex(animeOnlymarkAuthoringSource);
 
     expect(parsed.marks.map((mark) => mark.answer[0])).toEqual(animeOnlymarkAnswerKey);
   });
 
   it("keeps the anime default TeX points aligned with the exam data", () => {
-    const parsed = parseAuthoringLatex(defaultAuthoringSource);
+    const parsed = parseAuthoringLatex(animeOnlymarkAuthoringSource);
 
     expect(parsed.marks.map((mark) => mark.points)).toEqual(animeOnlymarkExam.questions.map((question) => question.points));
   });

@@ -12,70 +12,6 @@
   font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
 }
 
-.mark-sheet h2 {
-  margin: 0;
-  color: #d55d23;
-  font-size: 1rem;
-  letter-spacing: 0;
-  text-align: center;
-}
-
-.subject-sheet {
-  border: 1px solid #f0b08b;
-  margin: 12px 12px 8px;
-  background: #fff0e8;
-  padding: 10px;
-}
-
-.subject-sheet p {
-  margin: 4px 0 8px;
-  color: #c65e27;
-  font-size: 0.72rem;
-}
-
-.subject-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.subject-tabs span {
-  border: 1px solid #f07825;
-  background: #fffaf7;
-  color: #f07825;
-  padding: 5px 9px;
-  font-size: 0.76rem;
-  font-weight: 800;
-}
-
-.subject-tabs span.active {
-  background: #fff;
-  color: #222;
-}
-
-.major-tabs {
-  display: flex;
-  gap: 7px;
-  border-bottom: 2px solid #f07825;
-  margin: 0 12px;
-  padding-bottom: 8px;
-}
-
-.major-tabs button {
-  width: 30px;
-  height: 30px;
-  border: 2px solid #f07825;
-  border-radius: 2px;
-  background: #fff;
-  color: #f07825;
-  font-weight: 900;
-}
-
-.major-tabs button.active {
-  background: #f07825;
-  color: #fff;
-}
-
 .answer-table {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -111,31 +47,15 @@
   display: none;
 }
 
-.answer-grid-head,
 .answer-number,
 .answer-options {
   border-bottom: 1px solid #f2ad82;
 }
 
-.answer-number-head {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-right: 1px solid #f2ad82;
-  padding: 4px;
-  writing-mode: vertical-rl;
-}
-
-.answer-options-head,
 .answer-options {
   display: grid;
   grid-template-columns: repeat(10, minmax(0, 1fr));
   align-items: center;
-}
-
-.answer-options-head {
-  min-height: 24px;
-  text-align: center;
 }
 
 .answer-grid-row {

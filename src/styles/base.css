@@ -89,13 +89,3 @@ button:disabled {
   justify-content: flex-end;
   gap: 10px;
 }
-
-.eyebrow {
-  margin: 0 0 5px;
-  color: #6d4a20;
-  font-family: Inter, system-ui, sans-serif;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}

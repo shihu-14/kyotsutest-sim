@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type WheelEvent } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import type { AnswerValue, Exam, QuestionSlot, UserAnswers } from "../../types";
 import { gradeExam } from "../../utils/answer";
 import { useCountdown } from "../../hooks/useCountdown";
+import { useBookletZoom } from "../../hooks/useBookletZoom";
+import { useBookletNavigation } from "../../hooks/useBookletNavigation";
 import { MarkSheet } from "./MarkSheet";
 import { ProblemBooklet } from "./ProblemBooklet";
 import { ReviewScoreBadge } from "./ReviewScoreBadge";
@@ -30,8 +32,6 @@ interface ExamRunnerProps {
 
 const timerAccentColor = "#ff4d00";
 const homeActionColor = "#fffaf1";
-const visiblePageTabCount = 12;
-
 export function ExamRunner({
   exam,
   answers,
@@ -48,15 +48,24 @@ export function ExamRunner({
   onReturnHome,
   onExpire
 }: ExamRunnerProps) {
-  const [bookletZoom, setBookletZoom] = useState(1);
-  const [showCover, setShowCover] = useState(() => initialShowCover && Boolean(exam.coverImageUrl));
   const [showFinishConfirm, setShowFinishConfirm] = useState(false);
   const [showHomeConfirm, setShowHomeConfirm] = useState(false);
   const [coverMarks, setCoverMarks] = useState<Set<AnswerValue>>(() => new Set());
-  const bookletStageRef = useRef<HTMLDivElement | null>(null);
-  const pageTabsRef = useRef<HTMLDivElement | null>(null);
-  const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
-  const previousPagePositionRef = useRef<number | null>(null);
+  const { bookletStageRef, bookletStyle, handleBookletKeyDown, handleBookletWheel } = useBookletZoom();
+  const {
+    canGoNext,
+    canGoPrevious,
+    goNext,
+    goPrevious,
+    handlePageTabsWheel,
+    jumpToPage,
+    page,
+    pageTabsRef,
+    pageTabsStyle,
+    selectCover,
+    selectPage,
+    showCover
+  } = useBookletNavigation(exam, currentPageId, initialShowCover, onChangePage);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
@@ -66,14 +75,7 @@ export function ExamRunner({
     () => (reviewSummary ? new Map(reviewSummary.gradedQuestions.map((item) => [item.question.id, item])) : undefined),
     [reviewSummary]
   );
-  const page = exam.pages.find((candidate) => candidate.id === currentPageId) ?? exam.pages[0];
-  const pageIndex = exam.pages.findIndex((candidate) => candidate.id === page.id);
   const countdown = useCountdown(reviewMode ? null : deadline, onExpire);
-  const bookletStyle = { "--booklet-zoom": String(bookletZoom) } as CSSProperties;
-  const pageTabsStyle = {
-    "--visible-page-tabs": String(Math.min(exam.pages.length, visiblePageTabCount)),
-    "--has-cover-tab": exam.coverImageUrl ? "1" : "0"
-  } as CSSProperties;
   const finishColorStyle = {
     "--finish-color": timerAccentColor,
     backgroundColor: timerAccentColor,
@@ -93,40 +95,7 @@ export function ExamRunner({
     gap: "16px"
   } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
-  const canGoPrevious = showCover ? false : pageIndex > 0 || Boolean(exam.coverImageUrl);
-  const canGoNext = showCover ? exam.pages.length > 0 : pageIndex < exam.pages.length - 1;
   const RootElement = rootElement;
-
-  const goPrevious = () => {
-    if (showCover) {
-      return;
-    }
-
-    if (pageIndex === 0 && exam.coverImageUrl) {
-      setShowCover(true);
-      return;
-    }
-
-    const previousPage = exam.pages[Math.max(0, pageIndex - 1)];
-    pageNavigationSourceRef.current = "arrow";
-    onChangePage(previousPage.id);
-  };
-
-  const goNext = () => {
-    if (showCover) {
-      setShowCover(false);
-      onChangePage(exam.pages[0]?.id ?? currentPageId);
-      return;
-    }
-
-    const nextPage = exam.pages[Math.min(exam.pages.length - 1, pageIndex + 1)];
-    pageNavigationSourceRef.current = "arrow";
-    onChangePage(nextPage.id);
-  };
-
-  const updateBookletZoom = (value: number) => {
-    setBookletZoom(Math.min(1.6, Math.max(1, value)));
-  };
 
   const toggleCoverMark = (value: AnswerValue) => {
     setCoverMarks((current) => {
@@ -142,105 +111,6 @@ export function ExamRunner({
     setCoverMarks(new Set());
   }, [exam.id]);
 
-  useEffect(() => {
-    setShowCover(initialShowCover && Boolean(exam.coverImageUrl));
-  }, [exam.coverImageUrl, exam.id, initialShowCover]);
-
-  useEffect(() => {
-    const stage = bookletStageRef.current;
-    if (!stage) {
-      return undefined;
-    }
-
-    const preventPageZoom = (event: globalThis.WheelEvent) => {
-      if (!event.ctrlKey && !event.metaKey) {
-        return;
-      }
-
-      event.preventDefault();
-    };
-
-    stage.addEventListener("wheel", preventPageZoom, { passive: false });
-    return () => stage.removeEventListener("wheel", preventPageZoom);
-  }, []);
-
-  useEffect(() => {
-    const nav = pageTabsRef.current;
-    const activeTab = nav?.querySelector<HTMLButtonElement>(".active");
-    const currentPosition = showCover ? -1 : pageIndex;
-    const previousPosition = previousPagePositionRef.current;
-    const navigationSource = pageNavigationSourceRef.current;
-    pageNavigationSourceRef.current = null;
-    previousPagePositionRef.current = currentPosition;
-
-    if (!nav || !activeTab || nav.scrollWidth <= nav.clientWidth) {
-      return;
-    }
-
-    const leftEdge = activeTab.offsetLeft - nav.offsetLeft;
-    const rightEdge = leftEdge + activeTab.offsetWidth;
-    const visibleLeft = nav.scrollLeft;
-    const visibleRight = nav.scrollLeft + nav.clientWidth;
-    const maxScrollLeft = Math.max(0, nav.scrollWidth - nav.clientWidth);
-    const scrollTo = (left: number) => {
-      nav.scrollTo({ left: Math.min(maxScrollLeft, Math.max(0, left)), behavior: "smooth" });
-    };
-
-    if (navigationSource === "arrow" && previousPosition !== null && currentPosition > previousPosition) {
-      scrollTo(rightEdge - nav.clientWidth);
-      return;
-    }
-
-    if (navigationSource === "arrow" && previousPosition !== null && currentPosition < previousPosition) {
-      scrollTo(rightEdge - nav.clientWidth);
-      return;
-    }
-
-    if (rightEdge > visibleRight) {
-      scrollTo(rightEdge - nav.clientWidth);
-      return;
-    }
-
-    if (leftEdge < visibleLeft) {
-      scrollTo(leftEdge);
-    }
-  }, [currentPageId, exam.pages.length, showCover]);
-
-  const handleBookletWheel = (event: WheelEvent<HTMLDivElement>) => {
-    if (!event.ctrlKey && !event.metaKey) {
-      return;
-    }
-
-    event.preventDefault();
-    updateBookletZoom(bookletZoom + (event.deltaY < 0 ? 0.08 : -0.08));
-  };
-
-  const handleBookletKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!event.ctrlKey && !event.metaKey) {
-      return;
-    }
-
-    if (event.key === "+" || event.key === "=") {
-      event.preventDefault();
-      updateBookletZoom(bookletZoom + 0.08);
-    }
-
-    if (event.key === "-") {
-      event.preventDefault();
-      updateBookletZoom(bookletZoom - 0.08);
-    }
-  };
-
-  const handlePageTabsWheel = (event: WheelEvent<HTMLElement>) => {
-    const nav = pageTabsRef.current;
-    if (!nav || nav.scrollWidth <= nav.clientWidth || Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
-      return;
-    }
-
-    event.preventDefault();
-    nav.scrollLeft += event.deltaY;
-  };
-
   return (
     <RootElement className={["exam-layout", "exam-mode-background", className].filter(Boolean).join(" ")}>
       <header className="exam-toolbar" aria-label="試験操作">
@@ -249,10 +119,8 @@ export function ExamRunner({
           {!reviewMode ? (
             <StopwatchTimer
               formatted={countdown.formatted}
-              label={`残り時間 ${countdown.formatted}`}
               remainingMs={countdown.remainingMs}
               totalMs={totalTimeMs}
-              variant="timer-exam-seal timer-color-stadium-alert"
             />
           ) : null}
           {reviewMode ? (
@@ -298,12 +166,8 @@ export function ExamRunner({
             showCover={showCover}
             style={pageTabsStyle}
             onPageTabsWheel={handlePageTabsWheel}
-            onSelectCover={() => setShowCover(true)}
-            onSelectPage={(pageId) => {
-              pageNavigationSourceRef.current = "tab";
-              setShowCover(false);
-              onChangePage(pageId);
-            }}
+            onSelectCover={selectCover}
+            onSelectPage={selectPage}
           />
           <div className="booklet-stage-shell">
             {canGoPrevious ? <BookletSideArrow direction="previous" onClick={goPrevious} /> : null}
@@ -350,10 +214,7 @@ export function ExamRunner({
           answers={answers}
           exam={exam}
           reviewMode={reviewMode}
-          onJumpToPage={(pageId) => {
-            setShowCover(false);
-            onChangePage(pageId);
-          }}
+          onJumpToPage={jumpToPage}
           onToggleAnswer={onToggleAnswer}
         />
       </section>

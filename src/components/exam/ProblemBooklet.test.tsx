@@ -1,13 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { sampleExams } from "../../data/sampleExam";
+import gradeCircleStamp from "../../assets/stamps/grade-circle.png";
+import { initialExams } from "../../data/initialExams";
 import { ProblemBooklet } from "./ProblemBooklet";
 
 describe("ProblemBooklet", () => {
   it("syncs clickable marks on exact anime pages with the shared answer state", async () => {
     const user = userEvent.setup();
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = animeExam.questions[0];
     const onToggleAnswer = vi.fn();
@@ -30,7 +31,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("renders selected exact-page marks as filled in review state", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = animeExam.questions[0];
 
@@ -50,7 +51,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("renders multiple selected marks on an exact page when the question allows it", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = { ...animeExam.questions[0], multi: true };
 
@@ -68,7 +69,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("marks the correct answer in red during review without a separate mark panel", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = animeExam.questions[0];
 
@@ -87,7 +88,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("places exact-page grading stamps on the TeX answer-number box", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = animeExam.questions[0];
 
@@ -120,6 +121,53 @@ describe("ProblemBooklet", () => {
       "--grade-x": "66.72%",
       "--grade-y": "17.974%"
     });
-    expect(screen.getByLabelText("正解").querySelector("img.stamp-image-source")).not.toBeNull();
+    expect(screen.getByLabelText("正解")).toHaveClass("grade-stamp", "red-pen", "circle");
+    expect(screen.getByLabelText("正解")).not.toHaveClass("is-drawing");
+    expect(screen.getByLabelText("正解").querySelector("image.stamp-asset")).toHaveAttribute(
+      "href",
+      gradeCircleStamp
+    );
+    expect(screen.getByLabelText("正解").querySelector("mask")).toBeNull();
+  });
+
+  it("reveals exact-page red corrections only for questions whose stamp has started", () => {
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const page = animeExam.pages[3];
+    const firstQuestion = animeExam.questions.find((question) => question.id === "anime-q03")!;
+    const nextQuestion = animeExam.questions.find((question) => question.id === "anime-q04")!;
+    const firstCorrectOption = firstQuestion.options.find((option) => option.value === firstQuestion.correct[0])!;
+    const nextCorrectOption = nextQuestion.options.find((option) => option.value === nextQuestion.correct[0])!;
+
+    render(
+      <ProblemBooklet
+        answers={{}}
+        gradeStates={
+          new Map([
+            [
+              firstQuestion.id,
+              {
+                question: firstQuestion,
+                userAnswer: [],
+                correctAnswer: firstQuestion.correct,
+                isCorrect: false,
+                earnedPoints: 0,
+                status: "unanswered" as const
+              }
+            ]
+          ])
+        }
+        page={page}
+        questionsById={new Map(animeExam.questions.map((item) => [item.id, item]))}
+        reviewMode
+        onToggleAnswer={vi.fn()}
+      />
+    );
+
+    expect(
+      screen.getByRole("button", { name: `${firstQuestion.label} ${firstCorrectOption.label}` })
+    ).toHaveClass("review-correct");
+    expect(
+      screen.getByRole("button", { name: `${nextQuestion.label} ${nextCorrectOption.label}` })
+    ).not.toHaveClass("review-correct");
   });
 });
