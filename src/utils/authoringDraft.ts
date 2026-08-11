@@ -3,7 +3,7 @@ import {
   authoringBodyComment,
   authoringLayoutCommentLines,
   authoringMarkComment,
-  parseAuthoringAttributes,
+  parseMarkCommand,
   positiveChoiceCount,
   serializeChoiceCommand,
   serializeMarkCommand
@@ -97,19 +97,16 @@ function createSubsection(
 }
 
 function parseMark(attrsRaw: string | undefined, label: string, index: number): DraftMark {
-  const attrs = parseAuthoringAttributes(attrsRaw);
-  const points = Number(attrs.points ?? 0);
-  const choices = Number(attrs.choices ?? 4);
-  const answer = attrs.answer ?? "";
+  const parsed = parseMarkCommand(attrsRaw, label);
 
   return {
     id: `mark-${index + 1}`,
-    label,
-    answer,
-    points: Number.isFinite(points) ? points : 0,
-    choices: Number.isInteger(choices) && choices > 0 ? choices : 4,
-    multi: attrs.multi === "true" || answer.includes("|"),
-    optionContents: createDefaultChoices(Number.isInteger(choices) && choices > 0 ? choices : 4)
+    label: parsed.label,
+    answer: parsed.answerSource,
+    points: parsed.points,
+    choices: parsed.choices,
+    multi: parsed.multi,
+    optionContents: createDefaultChoices(parsed.choices)
   };
 }
 

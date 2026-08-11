@@ -3,6 +3,7 @@ import {
   authoringBodyComment,
   authoringLayoutCommentLines,
   authoringMarkComment,
+  parseMarkCommand,
   parseAuthoringAttributes,
   positiveChoiceCount,
   serializeChoiceCommand,
@@ -32,5 +33,22 @@ describe("authoringSyntax", () => {
     expect(authoringBodyComment("大問本文: 第1問", false)).toContain("ここに問題文を記述");
     expect(authoringMarkComment(mark)).toContain("正解 1|3 / 配点 6 / 選択肢 5");
     expect(authoringLayoutCommentLines()).toHaveLength(4);
+  });
+
+  it("parses valid and invalid mark metadata with shared semantics", () => {
+    expect(parseMarkCommand("answer=1|3,points=6,choices=5,multi=true", "ア")).toEqual({
+      answer: ["1", "3"],
+      answerSource: "1|3",
+      choices: 5,
+      errors: [],
+      label: "ア",
+      multi: true,
+      points: 6
+    });
+    expect(parseMarkCommand("points=0,choices=0", "イ").errors).toEqual([
+      "イ: 正解値 answer が未設定です。",
+      "イ: 配点 points は正の数で指定してください。",
+      "イ: choices は正の整数で指定してください。"
+    ]);
   });
 });

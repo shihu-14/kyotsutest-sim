@@ -64,3 +64,42 @@ export function authoringLayoutCommentLines(): string[] {
     "% \\geometry{inner=0.9in,outer=0.9in,top=50pt,bottom=0.76in}"
   ];
 }
+
+export interface ParsedMarkCommand {
+  answer: string[];
+  answerSource: string;
+  choices: number;
+  errors: string[];
+  label: string;
+  multi: boolean;
+  points: number;
+}
+
+export function parseMarkCommand(attrsRaw: string | undefined, label: string): ParsedMarkCommand {
+  const attrs = parseAuthoringAttributes(attrsRaw);
+  const rawPoints = Number(attrs.points ?? 0);
+  const rawChoices = Number(attrs.choices ?? 4);
+  const answerSource = attrs.answer ?? "";
+  const answer = attrs.answer ? attrs.answer.split("|").filter(Boolean) : [];
+  const errors: string[] = [];
+
+  if (!attrs.answer) {
+    errors.push(`${label}: 正解値 answer が未設定です。`);
+  }
+  if (!Number.isFinite(rawPoints) || rawPoints <= 0) {
+    errors.push(`${label}: 配点 points は正の数で指定してください。`);
+  }
+  if (!Number.isInteger(rawChoices) || rawChoices <= 0) {
+    errors.push(`${label}: choices は正の整数で指定してください。`);
+  }
+
+  return {
+    answer,
+    answerSource,
+    choices: Number.isInteger(rawChoices) && rawChoices > 0 ? rawChoices : 4,
+    errors,
+    label,
+    multi: attrs.multi === "true" || answer.length > 1,
+    points: Number.isFinite(rawPoints) ? rawPoints : 0
+  };
+}

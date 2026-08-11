@@ -8,7 +8,7 @@ import animeFigure06 from "../assets/exams/anime-onlymark-2026/crops/page-06-fig
 import animeFigure07 from "../assets/exams/anime-onlymark-2026/crops/page-07-figure.jpg";
 import animeFigure09 from "../assets/exams/anime-onlymark-2026/crops/page-09-figures.jpg";
 import animeFigure10 from "../assets/exams/anime-onlymark-2026/crops/page-10-figure.jpg";
-import { parseAuthoringAttributes } from "./authoringSyntax";
+import { parseAuthoringAttributes, parseMarkCommand } from "./authoringSyntax";
 
 export interface ParsedMark {
   id: string;
@@ -180,30 +180,17 @@ export function parseAuthoringLatex(source: string): ParsedAuthoringDocument {
   let markIndex = 1;
 
   while ((markMatch = markPattern.exec(source)) !== null) {
-    const attrs = parseAuthoringAttributes(markMatch[1]);
-    const points = Number(attrs.points ?? 0);
-    const choices = Number(attrs.choices ?? 4);
     const label = markMatch[2];
-    const answer = attrs.answer ? attrs.answer.split("|").filter(Boolean) : [];
-    const multi = attrs.multi === "true" || answer.length > 1;
-
-    if (!attrs.answer) {
-      errors.push(`${label}: 正解値 answer が未設定です。`);
-    }
-    if (!Number.isFinite(points) || points <= 0) {
-      errors.push(`${label}: 配点 points は正の数で指定してください。`);
-    }
-    if (!Number.isInteger(choices) || choices <= 0) {
-      errors.push(`${label}: choices は正の整数で指定してください。`);
-    }
+    const parsed = parseMarkCommand(markMatch[1], label);
+    errors.push(...parsed.errors);
 
     marks.push({
       id: `draft-${markIndex}`,
-      label,
-      answer,
-      points: Number.isFinite(points) ? points : 0,
-      choices: Number.isInteger(choices) && choices > 0 ? choices : 4,
-      multi
+      label: parsed.label,
+      answer: parsed.answer,
+      points: parsed.points,
+      choices: parsed.choices,
+      multi: parsed.multi
     });
     markIndex += 1;
   }
