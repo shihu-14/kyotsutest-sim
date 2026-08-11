@@ -21,7 +21,7 @@ import {
 import { defaultAuthoringMeta, defaultAuthoringSource } from "./authoringDefaults";
 import { coverInstructionsFromSource, metaFromExam } from "./authoringEnvironment";
 import { parseAuthoringLatex } from "./authoringPreview";
-import { loadAuthorSource } from "./storage";
+import { loadAuthorSource } from "./authoringStorage";
 import {
   authoringBodyComment,
   authoringLayoutCommentLines,
