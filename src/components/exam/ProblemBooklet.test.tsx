@@ -2,13 +2,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import gradeCircleStamp from "../../assets/stamps/grade-circle.png";
-import { sampleExams } from "../../data/sampleExam";
+import { initialExams } from "../../data/initialExams";
 import { ProblemBooklet } from "./ProblemBooklet";
 
 describe("ProblemBooklet", () => {
   it("syncs clickable marks on exact anime pages with the shared answer state", async () => {
     const user = userEvent.setup();
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = animeExam.questions[0];
     const onToggleAnswer = vi.fn();
@@ -31,7 +31,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("renders selected exact-page marks as filled in review state", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = animeExam.questions[0];
 
@@ -51,7 +51,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("renders multiple selected marks on an exact page when the question allows it", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = { ...animeExam.questions[0], multi: true };
 
@@ -69,7 +69,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("marks the correct answer in red during review without a separate mark panel", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = animeExam.questions[0];
 
@@ -88,7 +88,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("places exact-page grading stamps on the TeX answer-number box", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[0];
     const question = animeExam.questions[0];
 
@@ -131,7 +131,7 @@ describe("ProblemBooklet", () => {
   });
 
   it("reveals exact-page red corrections only for questions whose stamp has started", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026")!;
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026")!;
     const page = animeExam.pages[3];
     const firstQuestion = animeExam.questions.find((question) => question.id === "anime-q03")!;
     const nextQuestion = animeExam.questions.find((question) => question.id === "anime-q04")!;

@@ -1,13 +1,7 @@
 import type { AuthoringMeta, Exam } from "../../types";
-import {
-  defaultAuthoringMeta,
-  defaultCoverSource,
-  defaultEnvironmentSource
-} from "../../data/authoringDefaults";
 import { normalizePreviewText } from "./authoringPreview";
 import { loadAuthorCover, loadAuthorEnvironment, loadAuthorMeta } from "./authoringStorage";
 
-const animeSampleExamId = "anime-onlymark-2026";
 const coverInstructionsBlockPattern = /\\begin\{coverinstructions\}([\s\S]*?)\\end\{coverinstructions\}/;
 
 export function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
@@ -21,9 +15,9 @@ export function sameMeta(left: AuthoringMeta, right: AuthoringMeta): boolean {
   );
 }
 
-export function metaFromExam(exam: Exam | null | undefined): AuthoringMeta {
+export function metaFromExam(exam: Exam | null | undefined, fallbackMeta: AuthoringMeta): AuthoringMeta {
   if (!exam) {
-    return loadAuthorMeta(defaultAuthoringMeta);
+    return loadAuthorMeta(fallbackMeta);
   }
 
   return {
@@ -36,27 +30,31 @@ export function metaFromExam(exam: Exam | null | undefined): AuthoringMeta {
   };
 }
 
-export function environmentFromExam(exam: Exam | null | undefined): string {
+export function environmentFromExam(exam: Exam | null | undefined, fallbackSource: string): string {
   if (!exam) {
-    return loadAuthorEnvironment(defaultEnvironmentSource);
+    return loadAuthorEnvironment(fallbackSource);
   }
 
-  return defaultEnvironmentSource;
+  return fallbackSource;
 }
 
-export function coverSourceFromExam(exam: Exam | null | undefined): string {
+export function coverSourceFromExam(
+  exam: Exam | null | undefined,
+  fallbackSource: string,
+  authoredSource?: string
+): string {
   if (!exam) {
-    return loadAuthorCover(defaultCoverSource);
+    return loadAuthorCover(fallbackSource);
   }
 
-  if (exam.id === animeSampleExamId) {
-    return defaultCoverSource;
+  if (authoredSource) {
+    return authoredSource;
   }
 
-  return exam.instructions.map((instruction) => `\\item ${instruction}`).join("\n") || defaultCoverSource;
+  return exam.instructions.map((instruction) => `\\item ${instruction}`).join("\n") || fallbackSource;
 }
 
-export function coverInstructionsFromSource(source: string): string[] {
+export function coverInstructionsFromSource(source: string, fallbackSource = ""): string[] {
   const instructions = source
     .split("\n")
     .map((line) => line.trim())
@@ -68,7 +66,10 @@ export function coverInstructionsFromSource(source: string): string[] {
 
   return instructions.length
     ? instructions
-    : defaultCoverSource.split("\n").map((line) => normalizePreviewText(line.replace(/^\\item\s*/, "")));
+    : fallbackSource
+        .split("\n")
+        .map((line) => normalizePreviewText(line.replace(/^\\item\s*/, "")))
+        .filter(Boolean);
 }
 
 function escapeSettingValue(value: string): string {

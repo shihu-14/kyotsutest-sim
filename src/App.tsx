@@ -4,13 +4,13 @@ import { ExamRunner } from "./components/exam/ExamRunner";
 import { CoverPage } from "./components/home/CoverPage";
 import { ExamList } from "./components/home/ExamList";
 import { ScoringScreen } from "./components/scoring/ScoringScreen";
-import { sampleExams } from "./data/sampleExam";
+import { initialExams } from "./data/initialExams";
 import { useExamSession } from "./hooks/useExamSession";
 import { useReviewTransition } from "./hooks/useReviewTransition";
 import type { Exam } from "./types";
 
 export function App() {
-  const [exams, setExams] = useState<Exam[]>(sampleExams);
+  const [exams, setExams] = useState<Exam[]>(initialExams);
   const {
     changePage,
     closeEditor,

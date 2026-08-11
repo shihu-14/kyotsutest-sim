@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { resolveAuthoringData } from "../../data/authoringSources";
 import type { Exam } from "../../types";
 import {
   EnvironmentSettingsPanel,
@@ -54,10 +55,21 @@ type CenterTab = "form" | "tex";
 type EditorSelection = "environment" | "section";
 
 export function AuthoringEditor({ initialExam = null, onBack, onPublish }: AuthoringEditorProps) {
-  const [source, setSource] = useState(() => sourceFromExam(initialExam));
-  const [meta, setMeta] = useState(() => metaFromExam(initialExam));
-  const [environmentSource, setEnvironmentSource] = useState(() => environmentFromExam(initialExam));
-  const [coverSource, setCoverSource] = useState(() => coverSourceFromExam(initialExam));
+  const authoringData = resolveAuthoringData(initialExam);
+  const [source, setSource] = useState(() =>
+    sourceFromExam(initialExam, authoringData.defaults, authoringData.examSource)
+  );
+  const [meta, setMeta] = useState(() => metaFromExam(initialExam, authoringData.defaults.meta));
+  const [environmentSource, setEnvironmentSource] = useState(() =>
+    environmentFromExam(initialExam, authoringData.defaults.environmentSource)
+  );
+  const [coverSource, setCoverSource] = useState(() =>
+    coverSourceFromExam(
+      initialExam,
+      authoringData.defaults.coverSource,
+      authoringData.examSource?.coverSource
+    )
+  );
   const [savedSource, setSavedSource] = useState(source);
   const [savedMeta, setSavedMeta] = useState(meta);
   const [savedEnvironmentSource, setSavedEnvironmentSource] = useState(environmentSource);

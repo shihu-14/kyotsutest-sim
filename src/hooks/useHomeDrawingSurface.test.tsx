@@ -1,7 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { sampleExams } from "../data/sampleExam";
+import { initialExams } from "../data/initialExams";
 import { useHomeDrawingSurface } from "./useHomeDrawingSurface";
 import {
   DEFAULT_TOOL_SIZES,
@@ -137,7 +137,7 @@ describe("useHomeDrawingSurface", () => {
   it("preserves each resting angle when tool images load and the floor is remeasured", () => {
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -211,7 +211,7 @@ describe("useHomeDrawingSurface", () => {
 
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -256,7 +256,7 @@ describe("useHomeDrawingSurface", () => {
     (kind) => {
       render(
         <ExamList
-          exams={sampleExams}
+          exams={initialExams}
           onDelete={vi.fn()}
           onEdit={vi.fn()}
           onOpenEditor={vi.fn()}
@@ -369,7 +369,7 @@ describe("useHomeDrawingSurface", () => {
       ({ unmount } = render(
         <StrictMode>
           <ExamList
-            exams={sampleExams}
+            exams={initialExams}
             onDelete={vi.fn()}
             onEdit={vi.fn()}
             onOpenEditor={vi.fn()}
@@ -457,7 +457,7 @@ describe("useHomeDrawingSurface", () => {
     const { unmount } = render(
       <StrictMode>
         <ExamList
-          exams={sampleExams}
+          exams={initialExams}
           onDelete={vi.fn()}
           onEdit={vi.fn()}
           onOpenEditor={vi.fn()}
@@ -478,7 +478,7 @@ describe("useHomeDrawingSurface", () => {
     const { clearRect, stroke } = installCanvasContext();
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -538,7 +538,7 @@ describe("useHomeDrawingSurface", () => {
   it("prevents selection on pointerdown and clears the dragging class on every finish path", () => {
     const { unmount } = render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -602,7 +602,7 @@ describe("useHomeDrawingSurface", () => {
     })));
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -643,7 +643,7 @@ describe("useHomeDrawingSurface", () => {
   it("draws from page and grid gaps, then drops the held tool on a card", () => {
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -658,7 +658,7 @@ describe("useHomeDrawingSurface", () => {
 
     installPointerCapture(surface);
     const grid = screen.getByRole("region", { name: "公開中の試験一覧" });
-    const article = screen.getByRole("article", { name: sampleExams[0].title });
+    const article = screen.getByRole("article", { name: initialExams[0].title });
 
     pickTool("pencil");
     [surface, grid].forEach((target, index) => {
@@ -687,7 +687,7 @@ describe("useHomeDrawingSurface", () => {
   it("captures pen input on pointerdown and draws only after the threshold", async () => {
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -731,7 +731,7 @@ describe("useHomeDrawingSurface", () => {
     const { context, fillRect, renderEvents, stroke } = installCanvasContext();
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -776,7 +776,7 @@ describe("useHomeDrawingSurface", () => {
     const onSelect = vi.fn();
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -785,7 +785,7 @@ describe("useHomeDrawingSurface", () => {
     );
 
     pickTool("pencil");
-    const selectButton = screen.getByRole("button", { name: `${sampleExams[0].title}を選択` });
+    const selectButton = screen.getByRole("button", { name: `${initialExams[0].title}を選択` });
     const pointerDown = dispatchPointerEvent(selectButton, "pointerdown", {
       button: 0,
       clientX: 300,
@@ -797,7 +797,7 @@ describe("useHomeDrawingSurface", () => {
     expect(pointerDown.defaultPrevented).toBe(false);
     expect(screen.getByRole("button", { name: "鉛筆を拾う" })).toHaveAttribute("data-tool-phase", "resting");
     fireEvent.click(selectButton);
-    expect(onSelect).toHaveBeenCalledWith(sampleExams[0]);
+    expect(onSelect).toHaveBeenCalledWith(initialExams[0]);
   });
 
   it("does not capture or draw from buttons, links, summaries, explicit exclusions, or touch", () => {
@@ -849,7 +849,7 @@ describe("useHomeDrawingSurface", () => {
   it("prevents native dragstart and marks cover images as non-draggable", () => {
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -857,7 +857,7 @@ describe("useHomeDrawingSurface", () => {
       />
     );
 
-    const cover = screen.getByLabelText(`${sampleExams[0].title}の表紙`);
+    const cover = screen.getByLabelText(`${initialExams[0].title}の表紙`);
     const coverImage = cover.querySelector("img");
     expect(coverImage).not.toBeNull();
     expect(coverImage).toHaveAttribute("draggable", "false");

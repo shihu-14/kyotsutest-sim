@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { sampleExams } from "../../data/sampleExam";
+import { initialExams } from "../../data/initialExams";
 import { ExamList } from "./ExamList";
 
 describe("ExamList", () => {
@@ -22,11 +22,11 @@ describe("ExamList", () => {
   it("uses each problem booklet itself as the exam selection control", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
-    const exam = sampleExams[0];
+    const exam = initialExams[0];
 
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -40,6 +40,8 @@ describe("ExamList", () => {
     expect(screen.queryByText(exam.description)).not.toBeInTheDocument();
 
     const card = screen.getByRole("article", { name: exam.title });
+    expect(card).toHaveClass("exam-card");
+    expect(within(card).getByLabelText(`${exam.title}の表紙`)).toHaveClass("exam-card-cover");
     expect(card).not.toHaveTextContent(`${exam.durationMinutes}分`);
     expect(within(card).queryByText(`${exam.questions.length}問`)).not.toBeInTheDocument();
     expect(card).not.toHaveTextContent(`${exam.totalPoints}点`);
@@ -49,18 +51,16 @@ describe("ExamList", () => {
     expect(within(card).queryByText("公開中")).not.toBeInTheDocument();
     expect(within(card).getByLabelText(`${exam.title}の設定`)).toBeInTheDocument();
     expect(within(card).queryByRole("button", { name: "試験を始める" })).not.toBeInTheDocument();
-    expect(card.querySelector(".steam-capsule-overlay")).not.toBeInTheDocument();
-
     await user.click(within(card).getByRole("button", { name: `${exam.title}を選択` }));
     expect(onSelect).toHaveBeenCalledWith(exam);
   });
 
   it("keeps only problem creation in the home action row", async () => {
     const user = userEvent.setup();
-    const exam = sampleExams[0];
+    const exam = initialExams[0];
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}
@@ -69,7 +69,6 @@ describe("ExamList", () => {
     );
 
     expect(screen.queryByText("カード暗さ調整")).not.toBeInTheDocument();
-    expect(document.querySelector(".steam-capsule-overlay")).not.toBeInTheDocument();
     const card = screen.getByRole("article", { name: exam.title });
     await user.click(within(card).getByLabelText(`${exam.title}の設定`));
     expect(within(card).getByRole("button", { name: "編集する" })).toBeEnabled();
@@ -96,9 +95,9 @@ describe("ExamList", () => {
     ]);
   });
 
-  it("keeps the adopted Steam Capsule card usable without a cover image", () => {
+  it("keeps the exam card usable without a cover image", () => {
     const examWithoutCover = {
-      ...sampleExams[0],
+      ...initialExams[0],
       id: "home-without-cover",
       title: "表紙なしホーム試験",
       coverImageUrl: undefined
@@ -120,7 +119,7 @@ describe("ExamList", () => {
   });
 
   it("registers the anime TeX exam as a published PDF-page sample", () => {
-    const animeExam = sampleExams.find((exam) => exam.id === "anime-onlymark-2026");
+    const animeExam = initialExams.find((exam) => exam.id === "anime-onlymark-2026");
 
     expect(animeExam).toMatchObject({
       title: "漫画映画",
@@ -147,11 +146,11 @@ describe("ExamList", () => {
     const onDelete = vi.fn();
     const onEdit = vi.fn();
     const onSelect = vi.fn();
-    const exam = sampleExams[0];
+    const exam = initialExams[0];
 
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={onDelete}
         onEdit={onEdit}
         onOpenEditor={vi.fn()}
@@ -171,10 +170,10 @@ describe("ExamList", () => {
 
   it("closes a card action menu when another part of the page is clicked", async () => {
     const user = userEvent.setup();
-    const exam = sampleExams[0];
+    const exam = initialExams[0];
     render(
       <ExamList
-        exams={sampleExams}
+        exams={initialExams}
         onDelete={vi.fn()}
         onEdit={vi.fn()}
         onOpenEditor={vi.fn()}

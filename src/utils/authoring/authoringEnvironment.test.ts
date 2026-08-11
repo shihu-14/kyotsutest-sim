@@ -11,7 +11,14 @@ describe("authoringEnvironment", () => {
   beforeEach(() => window.localStorage.clear());
 
   it("round-trips metadata, environment, and cover settings", () => {
-    const meta = metaFromExam(structuredExamFixture);
+    const meta = metaFromExam(structuredExamFixture, {
+      title: "",
+      subject: "",
+      description: "",
+      questionCount: 0,
+      totalPoints: 0,
+      durationMinutes: 0
+    });
     const serialized = serializeEnvironmentEditorSource(meta, "\\pagecolor{beige}", "\\item 注意事項");
     const parsed = parseEnvironmentEditorSource(serialized, meta, "fallback env", "fallback cover");
 
