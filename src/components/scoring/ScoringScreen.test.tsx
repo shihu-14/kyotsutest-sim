@@ -32,7 +32,8 @@ describe("ScoringScreen", () => {
     );
 
     expect(screen.getByRole("main")).toHaveClass("scoring-static");
-    expect(screen.getByText("最終得点")).toBeInTheDocument();
+    expect(document.querySelector(".scoring-final-content p")).toHaveTextContent("得点");
+    expect(screen.queryByText("最終得点")).not.toBeInTheDocument();
     expect(screen.getByLabelText("採点結果")).toHaveClass("scoring-final-result");
     expect(document.querySelector(".scoring-review-backdrop")).toBeInTheDocument();
     expect(document.querySelector(".scoring-review-backdrop .page-tabs .cover-tab")).not.toHaveClass("active");
@@ -153,7 +154,7 @@ describe("ScoringScreen", () => {
     });
 
     expect(screen.getByLabelText("採点結果")).toHaveClass("auto-review-score-pop");
-    expect(screen.getByText("最終得点")).toBeInTheDocument();
+    expect(document.querySelector(".scoring-final-content p")).toHaveTextContent("得点");
     expect(screen.queryByRole("button", { name: "復習する" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "ホームに戻る" })).not.toBeInTheDocument();
     expect(onReview).not.toHaveBeenCalled();

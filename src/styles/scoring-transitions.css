@@ -23,7 +23,7 @@
 .review-score-badge {
   display: grid;
   min-width: 128px;
-  border: 2px solid #ff4d00;
+  border: 2px solid var(--exam-timer-accent, #ff4d00);
   border-radius: 8px;
   background: #fffaf1;
   color: #1b1b1b;
@@ -51,7 +51,13 @@
 }
 
 .exam-mode-background .review-score-badge {
-  transform: translateY(-10px);
+  transform: translateY(-13px);
+}
+
+@media (min-width: 981px) {
+  .exam-mode-background.exam-review-mode .toolbar-metrics {
+    transform: translateY(16px);
+  }
 }
 
 .review-mode-fade-in {

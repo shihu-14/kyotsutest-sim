@@ -38,7 +38,7 @@
   --timer-size: 92px;
   --timer-crown-angle: 90deg;
   --timer-css-crown-angle: calc(90deg - var(--timer-crown-angle));
-  --timer-accent: #ff4d00;
+  --timer-accent: var(--exam-timer-accent, #ff4d00);
   --timer-fill: #ffd6c2;
   --timer-face: #fff7f2;
   --timer-text: #111111;
