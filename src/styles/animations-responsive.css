@@ -109,31 +109,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .design-mode-heading {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .design-candidate-tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .home-design-canvas {
-    height: auto;
-  }
-
-  .timer-candidate-stage {
-    grid-template-columns: 1fr;
-  }
-
-  .timer-primary-preview {
-    min-height: 360px;
-  }
-
-  .timer-state-grid {
-    grid-template-columns: 1fr;
-  }
-
   .author-grid {
     grid-template-columns: 1fr;
   }
@@ -203,27 +178,6 @@
 
   .exam-card-main {
     grid-template-rows: minmax(0, 1fr);
-  }
-
-  .design-candidate-tabs {
-    grid-template-columns: 1fr;
-  }
-
-  .timer-candidate-header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .timer-candidate-stage {
-    padding: 12px;
-  }
-
-  .timer-preview-large {
-    --timer-size: 176px;
-  }
-
-  .timer-preview-small {
-    --timer-size: 108px;
   }
 
   .meta-form {
