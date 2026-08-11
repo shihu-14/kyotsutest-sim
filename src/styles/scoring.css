@@ -66,17 +66,22 @@
 
 .scoring-final-content p {
   margin: 0;
-  color: #6d4a20;
+  color: #111;
   font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
+  font-size: 1.125rem;
   font-weight: 900;
 }
 
 .scoring-final-content strong {
   display: block;
-  color: #1f6f5b;
+  color: #111;
   font-family: Inter, system-ui, sans-serif;
   font-size: clamp(4rem, 10vw, 7.8rem);
   line-height: 1.02;
+}
+
+.scoring-final-content small {
+  color: #111;
 }
 
 .scoring-score-value {

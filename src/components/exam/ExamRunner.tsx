@@ -85,6 +85,9 @@ export function ExamRunner({
     "--home-action-color": homeActionColor,
     backgroundColor: homeActionColor
   } as CSSProperties;
+  const examLayoutStyle = {
+    "--exam-timer-accent": timerAccentColor
+  } as CSSProperties;
   const exitDialogStyle = {
     width: "min(550px, calc(100vw - 40px))"
   } as CSSProperties;
@@ -112,7 +115,12 @@ export function ExamRunner({
   }, [exam.id]);
 
   return (
-    <RootElement className={["exam-layout", "exam-mode-background", className].filter(Boolean).join(" ")}>
+    <RootElement
+      className={["exam-layout", "exam-mode-background", reviewMode ? "exam-review-mode" : "", className]
+        .filter(Boolean)
+        .join(" ")}
+      style={examLayoutStyle}
+    >
       <header className="exam-toolbar" aria-label="試験操作">
         <div className="toolbar-metrics">
           {reviewMode && reviewSummary ? <ReviewScoreBadge summary={reviewSummary} /> : null}
