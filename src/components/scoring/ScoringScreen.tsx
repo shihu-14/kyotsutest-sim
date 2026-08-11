@@ -121,6 +121,7 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
                 </article>
               ) : displayPage ? (
                 <ProblemBooklet
+                  animateGradeStamps
                   answers={answers}
                   gradeStates={gradeStates}
                   page={displayPage}

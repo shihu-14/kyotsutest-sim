@@ -10,5 +10,7 @@
 @import "./problem-booklet.css";
 @import "./mark-sheet.css";
 @import "./scoring.css";
+@import "./score-display-variants.css";
+@import "./score-pop-variants.css";
 @import "./authoring.css";
 @import "./animations-responsive.css";

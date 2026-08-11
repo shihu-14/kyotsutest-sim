@@ -9,9 +9,14 @@ import {
 } from "react";
 import {
   DEFAULT_TOOL_SIZES,
-  RESTING_ROTATIONS,
+  HELD_TOOL_LIFT,
+  HELD_TOOL_ROTATIONS,
+  REDUCED_MOTION_INITIAL_ROTATIONS,
+  TOOL_CURSOR_OFFSETS,
+  droppedToolPhysicsState,
   heldCenterFromContact,
   initialLandingCenters,
+  interpolateAngleShortest,
   physicsDeltaSeconds,
   resolveRestingX,
   restingToolY,
@@ -28,10 +33,9 @@ import {
 const DRAG_START_DISTANCE = 3;
 const GRAPHITE_COLOR = "58, 63, 61";
 const PENCIL_DRAGGING_CLASS = "is-pencil-dragging";
-const ERASER_FACE = { height: 12, width: 24 };
+const ERASER_FACE = { height: 16, width: 38 };
 const TOOL_KINDS: HomeDrawingToolKind[] = ["pencil", "eraser"];
-const HOVER_ROTATIONS: Record<HomeDrawingToolKind, number> = { pencil: 18, eraser: -12 };
-const CONTACT_ROTATIONS: Record<HomeDrawingToolKind, number> = { pencil: 8, eraser: 0 };
+const INITIAL_FALL_ROTATIONS: Record<HomeDrawingToolKind, number> = { pencil: -18, eraser: 28 };
 const UI_DROP_SELECTOR = [
   "a",
   "button",
@@ -109,6 +113,7 @@ interface HomePencilDrawing {
     onPointerUp: PointerEventHandler<HTMLElement>;
   };
   registerToolElement: (kind: HomeDrawingToolKind, element: HTMLButtonElement | null) => void;
+  remeasureToolWorld: () => void;
   rootRef: RefObject<HTMLDivElement | null>;
   toolPhases: Record<HomeDrawingToolKind, HomeDrawingToolPhase>;
 }
@@ -253,11 +258,11 @@ function isUiDropTarget(target: EventTarget | null) {
 function initialPhysicsState(kind: HomeDrawingToolKind): ToolPhysicsState {
   return {
     x: 0,
-    y: kind === "pencil" ? -48 : -76,
+    y: kind === "pencil" ? -112 : -64,
     vx: 0,
     vy: kind === "pencil" ? 0 : 40,
-    rotation: kind === "pencil" ? -24 : 32,
-    angularVelocity: kind === "pencil" ? 140 : -180,
+    rotation: INITIAL_FALL_ROTATIONS[kind],
+    angularVelocity: kind === "pencil" ? 82 : -112,
     restingFrames: 0
   };
 }
@@ -268,7 +273,7 @@ function interpolatePhysicsState(from: ToolPhysicsState, to: ToolPhysicsState, p
     y: from.y + (to.y - from.y) * progress,
     vx: 0,
     vy: 0,
-    rotation: from.rotation + (to.rotation - from.rotation) * progress,
+    rotation: interpolateAngleShortest(from.rotation, to.rotation, progress),
     angularVelocity: 0,
     restingFrames: 0
   };
@@ -427,13 +432,13 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     (kind: HomeDrawingToolKind) => {
       const floor = floorSizeRef.current;
       const size = toolSizesRef.current[kind];
-      const rotation = RESTING_ROTATIONS[kind];
+      const rotation = toolPhysicsRef.current[kind].rotation;
       const requestedX = restingPreferenceXRef.current[kind] ?? toolPhysicsRef.current[kind].x;
       const x = resolveRestingX(requestedX, floor.width, size, rotation, restingOtherBounds(kind));
       restingPreferenceXRef.current[kind] = x;
       toolPhysicsRef.current[kind] = {
         x,
-        y: restingToolY(floor.height, size, rotation),
+        y: restingToolY(kind, floor.height, size, rotation),
         vx: 0,
         vy: 0,
         rotation,
@@ -533,13 +538,14 @@ export function useHomePencilDrawing(): HomePencilDrawing {
   const placeToolsOnFloor = useCallback(() => {
     const centers = initialLandingCenters(floorSizeRef.current.width, toolSizesRef.current);
     TOOL_KINDS.forEach((kind) => {
+      const rotation = REDUCED_MOTION_INITIAL_ROTATIONS[kind];
       restingPreferenceXRef.current[kind] = centers[kind];
       toolPhysicsRef.current[kind] = {
         x: centers[kind],
-        y: restingToolY(floorSizeRef.current.height, toolSizesRef.current[kind], RESTING_ROTATIONS[kind]),
+        y: restingToolY(kind, floorSizeRef.current.height, toolSizesRef.current[kind], rotation),
         vx: 0,
         vy: 0,
-        rotation: RESTING_ROTATIONS[kind],
+        rotation,
         angularVelocity: 0,
         restingFrames: 2
       };
@@ -555,6 +561,8 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     }
 
     const bounds = root.getBoundingClientRect();
+    const previousFloorHeight = floorSizeRef.current.height;
+    const floorMovedDown = previousFloorHeight > 0 && bounds.height > previousFloorHeight + 1;
     floorSizeRef.current = { height: bounds.height, width: bounds.width };
     TOOL_KINDS.forEach((kind) => {
       const element = toolElementsRef.current[kind];
@@ -567,22 +575,46 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     });
 
     const defaultCenters = initialLandingCenters(bounds.width, toolSizesRef.current);
+    let restartedFalling = false;
     TOOL_KINDS.forEach((kind) => {
       if (toolPhasesRef.current[kind] !== "resting") {
         return;
       }
 
       restingPreferenceXRef.current[kind] = restingPreferenceXRef.current[kind] ?? defaultCenters[kind];
+      if (floorMovedDown && !reducedMotionRef.current) {
+        toolPhysicsRef.current[kind] = {
+          ...toolPhysicsRef.current[kind],
+          vx: 0,
+          vy: 0,
+          angularVelocity: 0,
+          restingFrames: 0
+        };
+        setToolPhase(kind, "falling");
+        applyToolPose(kind);
+        restartedFalling = true;
+        return;
+      }
+
       settleTool(kind);
     });
-  }, [settleTool]);
+
+    if (restartedFalling) {
+      lastPhysicsTimestampRef.current = null;
+      schedulePhysics();
+    }
+  }, [applyToolPose, schedulePhysics, setToolPhase, settleTool]);
 
   const initializeToolWorld = useCallback(() => {
     measureToolWorld();
     heldToolRef.current = null;
     liftAnimationRef.current = null;
     lastPhysicsTimestampRef.current = null;
-    const centers = initialLandingCenters(floorSizeRef.current.width, toolSizesRef.current);
+    const centers = initialLandingCenters(
+      floorSizeRef.current.width,
+      toolSizesRef.current,
+      INITIAL_FALL_ROTATIONS
+    );
     restingPreferenceXRef.current = { pencil: centers.pencil, eraser: centers.eraser };
 
     if (reducedMotionRef.current || typeof window.requestAnimationFrame !== "function") {
@@ -616,15 +648,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     heldToolRef.current = null;
     liftAnimationRef.current = null;
     restingPreferenceXRef.current[kind] = rootCenter.x;
-    toolPhysicsRef.current[kind] = {
-      x: rootCenter.x,
-      y: rootCenter.y,
-      vx: 0,
-      vy: 0,
-      rotation: toolPhysicsRef.current[kind].rotation,
-      angularVelocity: kind === "pencil" ? 115 : -150,
-      restingFrames: 0
-    };
+    toolPhysicsRef.current[kind] = droppedToolPhysicsState(rootCenter, toolPhysicsRef.current[kind].rotation);
     setToolPhase(kind, "falling");
     applyToolPose(kind);
     lastPhysicsTimestampRef.current = null;
@@ -638,8 +662,14 @@ export function useHomePencilDrawing(): HomePencilDrawing {
   }, [applyToolPose, schedulePhysics, setToolPhase, settleTool]);
 
   const updateHeldToolPosition = useCallback(
-    (kind: HomeDrawingToolKind, contactPoint: Point2D, rotation: number) => {
-      const center = heldCenterFromContact(kind, contactPoint, rotation, toolSizesRef.current[kind]);
+    (kind: HomeDrawingToolKind, contactPoint: Point2D, isContact: boolean) => {
+      const rotation = HELD_TOOL_ROTATIONS[kind];
+      const cursorOffset = TOOL_CURSOR_OFFSETS[kind];
+      const visibleContactPoint = {
+        x: contactPoint.x + cursorOffset.x,
+        y: contactPoint.y + cursorOffset.y - (isContact ? 0 : HELD_TOOL_LIFT)
+      };
+      const center = heldCenterFromContact(kind, visibleContactPoint, rotation, toolSizesRef.current[kind]);
       toolPhysicsRef.current[kind] = {
         x: center.x,
         y: center.y,
@@ -679,12 +709,20 @@ export function useHomePencilDrawing(): HomePencilDrawing {
         angularVelocity: 0,
         restingFrames: 0
       };
-      const targetCenter = heldCenterFromContact(kind, point, HOVER_ROTATIONS[kind], toolSizesRef.current[kind]);
+      const targetCenter = heldCenterFromContact(
+        kind,
+        {
+          x: point.x + TOOL_CURSOR_OFFSETS[kind].x,
+          y: point.y + TOOL_CURSOR_OFFSETS[kind].y - HELD_TOOL_LIFT
+        },
+        HELD_TOOL_ROTATIONS[kind],
+        toolSizesRef.current[kind]
+      );
       const to: ToolPhysicsState = {
         ...from,
         x: targetCenter.x,
         y: targetCenter.y,
-        rotation: HOVER_ROTATIONS[kind]
+        rotation: HELD_TOOL_ROTATIONS[kind]
       };
       heldToolRef.current = kind;
       lastPointerRef.current = point;
@@ -833,7 +871,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
       const heldTool = heldToolRef.current;
       if (heldTool) {
         setToolPhase(heldTool, "held");
-        updateHeldToolPosition(heldTool, lastPointerRef.current, HOVER_ROTATIONS[heldTool]);
+        updateHeldToolPosition(heldTool, lastPointerRef.current, false);
       }
       scheduleDrawing();
     },
@@ -879,7 +917,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
             }
           : {
               kind: "eraser",
-              samples: [{ ...point, angle: CONTACT_ROTATIONS.eraser, time: event.timeStamp }],
+              samples: [{ ...point, angle: HELD_TOOL_ROTATIONS.eraser, time: event.timeStamp }],
               faceWidth: ERASER_FACE.width,
               faceHeight: ERASER_FACE.height
             };
@@ -892,7 +930,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
         operation
       };
       setToolPhase(heldTool, "contact");
-      updateHeldToolPosition(heldTool, lastPointerRef.current, CONTACT_ROTATIONS[heldTool]);
+      updateHeldToolPosition(heldTool, lastPointerRef.current, true);
       if (typeof event.currentTarget.setPointerCapture === "function") {
         event.currentTarget.setPointerCapture(event.pointerId);
       }
@@ -910,11 +948,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
       const heldTool = heldToolRef.current;
       const activeGesture = activeGestureRef.current;
       if (heldTool && toolPhasesRef.current[heldTool] !== "lifting") {
-        updateHeldToolPosition(
-          heldTool,
-          lastPointerRef.current,
-          activeGesture?.pointerId === event.pointerId ? CONTACT_ROTATIONS[heldTool] : HOVER_ROTATIONS[heldTool]
-        );
+        updateHeldToolPosition(heldTool, lastPointerRef.current, activeGesture?.pointerId === event.pointerId);
       }
 
       if (!activeGesture || activeGesture.pointerId !== event.pointerId) {
@@ -964,7 +998,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
         if (Math.hypot(point.x - previous.x, point.y - previous.y) >= 1.5) {
           activeGesture.operation.samples.push({
             ...point,
-            angle: CONTACT_ROTATIONS.eraser,
+            angle: HELD_TOOL_ROTATIONS.eraser,
             time: event.timeStamp
           });
         }
@@ -1012,7 +1046,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
     const heldTool = heldToolRef.current;
     if (heldTool) {
       setToolPhase(heldTool, "held");
-      updateHeldToolPosition(heldTool, lastPointerRef.current, HOVER_ROTATIONS[heldTool]);
+      updateHeldToolPosition(heldTool, lastPointerRef.current, false);
     }
     scheduleDrawing();
   }, [scheduleDrawing, setToolPhase, updateHeldToolPosition]);
@@ -1031,6 +1065,7 @@ export function useHomePencilDrawing(): HomePencilDrawing {
       onPointerUp
     },
     registerToolElement,
+    remeasureToolWorld: measureToolWorld,
     rootRef,
     toolPhases
   };

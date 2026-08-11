@@ -1,12 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useHomePencilDrawing } from "../../hooks/useHomePencilDrawing";
 import type { Exam } from "../../types";
-import { EditorDesignPreview } from "../design-previews/EditorDesignPreview";
-import { ExamDesignPreview } from "../design-previews/ExamDesignPreview";
-import { HomeDesignPreview } from "../design-previews/HomeDesignPreview";
-import { PageNavDesignPreview } from "../design-previews/PageNavDesignPreview";
-import { ScoringDesignPreview } from "../design-previews/ScoringDesignPreview";
-import { TimerDesignPreview } from "../design-previews/TimerDesignPreview";
+import { ScoreDisplayPreview } from "../design-previews/ScoreDisplayPreview";
+import { ScorePopPreview } from "../design-previews/ScorePopPreview";
 import { HomeDrawingTools } from "./HomeDrawingTools";
 import { SteamCapsuleCard } from "./SteamCapsuleCard";
 
@@ -18,19 +14,55 @@ interface ExamListProps {
   onOpenEditor: () => void;
 }
 
+interface ExamCardActionsProps {
+  exam: Exam;
+  onDelete: (examId: string) => void;
+  onEdit: (exam: Exam) => void;
+}
+
+type HomePreview = "score-display" | "score-pop" | null;
+
+function ExamCardActions({ exam, onDelete, onEdit }: ExamCardActionsProps) {
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
+
+  useEffect(() => {
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      const details = detailsRef.current;
+      if (details?.open && event.target instanceof Node && !details.contains(event.target)) {
+        details.removeAttribute("open");
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePointerDown);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointerDown);
+  }, []);
+
+  return (
+    <details className="exam-actions" ref={detailsRef}>
+      <summary aria-label={`${exam.title}の設定`}>⋮</summary>
+      <div className="exam-action-menu">
+        <button type="button" onClick={() => onEdit(exam)}>
+          編集する
+        </button>
+        <button type="button" onClick={() => onDelete(exam.id)}>
+          削除する
+        </button>
+      </div>
+    </details>
+  );
+}
+
 export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: ExamListProps) {
-  const [homeMode, setHomeMode] = useState<
-    "exams" | "designs" | "timers" | "pageNavs" | "homes" | "editors" | "scorings"
-  >("exams");
   const authoringDisabled = true;
-  const previewExam = exams.find((exam) => exam.pages.some((page) => page.pageImageUrl)) ?? exams[0];
+  const [activePreview, setActivePreview] = useState<HomePreview>(null);
+  const publishedExams = exams.filter((exam) => exam.published);
+  const previewExam = publishedExams[0];
   const {
     canvasRef,
-    clearDrawing,
-    hasDrawing,
     pickUpTool,
     pointerHandlers,
     registerToolElement,
+    remeasureToolWorld,
     rootRef,
     toolPhases,
   } = useHomePencilDrawing();
@@ -38,72 +70,28 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
   return (
     <div className="home-pencil-surface" ref={rootRef} {...pointerHandlers}>
       <canvas aria-hidden="true" className="home-pencil-canvas" ref={canvasRef} />
-      <main className="screen screen-narrow">
-        <header className="screen-heading">
+      <main className={["screen", "screen-narrow", activePreview ? "home-score-preview-active" : ""].join(" ")}>
+        <header className="screen-heading home-screen-heading">
           <div>
-            <h1>共通テスト形式 ウェブ模試</h1>
+            <h1 className="home-screen-title">共通テスト形式 ウェブ模試</h1>
           </div>
           <div className="home-actions">
             <button
-              className="text-button home-pencil-clear"
-              disabled={!hasDrawing}
-              type="button"
-              onClick={clearDrawing}
-            >
-              書き込みを消す
-            </button>
-            {homeMode !== "exams" ? (
-              <button className="secondary-button" type="button" onClick={() => setHomeMode("exams")}>
-                試験一覧
-              </button>
-            ) : null}
-            <button
-              aria-pressed={homeMode === "designs"}
+              aria-pressed={activePreview === "score-display"}
               className="secondary-button"
+              disabled={!previewExam}
               type="button"
-              onClick={() => setHomeMode("designs")}
+              onClick={() => setActivePreview((current) => (current === "score-display" ? null : "score-display"))}
             >
-              画面候補
+              {activePreview === "score-display" ? "試験一覧" : "得点候補"}
             </button>
             <button
-              aria-pressed={homeMode === "homes"}
+              aria-pressed={activePreview === "score-pop"}
               className="secondary-button"
               type="button"
-              onClick={() => setHomeMode("homes")}
+              onClick={() => setActivePreview((current) => (current === "score-pop" ? null : "score-pop"))}
             >
-              ホーム候補
-            </button>
-            <button
-              aria-pressed={homeMode === "timers"}
-              className="secondary-button"
-              type="button"
-              onClick={() => setHomeMode("timers")}
-            >
-              時間候補
-            </button>
-            <button
-              aria-pressed={homeMode === "pageNavs"}
-              className="secondary-button"
-              type="button"
-              onClick={() => setHomeMode("pageNavs")}
-            >
-              ページ候補
-            </button>
-            <button
-              aria-pressed={homeMode === "scorings"}
-              className="secondary-button"
-              type="button"
-              onClick={() => setHomeMode("scorings")}
-            >
-              採点候補
-            </button>
-            <button
-              aria-pressed={homeMode === "editors"}
-              className="secondary-button"
-              type="button"
-              onClick={() => setHomeMode("editors")}
-            >
-              編集候補
+              {activePreview === "score-pop" ? "試験一覧" : "得点ポップ候補"}
             </button>
             <button
               className="secondary-button authoring-disabled-button"
@@ -111,61 +99,32 @@ export function ExamList({ exams, onDelete, onEdit, onSelect, onOpenEditor }: Ex
               type="button"
               onClick={authoringDisabled ? undefined : onOpenEditor}
             >
-              新規作成
+              問題の新規作成
             </button>
           </div>
         </header>
-
-        {homeMode === "designs" && previewExam ? (
-          <ExamDesignPreview exam={previewExam} />
-        ) : homeMode === "homes" ? (
-          <HomeDesignPreview exams={exams.filter((exam) => exam.published)} />
-        ) : homeMode === "timers" && previewExam ? (
-          <TimerDesignPreview exam={previewExam} />
-        ) : homeMode === "pageNavs" && previewExam ? (
-          <PageNavDesignPreview exam={previewExam} />
-        ) : homeMode === "scorings" && previewExam ? (
-          <ScoringDesignPreview exam={previewExam} />
-        ) : homeMode === "editors" && previewExam ? (
-          <EditorDesignPreview exam={previewExam} />
+        {activePreview === "score-display" && previewExam ? (
+          <ScoreDisplayPreview exam={previewExam} onExit={() => setActivePreview(null)} />
+        ) : activePreview === "score-pop" ? (
+          <ScorePopPreview />
         ) : (
-          <section className="exam-grid" aria-label="公開中の試験一覧">
-            {exams
-              .filter((exam) => exam.published)
-              .map((exam) => (
-                <SteamCapsuleCard
-                  exam={exam}
-                  key={exam.id}
-                  settingsControl={
-                    <details className="exam-actions">
-                      <summary aria-label={`${exam.title}の設定`}>⋮</summary>
-                      <div className="exam-action-menu">
-                        <button
-                          className="authoring-disabled-button"
-                          disabled={authoringDisabled}
-                          type="button"
-                          onClick={authoringDisabled ? undefined : () => onEdit(exam)}
-                        >
-                          編集する
-                        </button>
-                        <button type="button" onClick={() => onDelete(exam.id)}>
-                          削除する
-                        </button>
-                      </div>
-                    </details>
-                  }
-                  startControl={
-                    <button type="button" onClick={() => onSelect(exam)}>
-                      試験を始める
-                    </button>
-                  }
-                />
-              ))}
+          <section aria-label="公開中の試験一覧" className="exam-grid">
+            {publishedExams.map((exam) => (
+              <SteamCapsuleCard
+                exam={exam}
+                key={exam.id}
+                onSelect={() => onSelect(exam)}
+                settingsControl={
+                  <ExamCardActions exam={exam} onDelete={onDelete} onEdit={onEdit} />
+                }
+              />
+            ))}
           </section>
         )}
       </main>
       <HomeDrawingTools
         onPickTool={pickUpTool}
+        onToolImageLoad={remeasureToolWorld}
         phases={toolPhases}
         registerToolElement={registerToolElement}
       />
