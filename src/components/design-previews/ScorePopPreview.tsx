@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScorePop, scorePopCandidates, type ScorePopVariant } from "../scoring/ScorePop";
+import { ScorePop, scorePopCandidates, type ScorePopVariant } from "./ScorePop";
 
 const previewScore = 86;
 const previewTotalPoints = 100;
