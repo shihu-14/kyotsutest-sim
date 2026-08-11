@@ -197,7 +197,9 @@ describe("ExamRunner", () => {
     );
 
     expect(document.querySelector('[role="timer"]')).not.toBeInTheDocument();
-    expect(document.querySelector('[role="status"][aria-label="得点 4/12"]')).toHaveClass("review-score-badge");
+    const reviewScore = document.querySelector('[role="status"][aria-label="得点 4/12"]');
+    expect(reviewScore).toHaveClass("review-score-badge");
+    expect(reviewScore?.querySelector("span")).not.toBeInTheDocument();
     expect(document.querySelector(".exam-layout")).toHaveClass("exam-review-mode");
     expect((document.querySelector(".exam-layout") as HTMLElement).style.getPropertyValue("--exam-timer-accent")).toBe(
       "#ff4d00"

@@ -23,7 +23,7 @@
 .review-score-badge {
   display: grid;
   min-width: 128px;
-  border: 2px solid var(--exam-timer-accent, #ff4d00);
+  border: 2px solid #f07825;
   border-radius: 8px;
   background: #fffaf1;
   color: #1b1b1b;
@@ -31,12 +31,6 @@
   font-family: Inter, "Hiragino Sans", system-ui, sans-serif;
   text-align: right;
   box-shadow: 0 12px 24px rgba(84, 46, 5, 0.14);
-}
-
-.review-score-badge span {
-  color: #7b4721;
-  font-size: 0.72rem;
-  font-weight: 900;
 }
 
 .review-score-badge strong {
@@ -50,13 +44,10 @@
   font-size: 0.52em;
 }
 
-.exam-mode-background .review-score-badge {
-  transform: translateY(-13px);
-}
-
 @media (min-width: 981px) {
   .exam-mode-background.exam-review-mode .toolbar-metrics {
-    transform: translateY(16px);
+    min-height: 75px;
+    align-items: flex-end;
   }
 }
 
