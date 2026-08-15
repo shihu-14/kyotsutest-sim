@@ -42,11 +42,11 @@
 }
 
 .home-return-button {
-  border-color: rgba(39, 53, 52, 0.24);
+  border-color: rgba(0, 0, 0, 0.3);
   background: var(--home-action-color, #fffaf1);
   color: #273534;
   padding-inline: 7px;
-  box-shadow: 0 10px 20px rgba(52, 39, 22, 0.14);
+  box-shadow: 0 10px 20px rgba(52, 39, 22, 0);
   white-space: nowrap;
 }
 
