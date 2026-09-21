@@ -1,4 +1,4 @@
-import type { Exam } from "../types";
+import type { Exam } from "../domain/exam";
 
 const fourChoices = ["1", "2", "3", "4"].map((value) => ({
   value,

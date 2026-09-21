@@ -1,0 +1,108 @@
+import type { Exam } from "../../domain/exam";
+import { useEffect, useRef } from "react";
+import { useHomeDrawingSurface } from "./drawing/useHomeDrawingSurface";
+import { HomeDrawingTools } from "./drawing/HomeDrawingTools";
+import type { ReactNode } from "react";
+
+interface ExamListProps {
+  exams: Exam[];
+  onSelect: (exam: Exam) => void;
+}
+
+interface ExamCardActionsProps {
+  exam: Exam;
+}
+
+function ExamCardActions({ exam }: ExamCardActionsProps) {
+  const detailsRef = useRef<HTMLDetailsElement | null>(null);
+
+  useEffect(() => {
+    const closeOnOutsidePointerDown = (event: PointerEvent) => {
+      const details = detailsRef.current;
+      if (details?.open && event.target instanceof Node && !details.contains(event.target)) {
+        details.removeAttribute("open");
+      }
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsidePointerDown);
+    return () => document.removeEventListener("pointerdown", closeOnOutsidePointerDown);
+  }, []);
+
+  return (
+    <details className="exam-actions" ref={detailsRef}>
+      <summary aria-label={`${exam.title}の設定`}>⋮</summary>
+      <div className="exam-action-menu">
+        <button disabled type="button">
+          編集する
+        </button>
+        <button disabled type="button">
+          削除する
+        </button>
+      </div>
+    </details>
+  );
+}
+
+export function ExamList({ exams, onSelect }: ExamListProps) {
+  const publishedExams = exams.filter((exam) => exam.published);
+  const { canvasRef, pickUpTool, pointerHandlers, registerToolElement, remeasureToolWorld, rootRef, toolPhases } =
+    useHomeDrawingSurface();
+
+  return (
+    <div className="home-pencil-surface" ref={rootRef} {...pointerHandlers}>
+      <canvas aria-hidden="true" className="home-pencil-canvas" ref={canvasRef} />
+      <main className="screen screen-narrow">
+        <header className="screen-heading home-screen-heading">
+          <div>
+            <h1 className="home-screen-title">共通テスト形式 ウェブ模試</h1>
+          </div>
+          <div className="home-actions">
+            <button className="secondary-button authoring-disabled-button" disabled type="button">
+              問題の新規作成
+            </button>
+          </div>
+        </header>
+        <section aria-label="公開中の試験一覧" className="exam-grid">
+          {publishedExams.map((exam) => (
+            <ExamCard
+              exam={exam}
+              key={exam.id}
+              onSelect={() => onSelect(exam)}
+              settingsControl={<ExamCardActions exam={exam} />}
+            />
+          ))}
+        </section>
+      </main>
+      <HomeDrawingTools
+        onPickTool={pickUpTool}
+        onToolImageLoad={remeasureToolWorld}
+        phases={toolPhases}
+        registerToolElement={registerToolElement}
+      />
+    </div>
+  );
+}
+
+interface ExamCardProps {
+  exam: Exam;
+  onSelect: () => void;
+  settingsControl: ReactNode;
+}
+
+function ExamCard({ exam, onSelect, settingsControl }: ExamCardProps) {
+  return (
+    <article aria-label={exam.title} className="exam-card">
+      <div aria-label={`${exam.title}の表紙`} className="exam-card-cover">
+        {exam.coverImageUrl ? (
+          <img alt={`${exam.title}の表紙`} draggable={false} src={exam.coverImageUrl} />
+        ) : (
+          <div aria-label={`${exam.title}の表紙画像なし`} className="exam-card-cover-placeholder" role="img">
+            <span>{exam.subject}</span>
+          </div>
+        )}
+      </div>
+      <button aria-label={`${exam.title}を選択`} className="exam-card-select" type="button" onClick={onSelect} />
+      <div className="exam-card-settings">{settingsControl}</div>
+    </article>
+  );
+}
