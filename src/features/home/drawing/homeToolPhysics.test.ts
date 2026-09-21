@@ -1,3 +1,4 @@
+import { contactPointFromHeldCenter } from "./drawingTestUtils";
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_TOOL_SIZES,
@@ -6,8 +7,6 @@ import {
   REDUCED_MOTION_INITIAL_ROTATIONS,
   TOOL_CONTACT_ANCHORS,
   TOOL_CURSOR_OFFSETS,
-  clientPointFromRoot,
-  contactPointFromHeldCenter,
   droppedToolPhysicsState,
   heldCenterFromContact,
   initialLandingCenters,
@@ -34,7 +33,6 @@ describe("homeToolPhysics", () => {
     const rootPoint = rootPointFromClient({ x: 900, y: 300 }, rootRect);
 
     expect(rootPoint).toEqual({ x: 900, y: 669 });
-    expect(clientPointFromRoot(rootPoint, rootRect)).toEqual({ x: 900, y: 300 });
   });
 
   it("keeps responsive landing positions in bounds and separated", () => {

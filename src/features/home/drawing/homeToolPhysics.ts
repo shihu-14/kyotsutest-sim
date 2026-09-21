@@ -142,13 +142,6 @@ export function rootPointFromClient(point: Point2D, rootRect: Pick<DOMRect, "lef
   };
 }
 
-export function clientPointFromRoot(point: Point2D, rootRect: Pick<DOMRect, "left" | "top">): Point2D {
-  return {
-    x: point.x + rootRect.left,
-    y: point.y + rootRect.top
-  };
-}
-
 export function heldCenterFromContact(
   kind: HomeDrawingToolKind,
   contactPoint: Point2D,
@@ -169,25 +162,6 @@ export function heldCenterFromContact(
   return {
     x: contactPoint.x - rotatedOffset.x,
     y: contactPoint.y - rotatedOffset.y
-  };
-}
-
-export function contactPointFromHeldCenter(
-  kind: HomeDrawingToolKind,
-  center: Point2D,
-  rotation: number,
-  size: ToolSize
-): Point2D {
-  const anchor = TOOL_CONTACT_ANCHORS[kind];
-  const localOffset = {
-    x: (anchor.x - 0.5) * size.width,
-    y: (anchor.y - 0.5) * size.height
-  };
-  const radians = degreesToRadians(rotation);
-
-  return {
-    x: center.x + localOffset.x * Math.cos(radians) - localOffset.y * Math.sin(radians),
-    y: center.y + localOffset.x * Math.sin(radians) + localOffset.y * Math.cos(radians)
   };
 }
 

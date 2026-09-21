@@ -138,7 +138,7 @@ function drawEraserOperation(context: CanvasRenderingContext2D, operation: Erase
   context.globalCompositeOperation = "source-over";
 }
 
-export function drawHomeDrawingOperation(context: CanvasRenderingContext2D, operation: DrawingOperation) {
+function drawHomeDrawingOperation(context: CanvasRenderingContext2D, operation: DrawingOperation) {
   if (operation.kind === "pencil") {
     drawPencilOperation(context, operation);
     return;

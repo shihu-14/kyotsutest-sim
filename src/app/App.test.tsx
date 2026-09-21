@@ -102,6 +102,19 @@ describe("App", () => {
     expect(window.localStorage.getItem("kyotsu-test-sim:deadline:anime-onlymark-2026")).toBeNull();
   });
 
+  it("automatically starts scoring when the exam deadline expires", () => {
+    vi.useFakeTimers();
+    render(<App />);
+    fireEvent.click(screen.getByRole("button", { name: "漫画映画を選択" }));
+    fireEvent.click(screen.getByRole("button", { name: "試験を始める" }));
+    act(() => {
+      vi.advanceTimersByTime(40 * 60_000);
+    });
+    expect(screen.queryByRole("timer")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("問題用紙への採点")).toBeInTheDocument();
+    expect(window.localStorage.getItem("kyotsu-test-sim:deadline:anime-onlymark-2026")).toBeNull();
+  });
+
   it("keeps the select to review session transitions intact", async () => {
     vi.useFakeTimers();
 
