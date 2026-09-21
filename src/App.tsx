@@ -16,7 +16,7 @@ export function App() {
     openCover: openSessionCover,
     resetToList: resetSessionToList,
     startExam: startSessionExam,
-    state: { answers, currentPageId, deadline, phase, selectedExam, showCompletedScoring },
+    state: { answers, currentPageId, deadline, phase, selectedExam },
     toggleAnswer
   } = useExamSession();
   const { className: reviewTransitionClassName, resetReviewTransition, startReviewTransition } = useReviewTransition();
@@ -59,7 +59,6 @@ export function App() {
       <ScoringScreen
         answers={answers}
         exam={selectedExam}
-        startComplete={showCompletedScoring}
         onReview={() => {
           enterReview();
           startReviewTransition();

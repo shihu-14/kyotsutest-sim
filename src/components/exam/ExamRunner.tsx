@@ -18,10 +18,8 @@ interface ExamRunnerProps {
   answers: UserAnswers;
   currentPageId: string;
   deadline: number | null;
-  initialShowCover?: boolean;
   className?: string;
   reviewMode?: boolean;
-  rootElement?: "main" | "div";
   onChangePage: (pageId: string) => void;
   onToggleAnswer: (question: QuestionSlot, value: AnswerValue) => void;
   onFinish: () => void;
@@ -37,10 +35,8 @@ export function ExamRunner({
   answers,
   currentPageId,
   deadline,
-  initialShowCover = false,
   className,
   reviewMode = false,
-  rootElement = "main",
   onChangePage,
   onToggleAnswer,
   onFinish,
@@ -65,7 +61,7 @@ export function ExamRunner({
     selectCover,
     selectPage,
     showCover
-  } = useBookletNavigation(exam, currentPageId, initialShowCover, onChangePage);
+  } = useBookletNavigation(exam, currentPageId, onChangePage);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
     [exam.questions]
@@ -98,7 +94,6 @@ export function ExamRunner({
     gap: "16px"
   } as CSSProperties;
   const totalTimeMs = exam.durationMinutes * 60 * 1000;
-  const RootElement = rootElement;
 
   const toggleCoverMark = (value: AnswerValue) => {
     setCoverMarks((current) => {
@@ -115,7 +110,7 @@ export function ExamRunner({
   }, [exam.id]);
 
   return (
-    <RootElement
+    <main
       className={["exam-layout", "exam-mode-background", reviewMode ? "exam-review-mode" : "", className]
         .filter(Boolean)
         .join(" ")}
@@ -255,6 +250,6 @@ export function ExamRunner({
           }}
         />
       ) : null}
-    </RootElement>
+    </main>
   );
 }

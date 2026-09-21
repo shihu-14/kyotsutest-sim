@@ -3,13 +3,8 @@ import type { Exam } from "../types";
 
 const visiblePageTabCount = 12;
 
-export function useBookletNavigation(
-  exam: Exam,
-  currentPageId: string,
-  initialShowCover: boolean,
-  onChangePage: (pageId: string) => void
-) {
-  const [showCover, setShowCover] = useState(() => initialShowCover && Boolean(exam.coverImageUrl));
+export function useBookletNavigation(exam: Exam, currentPageId: string, onChangePage: (pageId: string) => void) {
+  const [showCover, setShowCover] = useState(false);
   const pageTabsRef = useRef<HTMLDivElement | null>(null);
   const pageNavigationSourceRef = useRef<"arrow" | "tab" | null>(null);
   const previousPagePositionRef = useRef<number | null>(null);
@@ -23,8 +18,8 @@ export function useBookletNavigation(
   const canGoNext = showCover ? exam.pages.length > 0 : pageIndex < exam.pages.length - 1;
 
   useEffect(() => {
-    setShowCover(initialShowCover && Boolean(exam.coverImageUrl));
-  }, [exam.coverImageUrl, exam.id, initialShowCover]);
+    setShowCover(false);
+  }, [exam.coverImageUrl, exam.id]);
 
   useEffect(() => {
     const nav = pageTabsRef.current;

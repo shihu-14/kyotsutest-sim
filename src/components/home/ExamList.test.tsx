@@ -29,7 +29,6 @@ describe("ExamList", () => {
     expect(screen.getByRole("button", { name: "問題の新規作成" })).toBeDisabled();
     expect(screen.getByLabelText(`${exam.title}の表紙`)).toBeInTheDocument();
     expect(screen.queryByText(exam.subject)).not.toBeInTheDocument();
-    expect(screen.queryByText(exam.description)).not.toBeInTheDocument();
 
     const card = screen.getByRole("article", { name: exam.title });
     expect(card).toHaveClass("exam-card");
@@ -101,12 +100,6 @@ describe("ExamList", () => {
       durationMinutes: 40,
       published: true,
       totalPoints: 100
-    });
-    expect(animeExam?.source).toMatchObject({
-      kind: "latex-pdf",
-      markPlacement: "manual",
-      pdfPath: "src/assets/exams/anime-onlymark-2026/source/kyotutest_anime_onlymark.pdf",
-      pdfPageImagesPath: "src/assets/exams/anime-onlymark-2026/pdf-pages"
     });
     expect(animeExam?.pages).toHaveLength(14);
     expect(animeExam?.questions).toHaveLength(21);

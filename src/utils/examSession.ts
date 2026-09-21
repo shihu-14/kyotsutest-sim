@@ -7,7 +7,6 @@ export interface ExamSessionState {
   deadline: number | null;
   phase: ExamPhase;
   selectedExam: Exam | null;
-  showCompletedScoring: boolean;
 }
 
 export type ExamSessionEvent =
@@ -25,8 +24,7 @@ export const initialExamSessionState: ExamSessionState = {
   currentPageId: "",
   deadline: null,
   phase: "select",
-  selectedExam: null,
-  showCompletedScoring: false
+  selectedExam: null
 };
 
 export function examSessionReducer(state: ExamSessionState, event: ExamSessionEvent): ExamSessionState {
@@ -55,15 +53,13 @@ export function examSessionReducer(state: ExamSessionState, event: ExamSessionEv
       return {
         ...state,
         deadline: null,
-        phase: "scoring",
-        showCompletedScoring: false
+        phase: "scoring"
       };
     case "ENTER_REVIEW":
       return {
         ...state,
         currentPageId: state.selectedExam?.pages[0]?.id ?? "",
-        phase: "review",
-        showCompletedScoring: true
+        phase: "review"
       };
     case "RESET_TO_LIST":
       return {
@@ -71,8 +67,7 @@ export function examSessionReducer(state: ExamSessionState, event: ExamSessionEv
         currentPageId: "",
         deadline: null,
         phase: "select",
-        selectedExam: null,
-        showCompletedScoring: false
+        selectedExam: null
       };
     case "DISCARD_TO_LIST":
       return {
@@ -81,8 +76,7 @@ export function examSessionReducer(state: ExamSessionState, event: ExamSessionEv
         currentPageId: "",
         deadline: null,
         phase: "select",
-        selectedExam: null,
-        showCompletedScoring: false
+        selectedExam: null
       };
     case "CHANGE_PAGE":
       return { ...state, currentPageId: event.pageId };

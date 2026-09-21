@@ -2,12 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { Exam, GradeSummary, UserAnswers } from "../../types";
 import { gradeExam } from "../../utils/answer";
 import { ProblemBooklet } from "../exam/ProblemBooklet";
-import { ScoringReviewBackdrop } from "./ScoringReviewBackdrop";
 
 interface ScoringScreenProps {
   exam: Exam;
   answers: UserAnswers;
-  startComplete?: boolean;
   onReview: () => void;
 }
 
@@ -19,7 +17,7 @@ const emptyPageTurnDelayMs = 260;
 const resultDelayMs = 620;
 const autoReviewDelayMs = 2000;
 
-export function ScoringScreen({ exam, answers, startComplete = false, onReview }: ScoringScreenProps) {
+export function ScoringScreen({ exam, answers, onReview }: ScoringScreenProps) {
   const summary = useMemo<GradeSummary>(() => gradeExam(exam, answers), [answers, exam]);
   const questionsById = useMemo(
     () => new Map(exam.questions.map((question) => [question.id, question])),
@@ -30,9 +28,9 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
     [summary.gradedQuestions]
   );
   const firstPageIndex = exam.coverImageUrl ? coverPageIndex : 0;
-  const [visibleCount, setVisibleCount] = useState(() => (startComplete ? summary.gradedQuestions.length : 0));
-  const [currentPageIndex, setCurrentPageIndex] = useState(() => (startComplete ? exam.pages.length : firstPageIndex));
-  const [showResult, setShowResult] = useState(startComplete);
+  const [visibleCount, setVisibleCount] = useState(0);
+  const [currentPageIndex, setCurrentPageIndex] = useState(firstPageIndex);
+  const [showResult, setShowResult] = useState(false);
   const visibleQuestions = useMemo(
     () => summary.gradedQuestions.slice(0, visibleCount),
     [summary.gradedQuestions, visibleCount]
@@ -47,13 +45,13 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
   const showCover = currentPageIndex === coverPageIndex && Boolean(exam.coverImageUrl);
 
   useEffect(() => {
-    setVisibleCount(startComplete ? summary.gradedQuestions.length : 0);
-    setCurrentPageIndex(startComplete ? exam.pages.length : firstPageIndex);
-    setShowResult(startComplete);
-  }, [exam.pages.length, firstPageIndex, startComplete, summary.gradedQuestions.length]);
+    setVisibleCount(0);
+    setCurrentPageIndex(firstPageIndex);
+    setShowResult(false);
+  }, [exam.pages.length, firstPageIndex, summary.gradedQuestions.length]);
 
   useEffect(() => {
-    if (startComplete || showResult) {
+    if (showResult) {
       return undefined;
     }
 
@@ -92,21 +90,19 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
     }, delay);
 
     return () => window.clearTimeout(timeoutId);
-  }, [currentPageIndex, exam.pages, questionPageIds, showResult, startComplete, summary.gradedQuestions, visibleCount]);
+  }, [currentPageIndex, exam.pages, questionPageIds, showResult, summary.gradedQuestions, visibleCount]);
 
   useEffect(() => {
-    if (startComplete || !showResult) {
+    if (!showResult) {
       return undefined;
     }
 
     const timeoutId = window.setTimeout(onReview, autoReviewDelayMs);
     return () => window.clearTimeout(timeoutId);
-  }, [onReview, showResult, startComplete]);
-
-  const screenClassName = ["screen", "scoring-screen", startComplete ? "scoring-static" : ""].filter(Boolean).join(" ");
+  }, [onReview, showResult]);
 
   return (
-    <main className={screenClassName}>
+    <main className="screen scoring-screen">
       {!showResult ? (
         <section className="scoring-booklet-scene" aria-label="問題用紙への採点">
           <div className="scoring-booklet-shell">
@@ -133,13 +129,9 @@ export function ScoringScreen({ exam, answers, startComplete = false, onReview }
         </section>
       ) : null}
 
-      {showResult && startComplete && exam.pages[0] ? <ScoringReviewBackdrop answers={answers} exam={exam} /> : null}
-
       {showResult ? (
         <section
-          className={["scoring-final-result", "visible", startComplete ? "" : "auto-review-score-pop"]
-            .filter(Boolean)
-            .join(" ")}
+          className="scoring-final-result visible auto-review-score-pop"
           aria-label="採点結果"
           aria-live="polite"
         >
