@@ -1,0 +1,90 @@
+.home-pencil-surface {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: clip;
+  isolation: isolate;
+}
+
+.home-pencil-surface.is-home-tool-contacting,
+.home-pencil-surface.is-home-tool-contacting * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.home-pencil-surface > .screen {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  padding-bottom: 24px;
+}
+
+.home-pencil-canvas {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.home-drawing-tool-layer {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.home-drawing-tool {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  opacity: 1;
+  pointer-events: none;
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.home-drawing-tool:disabled {
+  opacity: 1;
+}
+
+.home-drawing-tool[data-tool-phase="resting"] {
+  cursor: default;
+  pointer-events: auto;
+}
+
+.home-drawing-tool:focus-visible {
+  outline: 2px solid rgba(31, 111, 91, 0.82);
+  outline-offset: 5px;
+}
+
+.home-drawing-tool-pencil {
+  width: clamp(64px, 7vw, 92px);
+  aspect-ratio: 289 / 606;
+}
+
+.home-drawing-tool-eraser {
+  width: clamp(54px, 6vw, 76px);
+  aspect-ratio: 181 / 230;
+}
+
+.home-drawing-tool-graphic {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-drawing-tool {
+    transition: none;
+  }
+}
