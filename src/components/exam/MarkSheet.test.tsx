@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { animeOnlymarkExam } from "../../data/exams/animeOnlymark2026";
-import { structuredExamFixture } from "../../test/examFixtures";
+import { imageExamFixture } from "../../test/examFixtures";
 import { MarkSheet } from "./MarkSheet";
 
 describe("MarkSheet", () => {
@@ -12,9 +12,9 @@ describe("MarkSheet", () => {
 
     render(
       <MarkSheet
-        activePageId={structuredExamFixture.pages[0].id}
+        activePageId={imageExamFixture.pages[0].id}
         answers={{}}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         onJumpToPage={vi.fn()}
         onToggleAnswer={onToggleAnswer}
       />
@@ -24,15 +24,15 @@ describe("MarkSheet", () => {
     expect(screen.queryByText("→")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "ア 2" }));
 
-    expect(onToggleAnswer).toHaveBeenCalledWith(structuredExamFixture.questions[0], "2");
+    expect(onToggleAnswer).toHaveBeenCalledWith(imageExamFixture.questions[0], "2");
   });
 
   it("renders mark choices from 1 through 9 and then 0", () => {
     render(
       <MarkSheet
-        activePageId={structuredExamFixture.pages[0].id}
+        activePageId={imageExamFixture.pages[0].id}
         answers={{}}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         onJumpToPage={vi.fn()}
         onToggleAnswer={vi.fn()}
       />
@@ -51,9 +51,9 @@ describe("MarkSheet", () => {
 
     render(
       <MarkSheet
-        activePageId={structuredExamFixture.pages[0].id}
+        activePageId={imageExamFixture.pages[0].id}
         answers={{}}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         onJumpToPage={onJumpToPage}
         onToggleAnswer={vi.fn()}
       />
@@ -61,7 +61,7 @@ describe("MarkSheet", () => {
 
     await user.click(screen.getByRole("button", { name: "ウ" }));
 
-    expect(onJumpToPage).toHaveBeenCalledWith(structuredExamFixture.pages[1].id);
+    expect(onJumpToPage).toHaveBeenCalledWith(imageExamFixture.pages[1].id);
   });
 
   it("shows section separators for subquestions and keeps the sheet scroll-focused", () => {
@@ -129,9 +129,9 @@ describe("MarkSheet", () => {
   it("renders multiple selected marks when a question allows multiple answers", () => {
     render(
       <MarkSheet
-        activePageId={structuredExamFixture.pages[1].id}
+        activePageId={imageExamFixture.pages[1].id}
         answers={{ "fixture-q3": ["1", "3"] }}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         onJumpToPage={vi.fn()}
         onToggleAnswer={vi.fn()}
       />
@@ -144,9 +144,9 @@ describe("MarkSheet", () => {
   it("keeps the user's wrong review mark black and paints only the correct mark red", () => {
     render(
       <MarkSheet
-        activePageId={structuredExamFixture.pages[0].id}
+        activePageId={imageExamFixture.pages[0].id}
         answers={{ "fixture-q1": ["1"] }}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         reviewMode
         onJumpToPage={vi.fn()}
         onToggleAnswer={vi.fn()}
@@ -163,9 +163,9 @@ describe("MarkSheet", () => {
   it("keeps a correct review mark black while adding the red correction layer", () => {
     render(
       <MarkSheet
-        activePageId={structuredExamFixture.pages[0].id}
+        activePageId={imageExamFixture.pages[0].id}
         answers={{ "fixture-q1": ["2"] }}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         reviewMode
         onJumpToPage={vi.fn()}
         onToggleAnswer={vi.fn()}

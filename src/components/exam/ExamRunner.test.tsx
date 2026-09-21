@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import gradeCircleStamp from "../../assets/stamps/grade-circle.png";
 import { animeOnlymarkExam } from "../../data/exams/animeOnlymark2026";
-import { structuredExamFixture } from "../../test/examFixtures";
+import { imageExamFixture } from "../../test/examFixtures";
 import { ExamRunner } from "./ExamRunner";
 
 function installPageTabLayoutMocks() {
@@ -81,9 +81,9 @@ describe("ExamRunner", () => {
     render(
       <ExamRunner
         answers={{}}
-        currentPageId={structuredExamFixture.pages[0].id}
+        currentPageId={imageExamFixture.pages[0].id}
         deadline={Date.now() + 60_000}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={onFinish}
@@ -135,9 +135,9 @@ describe("ExamRunner", () => {
     render(
       <ExamRunner
         answers={{}}
-        currentPageId={structuredExamFixture.pages[0].id}
+        currentPageId={imageExamFixture.pages[0].id}
         deadline={Date.now() + 60_000}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
@@ -186,9 +186,9 @@ describe("ExamRunner", () => {
     render(
       <ExamRunner
         answers={{ "fixture-q1": ["2"] }}
-        currentPageId={structuredExamFixture.pages[0].id}
+        currentPageId={imageExamFixture.pages[0].id}
         deadline={null}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         reviewMode
         onChangePage={vi.fn()}
         onExitReview={onExitReview}
@@ -264,9 +264,9 @@ describe("ExamRunner", () => {
     const rendered = render(
       <ExamRunner
         answers={{}}
-        currentPageId={structuredExamFixture.pages[0].id}
+        currentPageId={imageExamFixture.pages[0].id}
         deadline={Date.now() + 60_000}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
@@ -311,9 +311,9 @@ describe("ExamRunner", () => {
     const firstRender = render(
       <ExamRunner
         answers={{}}
-        currentPageId={structuredExamFixture.pages[0].id}
+        currentPageId={imageExamFixture.pages[0].id}
         deadline={Date.now() + 60_000}
-        exam={structuredExamFixture}
+        exam={imageExamFixture}
         onChangePage={vi.fn()}
         onExpire={vi.fn()}
         onFinish={vi.fn()}
@@ -391,13 +391,12 @@ describe("ExamRunner", () => {
   it("fits short page tabs and smoothly follows overflow page changes", async () => {
     const user = userEvent.setup();
     const pageTabLayout = installPageTabLayoutMocks();
-    const baseExam = structuredExamFixture;
+    const baseExam = imageExamFixture;
     const longExam = {
       ...baseExam,
       coverImageUrl: baseExam.coverImageUrl ?? "cover.png",
       pages: Array.from({ length: 30 }, (_, index) => ({
         ...baseExam.pages[0],
-        blocks: [],
         id: `long-page-${index + 1}`,
         pageNumber: index + 1,
         title: `Page ${index + 1}`

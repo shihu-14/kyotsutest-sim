@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import type { QuestionSlot } from "../types";
 import { answersEqual, gradeExam, gradeQuestion, toggleAnswer } from "./answer";
 import { animeOnlymarkExam } from "../data/exams/animeOnlymark2026";
-import { structuredExamFixture } from "../test/examFixtures";
+import { imageExamFixture } from "../test/examFixtures";
 
-const multiQuestion: QuestionSlot = structuredExamFixture.questions.find((question) => question.multi)!;
-const singleQuestion: QuestionSlot = structuredExamFixture.questions.find((question) => !question.multi)!;
+const multiQuestion: QuestionSlot = imageExamFixture.questions.find((question) => question.multi)!;
+const singleQuestion: QuestionSlot = imageExamFixture.questions.find((question) => !question.multi)!;
 
 describe("answer utilities", () => {
   it("toggles a single-select answer on and off", () => {
@@ -32,7 +32,7 @@ describe("answer utilities", () => {
   });
 
   it("sums the full exam score", () => {
-    const summary = gradeExam(structuredExamFixture, {
+    const summary = gradeExam(imageExamFixture, {
       "fixture-q1": ["2"],
       "fixture-q2": ["3"],
       "fixture-q3": ["1", "3"]

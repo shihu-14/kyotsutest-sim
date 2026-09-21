@@ -7,22 +7,19 @@
     "node": "^20.19.0 || ^22.13.0 || >=24"
   },
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "vite build",
+    "dev": "vite --host 127.0.0.1 --config vite.config.ts",
+    "build": "vite build --config vite.config.ts",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test && npm run build",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "test": "vitest --run",
-    "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest",
+    "test": "vitest --run --config vite.config.ts",
+    "test:coverage": "vitest run --coverage --config vite.config.ts",
+    "test:watch": "vitest --config vite.config.ts",
     "typecheck": "tsc --noEmit",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1 --config vite.config.ts"
   },
   "dependencies": {
-    "@monaco-editor/react": "^4.7.0",
-    "katex": "^0.16.22",
-    "monaco-editor": "^0.52.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
@@ -31,7 +28,6 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
-    "@types/katex": "^0.16.7",
     "@types/node": "^22.15.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.3",

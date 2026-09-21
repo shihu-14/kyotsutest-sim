@@ -2,7 +2,7 @@ import { act, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import gradeCircleStamp from "../../assets/stamps/grade-circle.png";
 import gradeCrossStamp from "../../assets/stamps/grade-cross.png";
-import { structuredExamFixture } from "../../test/examFixtures";
+import { imageExamFixture } from "../../test/examFixtures";
 import type { Exam } from "../../types";
 import { ScoringScreen } from "./ScoringScreen";
 
@@ -13,7 +13,7 @@ describe("ScoringScreen", () => {
   });
 
   it("starts scoring on the booklet instead of the old scoring list", () => {
-    render(<ScoringScreen answers={{}} exam={structuredExamFixture} onReview={vi.fn()} />);
+    render(<ScoringScreen answers={{}} exam={imageExamFixture} onReview={vi.fn()} />);
 
     expect(screen.queryByRole("heading", { name: "採点" })).not.toBeInTheDocument();
     expect(screen.queryByRole("heading", { name: "自動採点" })).not.toBeInTheDocument();
@@ -26,31 +26,14 @@ describe("ScoringScreen", () => {
     expect(document.querySelector(".scoring-progress-note")).not.toBeInTheDocument();
   });
 
-  it("can reopen directly in the completed scoring state", () => {
-    render(<ScoringScreen answers={{}} exam={structuredExamFixture} startComplete onReview={vi.fn()} />);
-
-    expect(screen.getByRole("main")).toHaveClass("scoring-static");
-    expect(document.querySelector(".scoring-final-content p")).toHaveTextContent("得点");
-    expect(screen.queryByText("最終得点")).not.toBeInTheDocument();
-    expect(screen.getByLabelText("採点結果")).toHaveClass("scoring-final-result");
-    expect(document.querySelector(".scoring-review-backdrop")).toBeInTheDocument();
-    expect(document.querySelector(".scoring-review-backdrop .page-tabs .cover-tab")).not.toHaveClass("active");
-    expect(document.querySelector(".scoring-review-backdrop .page-tab-scroll button.active")).toHaveTextContent("1");
-    expect(document.querySelector(".scoring-review-backdrop .booklet-side-arrow.next")).toBeInTheDocument();
-    expect(document.querySelector(".scoring-review-backdrop .booklet-side-arrow.previous")).toBeInTheDocument();
-    expect(document.querySelector(".scoring-review-backdrop .review-score-badge")).toBeInTheDocument();
-    expect(screen.queryByLabelText("問題用紙への採点")).not.toBeInTheDocument();
-    expect(document.querySelector(".scoring-final-result button")).not.toBeInTheDocument();
-  });
-
   it("delays from the cover and then stamps answers on the problem booklet", () => {
     vi.useFakeTimers();
 
-    render(<ScoringScreen answers={{}} exam={structuredExamFixture} onReview={vi.fn()} />);
+    render(<ScoringScreen answers={{}} exam={imageExamFixture} onReview={vi.fn()} />);
 
     expect(screen.queryByText("表紙")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
-    expect(document.querySelector(".choice-button.correct-choice")).not.toBeInTheDocument();
+    expect(document.querySelector(".page-image-mark.review-correct")).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(1000);
@@ -58,14 +41,14 @@ describe("ScoringScreen", () => {
 
     expect(screen.queryByText("1ページ")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
-    expect(document.querySelector(".choice-button.correct-choice")).not.toBeInTheDocument();
+    expect(document.querySelector(".page-image-mark.review-correct")).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(419);
     });
 
     expect(screen.queryByLabelText("不正解")).not.toBeInTheDocument();
-    expect(document.querySelector(".choice-button.correct-choice")).not.toBeInTheDocument();
+    expect(document.querySelector(".page-image-mark.review-correct")).not.toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(1);
@@ -78,12 +61,12 @@ describe("ScoringScreen", () => {
     expect(cross.querySelectorAll("path.cross-reveal-stroke")).toHaveLength(2);
     expect(cross.querySelector("path.cross-reveal-stroke.first")).not.toBeNull();
     expect(cross.querySelector("path.cross-reveal-stroke.second")).not.toBeNull();
-    expect(document.querySelector(".choice-button.correct-choice")).toBeInTheDocument();
+    expect(document.querySelector(".page-image-mark.review-correct")).toBeInTheDocument();
   });
 
   it("draws a correct stamp as one animated circle path", () => {
     vi.useFakeTimers();
-    const exam = structuredExamFixture;
+    const exam = imageExamFixture;
     const firstQuestion = exam.questions[0];
 
     render(<ScoringScreen answers={{ [firstQuestion.id]: firstQuestion.correct }} exam={exam} onReview={vi.fn()} />);
@@ -108,7 +91,7 @@ describe("ScoringScreen", () => {
   it("shows only the score pop and then forces review mode", () => {
     vi.useFakeTimers();
     const onReview = vi.fn();
-    const baseExam = structuredExamFixture;
+    const baseExam = imageExamFixture;
     const [firstQuestion] = baseExam.questions;
     const quickExam: Exam = {
       ...baseExam,
@@ -118,10 +101,7 @@ describe("ScoringScreen", () => {
           id: "quick-p1",
           pageNumber: 1,
           title: "即時採点ページ",
-          blocks: [
-            { type: "heading", text: "即時採点ページ", level: 2 },
-            { type: "question", questionId: firstQuestion.id }
-          ]
+          pageImageUrl: "/fixture-page.png"
         }
       ],
       questions: [{ ...firstQuestion, pageId: "quick-p1" }],
@@ -164,7 +144,7 @@ describe("ScoringScreen", () => {
   it("turns pages without grading targets faster than graded pages", () => {
     vi.useFakeTimers();
 
-    const baseExam = structuredExamFixture;
+    const baseExam = imageExamFixture;
     const [firstQuestion, secondQuestion] = baseExam.questions;
     const examWithEmptyPage: Exam = {
       ...baseExam,
@@ -175,26 +155,15 @@ describe("ScoringScreen", () => {
           id: "speed-p1",
           pageNumber: 1,
           title: "採点あり1",
-          blocks: [
-            { type: "heading", text: "採点あり1", level: 2 },
-            { type: "question", questionId: firstQuestion.id }
-          ]
+          pageImageUrl: "/fixture-page.png"
         },
         {
           id: "speed-p2",
           pageNumber: 2,
           title: "採点なしページ",
-          blocks: [{ type: "heading", text: "採点なしページ", level: 2 }]
+          pageImageUrl: "/fixture-page.png"
         },
-        {
-          id: "speed-p3",
-          pageNumber: 3,
-          title: "採点あり2",
-          blocks: [
-            { type: "heading", text: "採点あり2", level: 2 },
-            { type: "question", questionId: secondQuestion.id }
-          ]
-        }
+        { id: "speed-p3", pageNumber: 3, title: "採点あり2", pageImageUrl: "/fixture-page.png" }
       ],
       questions: [
         { ...firstQuestion, pageId: "speed-p1" },
@@ -205,7 +174,7 @@ describe("ScoringScreen", () => {
 
     render(<ScoringScreen answers={{}} exam={examWithEmptyPage} onReview={vi.fn()} />);
 
-    expect(screen.getByText("採点あり1")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "採点あり1" })).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(420);
@@ -215,18 +184,18 @@ describe("ScoringScreen", () => {
       vi.advanceTimersByTime(760);
     });
 
-    expect(screen.getByText("採点なしページ")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "採点なしページ" })).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(259);
     });
 
-    expect(screen.getByText("採点なしページ")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "採点なしページ" })).toBeInTheDocument();
 
     act(() => {
       vi.advanceTimersByTime(1);
     });
 
-    expect(screen.getByText("採点あり2")).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "採点あり2" })).toBeInTheDocument();
   });
 });
