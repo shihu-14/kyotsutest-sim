@@ -305,7 +305,7 @@ describe("ExamRunner", () => {
     }
   });
 
-  it("uses the common exact scroll surface for generated and reproduced exam pages", () => {
+  it("uses the same scroll surface for fixture and published image pages", () => {
     const animeExam = animeOnlymarkExam;
 
     const firstRender = render(

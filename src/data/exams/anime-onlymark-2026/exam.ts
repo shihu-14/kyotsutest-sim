@@ -17,7 +17,7 @@ import animePage14 from "./pdf-pages/page-14.jpg";
 import { animeCoverMarkAreas, animePageGradeAnchors, animePageId, animePageMarkAreas } from "./markLayout";
 import { animeOnlymarkQuestions } from "./questions";
 
-export const animePageImages = [
+const animePageImages = [
   animePage01,
   animePage02,
   animePage03,
@@ -34,7 +34,7 @@ export const animePageImages = [
   animePage14
 ];
 
-export const animePageTitles = [
+const animePageTitles = [
   "第1問 方程式クイズ",
   "第2問 暗殺教室 問1",
   "第2問 暗殺教室 問1 続き",
