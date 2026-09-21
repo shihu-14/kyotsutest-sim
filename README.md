@@ -65,31 +65,27 @@ TeXから生成したPDFをページごとの画像として表示し，各解�
 ```text
 .
 ├── src/
-│   ├── assets/
-│   │   ├── exams/          # TeXコード，pdfファイル，問題中の画像など
-│   │   └── home-tools/     # 鉛筆・消しゴムの画像
-│   │
-│   ├── components/
-│   │   ├── home/           # ホーム画面，注意事項の画面
-│   │   ├── exam/           # 問題冊子，マークシート，タイマー
-│   │   ├── scoring/        # 採点・復習画面
-│   │   └── authoring/      # 作問機能
-│   │
-│   ├── data/
-│   │   └── exams/          # 問題，正解，配点，ページ，マーク位置などの試験データ
-│   │
-│   ├── hooks/              # 状態管理や，試験中のページ遷移，拡大縮小など
-│   ├── utils/              # 採点，保存，描画などのロジック
-│   ├── styles/             # 画面ごとのスタイル
-│   ├── test/               # テストの共通設定
-│   ├── App.tsx             # アプリケーションの画面構成
-│   └── types.ts            # 共通の型定義
-│
-├── .github/workflows/      # GitHub Actions
-├── eslint.config.js        # ESLintの設定
-├── vite.config.ts          # Vite / Vitestの設定
-└── package.json            # 依存関係の管理
+│   ├── app/                 # 画面遷移，試験セッション，解答の保存
+│   ├── domain/              # 試験の型，解答操作，採点（React・DOMに非依存）
+│   ├── features/
+│   │   ├── home/            # 試験一覧と設定メニュー
+│   │   │   └── drawing/     # 入力，Canvas，道具の状態・物理計算，画像
+│   │   └── exam/            # 表紙，受験，冊子，採点，復習，スタンプ画像
+│   ├── data/exams/          # 試験定義，設問・正解，マーク座標，ページ画像
+│   ├── assets/              # 共通の背景画像
+│   ├── styles/              # 基本スタイルと機能別CSSの読み込み
+│   ├── test/                # 共通セットアップと画像方式のfixture
+│   └── main.tsx
+├── resources/exams/         # ページ画像の元になったTeX・PDF原本
+├── .github/workflows/       # GitHub Actions
+├── eslint.config.js
+├── vite.config.ts           # Vite / Vitestの共通設定
+└── package.json
 ```
+
+各機能のテストとCSSは対象コードの近くに配置している．画面は `app` が接続し，試験データと画面は `domain` の型・採点処理を参照する．ホームと受験画面が互いの実装へ依存しない構成とした．
+
+問題の表示はページ画像方式に統一している．ホームの新規作成・編集・削除は無効な状態で表示し，作問エディタの実装は含めていない．
 
 ## 使用技術
 
@@ -97,7 +93,6 @@ TeXから生成したPDFをページごとの画像として表示し，各解�
 
 - React
 - TypeScript
-- KaTeX
 
 ### ビルド・開発環境
 
@@ -148,6 +143,7 @@ npm run lint
 npm run format:check
 npm test
 npm run build
+npm run test:coverage
 ```
 
 ## 今後の実装予定
@@ -159,3 +155,7 @@ npm run build
 ```
 
 ```
+
+## Contributors
+
+- [Codex](https://openai.com/codex/) — リファクタリング，回帰テスト，動作検証．
