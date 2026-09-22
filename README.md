@@ -13,6 +13,7 @@ LaTeXで作成したマークシート形式の問題を，ブラウザ上で解
 ### 解答機能
 
 <!-- ![](docs/image/solve.png) -->
+
 ![受験中の操作](docs/movie/solve.gif)
 （GIFが表示されない場合は[こちら](docs/movie/solve.mp4)）
 
