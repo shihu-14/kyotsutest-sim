@@ -1,6 +1,6 @@
 # 共通テスト形式模試 シミュレータ
 
-LaTeXで作成したマークシート形式の問題を，ブラウザ上で解くことができるシミュレータ．作成した問題は[こちら](https://github.com/shihu-14/anime-kyotsutest/blob/main/kyotutest_anime_onlymark.tex)．
+LaTeXで作成したマークシート形式の問題を，ブラウザ上で解くことができるシミュレータ．作成した問題は[こちら](https://github.com/shihu-14/anime-kyotsutest)．
 
 問題を解答する機能，自動採点機能，正答と自分の解答との差分を確認できる復習機能がある．
 
